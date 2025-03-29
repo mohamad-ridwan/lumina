@@ -40,7 +40,7 @@ router.beforeEach(async (to, from, next) => {
 router.afterEach((to, from, failure) => {
   const toast = useToast()
   if (router.options?.showToast) {
-    toast.add({ severity: 'error', summary: router.options.showToast, life: 5000 })
+    toast.add({ severity: 'warn', summary: router.options.showToast, life: 5000 })
   }
 })
 
