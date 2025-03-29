@@ -1,16 +1,10 @@
 <script setup>
 import Header from '@/sections/chat/Header.vue';
 import SearchMessenger from '@/sections/chat/SearchMessenger.vue'
-import { socket } from '@/services/socket/socket';
-import { onMounted, onUnmounted } from 'vue';
+import { usersStore } from '@/stores/users';
 
-onMounted(() => {
-  socket.emit('connection')
-})
-
-onUnmounted(() => {
-  socket.emit('disconnect')
-})
+const userStore = usersStore()
+const { profile } = userStore
 
 </script>
 
