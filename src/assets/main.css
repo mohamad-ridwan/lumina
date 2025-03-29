@@ -1,0 +1,44 @@
+@import './base.css';
+@import 'tailwindcss';
+
+#app {
+  margin: 0 auto;
+  font-weight: normal;
+}
+
+/* Variabel gaya untuk tombol */
+.btn-primary {
+  @apply bg-[var(--primary-color)] text-white font-semibold py-2 px-4 rounded-lg;
+}
+
+.btn-secondary {
+  @apply bg-[var(--secondary-color)] text-white font-semibold py-2 px-4 rounded-lg;
+}
+
+/* Variabel gaya untuk teks pesan */
+.message-sender {
+  @apply bg-[var(--message-sender-color)] p-3 rounded-lg self-end shadow-[var(--message-shadow)];
+}
+
+.message-receiver {
+  @apply bg-[var(--message-receiver-color)] p-3 rounded-lg self-start shadow-[var(--message-shadow)];
+}
+
+/* Variabel gaya untuk judul */
+.text-heading {
+  @apply text-2xl font-bold text-[var(--text-primary-color)];
+}
+
+/* Variabel gaya untuk teks sekunder */
+.text-secondary {
+  @apply text-[var(--text-secondary-color)];
+}
+
+/* Variabel gaya untuk background app */
+.bg-app {
+  @apply bg-[var(--background-color)];
+}
+
+.border-app {
+  @apply border-[var(--border-color)];
+}
