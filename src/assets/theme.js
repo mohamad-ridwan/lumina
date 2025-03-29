@@ -29,4 +29,12 @@ export const theme = {
   shadow: {
     message: '0 1px 2px rgba(0, 0, 0, 0.05)', // Box shadow untuk pesan
   },
+  addChatButton: {
+    main: '#a1a1a1', // Abu-abu sedang untuk tombol "Tambah Obrolan"
+    text: '#000000', // Teks hitam pada latar belakang abu-abu
+    hover: '#909090', // Warna hover untuk tombol "Tambah Obrolan" (sedikit lebih gelap)
+    active: '#808080', // Warna active untuk tombol "Tambah Obrolan" (lebih gelap)
+  },
+  regularBtn:
+    'rounded-tl-[6px] !rounded-bl-[0] rounded-tr-[6px] rounded-br-[6px] !bg-[#a1a1a1] hover:!bg-[#909090] !h-[23px] !w-[23px] justify-center items-center flex cursor-pointer !text-black !outline-none !border-none !p-0',
 }

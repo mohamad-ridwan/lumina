@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import ChatView from '../views/ChatView.vue'
 import LoginView from '@/views/LoginView.vue'
 import { middleware } from '@/middleware'
 import { useToast } from 'primevue'
@@ -10,7 +10,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: ChatView,
       meta: { requiresAuth: true },
     },
     {
