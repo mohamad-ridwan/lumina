@@ -1,5 +1,39 @@
 <script setup>
+// import
+import { socket } from '@/services/socket/socket';
+import { usersStore } from '@/stores/users';
 import { Button } from 'primevue';
+import { onBeforeMount, onMounted, ref } from 'vue';
+
+// props
+const { item } = defineProps(['item'])
+
+// store
+// profile store
+const userStore = usersStore()
+const { profile } = userStore
+
+// state
+const name = ref('')
+
+const userIdCurrently = item.userIds.filter(id => id !== profile.data.id)?.[0]
+
+// hooks rendering
+onBeforeMount(() => {
+  if (profile) {
+    if (userIdCurrently) {
+      socket.emit('user-profile', userIdCurrently)
+    }
+  }
+})
+
+onMounted(() => {
+  socket.on('user-profile', (user) => {
+    if (user?.id === userIdCurrently) {
+      name.value = user.username
+    }
+  })
+})
 
 </script>
 
@@ -12,10 +46,10 @@ import { Button } from 'primevue';
         alt="" class="object-cover h-[50px] w-[50px] rounded-full">
 
       <div class="flex flex-col">
-        <h1 class="font-bold text-[0.9rem] text-[#111827]">Roger</h1>
+        <h1 class="font-bold text-[0.9rem] text-[#111827]">{{ name }}</h1>
         <p class="gap-1 flex whitespace-nowrap max-w-[200px] text-[0.8rem] text-[#6b7280]">
-          <span>You:</span>
-          <span>Okay letsgo</span>
+          <span v-if="item.latestMessage.senderUserId === profile?.data?.id">You:</span>
+          <span>{{ item.latestMessage.textMessage }}</span>
         </p>
       </div>
     </div>

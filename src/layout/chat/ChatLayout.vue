@@ -7,7 +7,7 @@ import SearchMessenger from '@/sections/chat/SearchMessenger.vue'
 import { fetchChats } from '@/services/api/chats';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeMount, onUnmounted, ref } from 'vue';
 
 // store
 // profile store
@@ -23,6 +23,7 @@ const apiChatsWorker = ref(null)
 const checkChatsWorker = ref(null)
 
 const totalDataStreamsChats = ref(null)
+const chatsData = ref([])
 
 // logic
 async function handleGetChats() {
@@ -53,6 +54,7 @@ async function handleGetChats() {
           // listen to check chats currently
           checkChatsWorker.value.onmessage = (event) => {
             setChats(event.data.chats)
+            chatsData.value = event.data.chats
 
             // if (event.data.chats.length === totalDataStreamsChats.value) {
             // }
@@ -75,14 +77,14 @@ async function handleGetChats() {
 }
 
 // hooks rendering
-onMounted(async () => {
+onBeforeMount(async () => {
   handleGetChats()
 })
 
 onUnmounted(() => {
   if (apiChatsWorker.value) {
     apiChatsWorker.value.terminate()
-    checkChatsWorker.value.terminate()
+    checkChatsWorker.value?.terminate()
   }
 })
 
@@ -97,7 +99,9 @@ onUnmounted(() => {
     </Header>
     <ListChat>
       <template #list>
-        <ChatItem />
+        <li v-for="item in chatsData" :key="item.id">
+          <ChatItem :item="item" />
+        </li>
       </template>
     </ListChat>
   </div>
