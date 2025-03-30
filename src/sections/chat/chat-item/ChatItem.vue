@@ -16,7 +16,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = userStore
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom } = chatRoomStore
+const { chatRoom, setChatRoom } = chatRoomStore
 
 // state
 const name = ref('')
@@ -26,9 +26,25 @@ const userIdCurrently = item.userIds.filter(id => id !== profile.data.id)?.[0]
 
 const handleClickUser = async () => {
   // get chat room
+  if (chatRoom?.chatId === item?.chatId) {
+    return
+  }
   const chatRoomCurrently = await fetchChatRoom({
     userIds: item.userIds,
     mainUserId: profile.data.id
+  })
+  // leave room previous
+  if (chatRoom?.chatId) {
+    socket.emit('leaveRoom', {
+      chatRoomId: chatRoom?.chatRoomId,
+      chatId: chatRoom?.chatId,
+      userId: profile?.data.id
+    })
+  }
+  socket.emit('joinRoom', {
+    chatRoomId: chatRoomCurrently?.chatRoomId,
+    chatId: chatRoomCurrently?.chatId,
+    userId: profile?.data.id
   })
   if (chatRoomCurrently?.data) {
     setChatRoom(chatRoomCurrently)

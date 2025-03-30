@@ -4,6 +4,8 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
+import { onMounted, onUnmounted } from 'vue';
+import { socket } from '@/services/socket/socket';
 
 // store
 // profile store
@@ -12,6 +14,15 @@ const { profile, profileIdConnection } = userStore
 
 // props
 const { chatRoom } = defineProps(['chatRoom'])
+
+onUnmounted(() => {
+  // leave room
+  socket.emit('leaveRoom', {
+    chatRoomId: chatRoom?.chatRoomId,
+    chatId: chatRoom?.chatId,
+    userId: profile?.data.id
+  })
+})
 
 </script>
 
