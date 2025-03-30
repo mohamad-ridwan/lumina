@@ -5,10 +5,11 @@ import Header from '@/sections/chat/Header.vue';
 import ListChat from '@/sections/chat/ListChat.vue';
 import SearchMessenger from '@/sections/chat/SearchMessenger.vue'
 import { fetchChats } from '@/services/api/chats';
+import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, onUnmounted, ref } from 'vue';
+import { onBeforeMount, onMounted, onUnmounted, ref } from 'vue';
 
 // store
 // profile store
@@ -79,6 +80,27 @@ async function handleGetChats() {
 // hooks rendering
 onBeforeMount(async () => {
   handleGetChats()
+})
+
+onMounted(() => {
+  socket.on('newMessage', (data) => {
+    const chatCurrently = chats.value?.slice()?.find(chat => chat?.chatId === data?.chatId)
+    if (chatCurrently && data.eventType === 'send-message') {
+      const newChatUserCurrently = {
+        ...chatCurrently,
+        latestMessage: data.latestMessage,
+        unreadCount: data.unreadCount,
+        latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
+      }
+      const removeChatUserCurrently = chats.value?.slice()?.filter(chat =>
+        chat.chatId !== data?.chatId
+      )
+      setChats([
+        newChatUserCurrently,
+        ...removeChatUserCurrently
+      ])
+    }
+  })
 })
 
 onUnmounted(() => {
