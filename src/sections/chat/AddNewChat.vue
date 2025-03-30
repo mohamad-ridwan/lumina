@@ -1,7 +1,10 @@
 <script setup>
 import ChatProfile from '@/components/ChatProfile.vue';
 import Input from '@/components/Input.vue';
+import { fetchChatRoom } from '@/services/api/chat-room';
 import { fetchSearchUsers } from '@/services/api/users';
+import { socket } from '@/services/socket/socket';
+import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
 import ConfirmPopup from 'primevue/confirmpopup';
 import { ref, watch } from 'vue';
@@ -10,6 +13,9 @@ import { ref, watch } from 'vue';
 // profile store
 const userStore = usersStore()
 const { profile } = userStore
+// chat-room store
+const chatRoomStore = useChatRoomStore()
+const { setChatRoom } = chatRoomStore
 
 // props
 const emits = defineEmits(['click'])
@@ -46,7 +52,22 @@ const debouncedSearch = debounce(async (newValue) => {
   loadingSearchUsers.value = false
 }, 1000);
 
-const handleClickContact = () => {
+const handleClickContact = async (userId) => {
+  // get chat room
+  const chatRoomCurrently = await fetchChatRoom({
+    userIds: [profile.data.id, userId],
+    mainUserId: profile.data.id
+  })
+  if (chatRoomCurrently?.data) {
+    setChatRoom(chatRoomCurrently)
+  }
+  // join room
+  // socket.emit('joinRoom', {
+  //   chatRoomId: '',
+  //   chatId: '',
+  //   userId: ''
+  // })
+  // close popup
   emits('click', false)
 }
 
@@ -71,7 +92,7 @@ watch(searchValue, (newValue) => {
         <ul>
           <li v-for="item in contactUsers" :key="item.id" class="border-b-[0.2px] border-[#f1f1f1]">
             <ChatProfile :username="item.username" font-size-username="text-xs" img-size="h-[30px] w-[30px]"
-              height-container="!h-[2.5rem]" @click="handleClickContact()" />
+              height-container="!h-[2.5rem]" @click="handleClickContact(item.id)" />
           </li>
           <li v-if="contactUsers.length === 0">
             <span class="text-xs text-[#6b7280]">User not found</span>
