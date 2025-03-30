@@ -15,6 +15,12 @@ const { profile, profileIdConnection } = userStore
 // props
 const { chatRoom } = defineProps(['chatRoom'])
 
+onMounted(() => {
+  socket.on('newMessage', (data) => {
+    console.log(data)
+  })
+})
+
 onUnmounted(() => {
   // leave room
   socket.emit('leaveRoom', {
@@ -33,8 +39,10 @@ onUnmounted(() => {
 
     <main class="flex-1 overflow-y-auto p-4 space-y-2 flex flex-col-reverse bg-[#f9fafb]">
       <template v-for="item in chatRoom.data" :key="item.messageId">
-        <SenderMessage v-if="item.senderUserId === profile.data.id" :text-message="item.textMessage" />
-        <RecipientMessage v-if="item.senderUserId !== profile.data.id" :text-message="item.textMessage" />
+        <SenderMessage v-if="item.senderUserId === profile.data.id" :text-message="item.textMessage"
+          :latest-message-timestamp="item.latestMessageTimestamp" />
+        <RecipientMessage v-if="item.senderUserId !== profile.data.id" :text-message="item.textMessage"
+          :latest-message-timestamp="item.latestMessageTimestamp" />
       </template>
     </main>
 
