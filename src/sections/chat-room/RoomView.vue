@@ -4,7 +4,7 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { onUnmounted } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted } from 'vue';
 import { socket } from '@/services/socket/socket';
 
 // store
@@ -15,6 +15,20 @@ const { profile, profileIdConnection } = userStore
 // props
 const { chatRoom } = defineProps(['chatRoom'])
 
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBeforeUnload);
+});
+
+function handleBeforeUnload() {
+  if (chatRoom?.chatId) {
+    socket.emit('leaveRoom', {
+      chatRoomId: chatRoom?.chatRoomId,
+      chatId: chatRoom?.chatId,
+      userId: profile?.data.id
+    })
+  }
+}
+
 onUnmounted(() => {
   // leave room
   socket.emit('leaveRoom', {
@@ -22,6 +36,18 @@ onUnmounted(() => {
     chatId: chatRoom?.chatId,
     userId: profile?.data.id
   })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+
+  if (chatRoom?.chatId) {
+    socket.emit('leaveRoom', {
+      chatRoomId: chatRoom?.chatRoomId,
+      chatId: chatRoom?.chatId,
+      userId: profile?.data.id
+    })
+  }
 })
 
 </script>
