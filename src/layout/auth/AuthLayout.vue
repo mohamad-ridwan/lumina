@@ -14,6 +14,7 @@ const { title, desc } = defineProps({
     <div class="flex w-[50%] justify-center">
       <div class="min-w-[350px] pt-[10%] pb-[5%] flex flex-col gap-6">
         <div class="flex flex-col gap-2">
+          <img src="/public/logo.png" alt="" class="max-w-[100px] object-cover">
           <h1 class="font-bold text-2xl">{{ title }}</h1>
           <span class="text-sm text-[#6b7280]">{{ desc }}</span>
         </div>
