@@ -15,6 +15,7 @@ const showTemplate = (event) => {
     confirmState.value = event.currentTarget
   } else {
     confirmState.value = null
+    confirm.close()
   }
 
   confirm.require({
@@ -28,7 +29,7 @@ const showTemplate = (event) => {
 </script>
 
 <template>
-  <AddNewChat />
+  <AddNewChat @click="confirm.close()" />
 
   <div class="flex flex-col pt-4 px-4 pb-3 gap-5">
     <div class="flex w-full justify-between items-center">

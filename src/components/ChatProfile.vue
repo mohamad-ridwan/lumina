@@ -2,11 +2,17 @@
 import { Button } from 'primevue';
 
 const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer'])
+
+const emits = defineEmits(['click'])
+
+const handleClick = () => {
+  emits('click')
+}
 </script>
 
 <template>
   <Button v-slot="slotProps" asChild type="button" severity="secondary" aria-label="chat">
-    <div v-bind="slotProps"
+    <div v-bind="slotProps" @click="handleClick()"
       :class="`!w-full ${heightContainer ?? '!h-[4rem]'} rounded-lg bg-[#f1f1f1] !flex gap-3 !items-center px-3 !justify-start !border-none`">
       <img
         src="https://images.unsplash.com/photo-1611095564985-89765398121e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"

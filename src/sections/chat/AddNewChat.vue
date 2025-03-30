@@ -11,6 +11,9 @@ import { ref, watch } from 'vue';
 const userStore = usersStore()
 const { profile } = userStore
 
+// props
+const emits = defineEmits(['click'])
+
 // state
 const loadingSearchUsers = ref(false)
 const searchValue = ref('')
@@ -43,6 +46,10 @@ const debouncedSearch = debounce(async (newValue) => {
   loadingSearchUsers.value = false
 }, 1000);
 
+const handleClickContact = () => {
+  emits('click', false)
+}
+
 // hooks rendering
 watch(searchValue, (newValue) => {
   loadingSearchUsers.value = true
@@ -64,7 +71,7 @@ watch(searchValue, (newValue) => {
         <ul>
           <li v-for="item in contactUsers" :key="item.id" class="border-b-[0.2px] border-[#f1f1f1]">
             <ChatProfile :username="item.username" font-size-username="text-xs" img-size="h-[30px] w-[30px]"
-              height-container="!h-[2.5rem]" />
+              height-container="!h-[2.5rem]" @click="handleClickContact()" />
           </li>
           <li v-if="contactUsers.length === 0">
             <span class="text-xs text-[#6b7280]">User not found</span>
