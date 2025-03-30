@@ -1,10 +1,23 @@
 <script setup>
+import { socket } from '@/services/socket/socket'
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
+import { onMounted } from 'vue'
 
 dayjs.extend(localizedFormat)
 
-const { textMessage, latestMessageTimestamp } = defineProps(['textMessage', 'latestMessageTimestamp'])
+const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId'])
+
+onMounted(() => {
+  if (status === 'UNREAD') {
+    socket.emit('markMessageAsRead', {
+      chatRoomId,
+      chatId,
+      messageId,
+      status: 'READ'
+    })
+  }
+})
 </script>
 
 <template>

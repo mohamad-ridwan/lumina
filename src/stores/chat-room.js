@@ -8,5 +8,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     chatRoom.value = chatRoomData
   }
 
-  return { chatRoom, setChatRoom }
+  function handleReadMessage(messageId) {
+    let chatDataCurrently = chatRoom.value.data
+    const currentMessageIndex = chatDataCurrently.findIndex((msg) => msg.messageId === messageId)
+    if (currentMessageIndex === -1) {
+      return
+    }
+    chatDataCurrently[currentMessageIndex].status = 'READ'
+  }
+
+  return { chatRoom, setChatRoom, handleReadMessage }
 })

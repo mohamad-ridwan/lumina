@@ -60,9 +60,10 @@ onBeforeUnmount(() => {
     <main class="flex-1 overflow-y-auto p-4 space-y-2 flex flex-col-reverse bg-[#f9fafb]">
       <template v-for="item in chatRoom.data" :key="item.messageId">
         <SenderMessage v-if="item.senderUserId === profile.data.id" :text-message="item.textMessage"
-          :latest-message-timestamp="item.latestMessageTimestamp" />
+          :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :message-id="item.messageId" />
         <RecipientMessage v-if="item.senderUserId !== profile.data.id" :text-message="item.textMessage"
-          :latest-message-timestamp="item.latestMessageTimestamp" />
+          :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :chat-id="chatRoom.chatId"
+          :chat-room-id="chatRoom.chatRoomId" :message-id="item.messageId" />
       </template>
     </main>
 
