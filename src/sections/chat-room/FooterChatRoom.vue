@@ -41,7 +41,7 @@ const onFormSubmit = async () => {
 </script>
 
 <template>
-  <footer class="bg-white p-4 border-b-[#f1f1f1]">
+  <footer class="bg-white p-4 border-t-[#f1f1f1] border-t-[1px]">
     <Form :initialValues="initialValues" @submit="onFormSubmit" class="flex">
       <InputText v-model="initialValues.textMessage" name="textMessage" type="text" placeholder="Type Message..." fluid
         class="!text-sm flex-1 rounded-l-md p-2 bg-[#f1f1f1]" />

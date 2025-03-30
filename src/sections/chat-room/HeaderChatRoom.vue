@@ -33,7 +33,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <header class="bg-white p-4 border-b-[#f1f1f1]">
+  <header class="bg-white p-4 border-b-[#f1f1f1] border-b-[1px]">
     <h2 class="text-lg font-semibold">{{ username }}</h2>
   </header>
 </template>

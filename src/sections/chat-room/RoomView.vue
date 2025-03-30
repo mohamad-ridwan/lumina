@@ -27,7 +27,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-screen">
+  <div class="flex flex-col h-screen border-l-[#f1f1f1] border-l-[1px]">
     <HeaderChatRoom :recipient-id="chatRoom.userIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
