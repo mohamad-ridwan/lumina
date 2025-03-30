@@ -9,7 +9,7 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue';
 
 // store
 // profile store
@@ -26,6 +26,8 @@ const apiChatsWorker = ref(null)
 const checkChatsWorker = ref(null)
 
 const totalDataStreamsChats = ref(null)
+const newMessateSocketUpdate = ref(null)
+const newReadNotificationSocketUpdate = ref(null)
 
 // logic
 async function handleGetChats() {
@@ -84,22 +86,11 @@ onBeforeMount(async () => {
 
 onMounted(() => {
   socket.on('newMessage', (data) => {
-    const chatCurrently = chats.value?.slice()?.find(chat => chat?.chatId === data?.chatId)
-    if (chatCurrently && data.eventType === 'send-message') {
-      const newChatUserCurrently = {
-        ...chatCurrently,
-        latestMessage: data.latestMessage,
-        unreadCount: data.unreadCount,
-        latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
-      }
-      const removeChatUserCurrently = chats.value?.slice()?.filter(chat =>
-        chat.chatId !== data?.chatId
-      )
-      setChats([
-        newChatUserCurrently,
-        ...removeChatUserCurrently
-      ])
-    }
+    newMessateSocketUpdate.value = data
+  })
+
+  socket.on('readNotification', (data) => {
+    newReadNotificationSocketUpdate.value = data
   })
 })
 
@@ -107,6 +98,36 @@ onUnmounted(() => {
   if (apiChatsWorker.value) {
     apiChatsWorker.value.terminate()
     checkChatsWorker.value?.terminate()
+  }
+})
+
+watch(newMessateSocketUpdate, (data) => {
+  const chatCurrently = chats.value?.slice()?.find(chat => chat?.chatId === data?.chatId)
+  if (chatCurrently && data.eventType === 'send-message') {
+    const newChatUserCurrently = {
+      ...chatCurrently,
+      latestMessage: data.latestMessage,
+      unreadCount: data.unreadCount,
+      latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
+    }
+    const removeChatUserCurrently = chats.value?.slice()?.filter(chat =>
+      chat.chatId !== data?.chatId
+    )
+    setChats([
+      newChatUserCurrently,
+      ...removeChatUserCurrently
+    ])
+  }
+})
+
+watch(newReadNotificationSocketUpdate, (data) => {
+  const chatUserIndex = chats.value?.slice()?.findIndex(chat => chat?.chatId === data?.chatId)
+  if (chatUserIndex !== -1) {
+    let newChats = chats.value?.slice()
+    newChats[chatUserIndex].unreadCount = {
+      ...data.unreadCount
+    }
+    setChats(newChats)
   }
 })
 

@@ -5,7 +5,11 @@ import { fetchChatRoom } from '@/services/api/chat-room';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
-import { onBeforeMount, onMounted, ref } from 'vue';
+import { onBeforeMount, onMounted, ref, watch } from 'vue';
+import dayjs from 'dayjs'
+import localizedFormat from 'dayjs/plugin/localizedFormat'
+
+dayjs.extend(localizedFormat)
 
 // props
 const { item } = defineProps(['item'])
@@ -20,6 +24,7 @@ const { chatRoom, setChatRoom } = chatRoomStore
 
 // state
 const name = ref('')
+const userProfileSocketUpdate = ref(null)
 
 // logic
 const userIdCurrently = item.userIds.filter(id => id !== profile.data.id)?.[0]
@@ -67,20 +72,26 @@ onBeforeMount(() => {
 
 onMounted(() => {
   socket.on('user-profile', (data) => {
-    if (
-      (data?.senderId === profile?.data?.id) &&
-      (data?.profileIdConnection === profileIdConnection) &&
-      (data.profile.id === userIdCurrently) &&
-      (data?.actionType === 'chats')
-    ) {
-      name.value = data.profile.username
-    }
+    userProfileSocketUpdate.value = data
   })
+})
+
+watch(userProfileSocketUpdate, (data) => {
+  if (
+    (data?.senderId === profile?.data?.id) &&
+    (data?.profileIdConnection === profileIdConnection) &&
+    (data.profile.id === userIdCurrently) &&
+    (data?.actionType === 'chats')
+  ) {
+    name.value = data.profile.username
+  }
 })
 
 </script>
 
 <template>
   <ChatProfile :username="name" :from-me="item.latestMessage.senderUserId === profile?.data?.id"
-    :text-message="item.latestMessage.textMessage" @click="handleClickUser" />
+    :text-message="item.latestMessage.textMessage" @click="handleClickUser"
+    :latest-message-timestamp="dayjs(item.latestMessageTimestamp).format('HH.mm')"
+    :unread-count="item.unreadCount[profile.data.id]" />
 </template>

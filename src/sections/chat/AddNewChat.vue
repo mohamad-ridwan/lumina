@@ -15,7 +15,7 @@ const userStore = usersStore()
 const { profile } = userStore
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom } = chatRoomStore
+const { setChatRoom, chatRoom } = chatRoomStore
 
 // props
 const emits = defineEmits(['click'])
@@ -37,7 +37,7 @@ function debounce(func, delay) {
 }
 
 const debouncedSearch = debounce(async (newValue) => {
-  if (!newValue) {
+  if (!newValue.trim()) {
     loadingSearchUsers.value = false
     contactUsers.value = []
     return
@@ -53,20 +53,36 @@ const debouncedSearch = debounce(async (newValue) => {
 }, 1000);
 
 const handleClickContact = async (userId) => {
+  const isAlreadyInChatRoom = chatRoom?.userIds?.filter(id => id !== userId)?.[0]
+  if (isAlreadyInChatRoom) {
+    emits('click', false)
+    return
+  }
+
   // get chat room
   const chatRoomCurrently = await fetchChatRoom({
     userIds: [profile.data.id, userId],
     mainUserId: profile.data.id
   })
+
+  // leave room previous
+  if (chatRoom?.chatId) {
+    socket.emit('leaveRoom', {
+      chatRoomId: chatRoom?.chatRoomId,
+      chatId: chatRoom?.chatId,
+      userId: profile?.data.id
+    })
+  }
+
+  socket.emit('joinRoom', {
+    chatRoomId: chatRoomCurrently?.chatRoomId,
+    chatId: chatRoomCurrently?.chatId,
+    userId: profile?.data.id
+  })
+
   if (chatRoomCurrently?.data) {
     setChatRoom(chatRoomCurrently)
   }
-  // join room
-  // socket.emit('joinRoom', {
-  //   chatRoomId: '',
-  //   chatId: '',
-  //   userId: ''
-  // })
   // close popup
   emits('click', false)
 }
@@ -94,7 +110,7 @@ watch(searchValue, (newValue) => {
             <ChatProfile :username="item.username" font-size-username="text-xs" img-size="h-[30px] w-[30px]"
               height-container="!h-[2.5rem]" @click="handleClickContact(item.id)" />
           </li>
-          <li v-if="contactUsers.length === 0">
+          <li v-if="contactUsers.length === 0 && searchValue.trim()">
             <span class="text-xs text-[#6b7280]">User not found</span>
           </li>
         </ul>
