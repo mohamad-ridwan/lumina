@@ -32,12 +32,10 @@ watch(newMessageUpdate, (data) => {
 </script>
 
 <template>
-  <div class="col-span-2">
+  <div :class="`col-span-2 ${!chatRoom?.chatId ? 'hidden md:block' : 'md:block'}`">
     <MainBackground :chat-id="!chatRoom?.chatId" />
     <template v-if="chatRoom?.chatId">
       <RoomView :chat-room="chatRoom" />
     </template>
   </div>
-
-
 </template>

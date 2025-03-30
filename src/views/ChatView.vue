@@ -5,7 +5,7 @@ import ChatLayout from '@/layout/chat/ChatLayout.vue';
 </script>
 
 <template>
-  <div class="grid grid-cols-3 min-h-screen">
+  <div class="grid grid-cols-1 md:grid-cols-3 min-h-screen">
     <ChatLayout />
     <ChatRoomLayout />
   </div>

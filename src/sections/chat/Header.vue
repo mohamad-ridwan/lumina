@@ -62,7 +62,7 @@ const handleLogout = () => {
       <div class="flex items-center gap-4">
         <Button icon="pi pi-plus" aria-label="Chat" :class="theme.regularBtn" size="small" icon-class="!text-xs"
           @click="showTemplate($event)" />
-        <Button icon="pi pi-sign-out" aria-label="Chat"
+        <Button icon="pi pi-sign-out" aria-label="Log out"
           class="'rounded-tl-[6px] !rounded-bl-[6px] rounded-tr-[6px] rounded-br-[6px] !bg-red-400 hover:!bg-red-500 !h-[23px] !w-[23px] justify-center items-center flex cursor-pointer !text-black !outline-none !border-none !p-0"
           size="small" icon-class="!text-xs" @click="handleLogout" />
       </div>

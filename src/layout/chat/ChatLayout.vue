@@ -6,6 +6,7 @@ import ListChat from '@/sections/chat/ListChat.vue';
 import SearchMessenger from '@/sections/chat/SearchMessenger.vue'
 import { fetchChats } from '@/services/api/chats';
 import { socket } from '@/services/socket/socket';
+import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
@@ -19,6 +20,9 @@ const { profile } = userStore
 const chatStore = chatsStore()
 const { setChats } = chatStore
 const { chats } = storeToRefs(chatStore)
+// chat room store
+const chatRoomStore = useChatRoomStore()
+const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 // worker state
@@ -134,7 +138,7 @@ watch(newReadNotificationSocketUpdate, (data) => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
+  <div :class="`${chatRoom?.chatId ? 'hidden md:flex' : 'md:flex'} flex-col gap-2`">
     <Header>
       <template #search>
         <SearchMessenger />
