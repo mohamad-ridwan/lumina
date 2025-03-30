@@ -37,4 +37,9 @@ export const theme = {
   },
   regularBtn:
     'rounded-tl-[6px] !rounded-bl-[0] rounded-tr-[6px] rounded-br-[6px] !bg-[#a1a1a1] hover:!bg-[#909090] !h-[23px] !w-[23px] justify-center items-center flex cursor-pointer !text-black !outline-none !border-none !p-0',
+  messageInput: {
+    background: '#ffffff', // Latar belakang input pesan
+    text: '#111827', // Teks input pesan
+    border: '#e5e7eb', // Border input pesan
+  },
 }

@@ -7,6 +7,7 @@ import SearchMessenger from '@/sections/chat/SearchMessenger.vue'
 import { fetchChats } from '@/services/api/chats';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
+import { storeToRefs } from 'pinia';
 import { onBeforeMount, onUnmounted, ref } from 'vue';
 
 // store
@@ -15,7 +16,8 @@ const userStore = usersStore()
 const { profile } = userStore
 // chats store
 const chatStore = chatsStore()
-const { chats, setChats } = chatStore
+const { setChats } = chatStore
+const { chats } = storeToRefs(chatStore)
 
 // state
 // worker state
@@ -23,7 +25,6 @@ const apiChatsWorker = ref(null)
 const checkChatsWorker = ref(null)
 
 const totalDataStreamsChats = ref(null)
-const chatsData = ref([])
 
 // logic
 async function handleGetChats() {
@@ -47,14 +48,13 @@ async function handleGetChats() {
 
           // check new data chats from store & streams progress
           checkChatsWorker.value.postMessage({
-            chats: chats.slice(),
+            chats: chats.value.slice(),
             streams: res
           })
 
           // listen to check chats currently
           checkChatsWorker.value.onmessage = (event) => {
             setChats(event.data.chats)
-            chatsData.value = event.data.chats
 
             // if (event.data.chats.length === totalDataStreamsChats.value) {
             // }
@@ -100,7 +100,7 @@ onUnmounted(() => {
     <ListChat>
       <template #list>
         <ul>
-          <li v-for="item in chatsData" :key="item.id">
+          <li v-for="item in chats" :key="item.id">
             <ChatItem :item="item" />
           </li>
         </ul>

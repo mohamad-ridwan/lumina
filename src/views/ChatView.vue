@@ -15,7 +15,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-3">
+  <div class="grid grid-cols-3 min-h-screen">
     <ChatLayout />
     <ChatRoomLayout />
   </div>
