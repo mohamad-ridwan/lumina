@@ -99,9 +99,11 @@ onUnmounted(() => {
     </Header>
     <ListChat>
       <template #list>
-        <li v-for="item in chatsData" :key="item.id">
-          <ChatItem :item="item" />
-        </li>
+        <ul>
+          <li v-for="item in chatsData" :key="item.id">
+            <ChatItem :item="item" />
+          </li>
+        </ul>
       </template>
     </ListChat>
   </div>
