@@ -45,6 +45,12 @@ const MyPreset = definePreset(Aura, {
       info: {
         background: theme.primary.main,
       },
+      secondary: {
+        background: 'transparent !important',
+        hover: {
+          background: '#f1f1f1 !important',
+        },
+      },
     },
     inputtext: {
       focus: {

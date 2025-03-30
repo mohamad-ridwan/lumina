@@ -1,7 +1,15 @@
 <script setup>
+// import
+import { chatsStore } from '@/stores/chats';
 import { InputText } from 'primevue';
 import { ref } from 'vue';
 
+// store
+// chats store
+const chatStore = chatsStore()
+const { chats } = chatStore
+
+// state
 const searchValue = ref('')
 </script>
 
