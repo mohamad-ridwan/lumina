@@ -10,6 +10,7 @@ import App from './App.vue'
 import router from './router'
 import { theme } from './assets/theme'
 import ToastService from 'primevue/toastservice'
+import ConfirmationService from 'primevue/confirmationservice'
 
 const MyPreset = definePreset(Aura, {
   // Kustomisasi tema Anda di sini
@@ -95,6 +96,7 @@ app.use(PrimeVue, {
   ripple: true,
 })
 app.use(ToastService)
+app.use(ConfirmationService)
 
 app.use(createPinia())
 app.use(router)
