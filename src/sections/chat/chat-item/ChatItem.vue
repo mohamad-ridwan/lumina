@@ -22,15 +22,21 @@ const userIdCurrently = item.userIds.filter(id => id !== profile.data.id)?.[0]
 onBeforeMount(() => {
   if (profile) {
     if (userIdCurrently) {
-      socket.emit('user-profile', userIdCurrently)
+      socket.emit('user-profile', {
+        profileId: userIdCurrently,
+        senderId: profile.data.id
+      })
     }
   }
 })
 
 onMounted(() => {
-  socket.on('user-profile', (user) => {
-    if (user?.id === userIdCurrently) {
-      name.value = user.username
+  socket.on('user-profile', (data) => {
+    if (
+      (data?.senderId === profile?.data?.id) &&
+      (data.profile.id === userIdCurrently)
+    ) {
+      name.value = data.profile.username
     }
   })
 })
