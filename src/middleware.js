@@ -8,7 +8,8 @@ import { usersStore } from './stores/users'
 export const middleware = async (path) => {
   const token = getSessionLogin()
   const userStore = usersStore()
-  const { setProfile } = userStore
+  const { setProfile, setProfileIdConnection } = userStore
+  setProfileIdConnection()
 
   let isValidAuth = false
   let message = ''

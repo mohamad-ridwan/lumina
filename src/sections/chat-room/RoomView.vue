@@ -8,7 +8,7 @@ import RecipientMessage from './RecipientMessage.vue';
 // store
 // profile store
 const userStore = usersStore()
-const { profile } = userStore
+const { profile, profileIdConnection } = userStore
 
 // props
 const { chatRoom } = defineProps(['chatRoom'])
@@ -17,7 +17,8 @@ const { chatRoom } = defineProps(['chatRoom'])
 
 <template>
   <div class="flex flex-col h-screen">
-    <HeaderChatRoom />
+    <HeaderChatRoom :recipient-id="chatRoom.userIds.filter(id => id !== profile.data.id)?.[0]"
+      :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
     <main class="flex-1 overflow-y-auto p-4 space-y-2 flex flex-col-reverse bg-[#f9fafb]">
       <template v-for="item in chatRoom.data" :key="item.messageId">

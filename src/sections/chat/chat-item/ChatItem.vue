@@ -11,7 +11,7 @@ const { item } = defineProps(['item'])
 // store
 // profile store
 const userStore = usersStore()
-const { profile } = userStore
+const { profile, profileIdConnection } = userStore
 
 // state
 const name = ref('')
@@ -24,7 +24,9 @@ onBeforeMount(() => {
     if (userIdCurrently) {
       socket.emit('user-profile', {
         profileId: userIdCurrently,
-        senderId: profile.data.id
+        senderId: profile.data.id,
+        profileIdConnection,
+        actionType: 'chats'
       })
     }
   }
@@ -34,7 +36,9 @@ onMounted(() => {
   socket.on('user-profile', (data) => {
     if (
       (data?.senderId === profile?.data?.id) &&
-      (data.profile.id === userIdCurrently)
+      (data?.profileIdConnection === profileIdConnection) &&
+      (data.profile.id === userIdCurrently) &&
+      (data?.actionType === 'chats')
     ) {
       name.value = data.profile.username
     }
