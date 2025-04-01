@@ -5,9 +5,10 @@ import { fetchChatRoom } from '@/services/api/chat-room';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
-import { onBeforeMount, onMounted, ref, watch } from 'vue';
+import { onBeforeMount, onMounted, ref, watch, } from 'vue';
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
+import { storeToRefs } from 'pinia';
 
 dayjs.extend(localizedFormat)
 
@@ -17,39 +18,40 @@ const { item } = defineProps(['item'])
 // store
 // profile store
 const userStore = usersStore()
-const { profile, profileIdConnection } = userStore
+const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { chatRoom, setChatRoom } = chatRoomStore
+const { setChatRoom } = chatRoomStore
+const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 const name = ref('')
 const userProfileSocketUpdate = ref(null)
 
 // logic
-const userIdCurrently = item.userIds.filter(id => id !== profile.data.id)?.[0]
+const userIdsCurrently = item.userIds.slice().find(id => id !== profile.value.data.id)
 
 const handleClickUser = async () => {
   // get chat room
-  if (chatRoom?.chatId === item?.chatId) {
+  if (chatRoom.value?.chatId === item?.chatId) {
     return
   }
   const chatRoomCurrently = await fetchChatRoom({
     userIds: item.userIds,
-    mainUserId: profile.data.id
+    mainUserId: profile.value.data.id
   })
   // leave room previous
   if (chatRoom?.chatId) {
     socket.emit('leaveRoom', {
-      chatRoomId: chatRoom?.chatRoomId,
-      chatId: chatRoom?.chatId,
-      userId: profile?.data.id
+      chatRoomId: chatRoom.value?.chatRoomId,
+      chatId: chatRoom.value?.chatId,
+      userId: profile.value?.data.id
     })
   }
   socket.emit('joinRoom', {
     chatRoomId: chatRoomCurrently?.chatRoomId,
     chatId: chatRoomCurrently?.chatId,
-    userId: profile?.data.id
+    userId: profile.value?.data.id
   })
   if (chatRoomCurrently?.data) {
     setChatRoom(chatRoomCurrently)
@@ -57,19 +59,6 @@ const handleClickUser = async () => {
 }
 
 // hooks rendering
-onBeforeMount(() => {
-  if (profile) {
-    if (userIdCurrently) {
-      socket.emit('user-profile', {
-        profileId: userIdCurrently,
-        senderId: profile.data.id,
-        profileIdConnection,
-        actionType: 'chats'
-      })
-    }
-  }
-})
-
 onMounted(() => {
   socket.on('user-profile', (data) => {
     userProfileSocketUpdate.value = data
@@ -78,15 +67,25 @@ onMounted(() => {
 
 watch(userProfileSocketUpdate, (data) => {
   if (
-    (data?.senderId === profile?.data?.id) &&
-    (data?.profileIdConnection === profileIdConnection) &&
-    (data.profile.id === userIdCurrently) &&
+    (data?.senderId === profile.value?.data?.id) &&
+    (data?.profileIdConnection === profileIdConnection.value) &&
+    (data.profile.id === userIdsCurrently) &&
     (data?.actionType === 'chats')
   ) {
     name.value = data.profile.username
   }
 })
 
+onBeforeMount(() => {
+  if (profile && userIdsCurrently) {
+    socket.emit('user-profile', {
+      profileId: userIdsCurrently,
+      senderId: profile.value.data.id,
+      profileIdConnection: profileIdConnection.value,
+      actionType: 'chats'
+    })
+  }
+})
 </script>
 
 <template>

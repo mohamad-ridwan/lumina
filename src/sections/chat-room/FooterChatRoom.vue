@@ -4,30 +4,31 @@ import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
 import { Form } from '@primevue/forms';
+import { storeToRefs } from 'pinia';
 import { InputText } from 'primevue';
 import { ref } from 'vue';
 
 // store
 // profile store
 const userStore = usersStore()
-const { profile } = userStore
+const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { chatRoom } = chatRoomStore
+const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 const initialValues = ref({
   textMessage: ''
 });
 
-const onFormSubmit = async () => {
+const onFormSubmit = () => {
   if (initialValues.value.textMessage.trim()) {
     socket.emit('sendMessage', {
-      chatRoomId: chatRoom?.chatRoomId,
-      chatId: chatRoom?.chatId,
+      chatRoomId: chatRoom.value.chatRoomId,
+      chatId: chatRoom.value.chatId,
       latestMessage: {
         messageId: generateRandomId(15),
-        senderUserId: profile.data.id,
+        senderUserId: profile.value.data.id,
         messageType: 'text',
         textMessage: initialValues.value.textMessage,
         latestMessageTimestamp: Date.now(),

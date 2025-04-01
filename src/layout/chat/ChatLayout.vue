@@ -10,7 +10,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onBeforeMount, onMounted, onUnmounted, onUpdated, ref, watch } from 'vue';
 
 // store
 // profile store
@@ -30,6 +30,7 @@ const apiChatsWorker = ref(null)
 const checkChatsWorker = ref(null)
 
 const totalDataStreamsChats = ref(null)
+const isStreamsDone = ref(false)
 const newMessateSocketUpdate = ref(null)
 const newReadNotificationSocketUpdate = ref(null)
 
@@ -63,10 +64,12 @@ async function handleGetChats() {
           checkChatsWorker.value.onmessage = (event) => {
             setChats(event.data.chats)
 
-            // if (event.data.chats.length === totalDataStreamsChats.value) {
-            // }
+            if (event.data.chats.length === totalDataStreamsChats.value) {
+              isStreamsDone.value = true
+            }
           }
         } else if (res?.length === 0 || !res) {
+          isStreamsDone.value = true
           if (checkChatsWorker.value) {
             checkChatsWorker.value.terminate()
             checkChatsWorker.value = null
@@ -107,6 +110,8 @@ onUnmounted(() => {
 
 watch(newMessateSocketUpdate, (data) => {
   const chatCurrently = chats.value?.slice()?.find(chat => chat?.chatId === data?.chatId)
+  // jika data ada di chats store
+  // tinggal ubah datanya
   if (chatCurrently && data.eventType === 'send-message') {
     const newChatUserCurrently = {
       ...chatCurrently,
@@ -120,6 +125,22 @@ watch(newMessateSocketUpdate, (data) => {
     setChats([
       newChatUserCurrently,
       ...removeChatUserCurrently
+    ])
+  } else if (
+    !chatCurrently && data.eventType === 'send-message' &&
+    data?.unreadCount?.[profile.data.id] !== undefined
+  ) {
+    // jika belum ada di chats store
+    // buat baru dan masukkan ke awal index
+    const newUserChat = {
+      ...data,
+      latestMessageTimestamp: data.latestMessage?.latestMessageTimestamp,
+      userIds: [Object.entries(data.unreadCount).find((k) => k[0] === profile.data.id).find(id => id !== 0), Object.entries(data.unreadCount).find((k) => k[0] !== profile.data.id).find(id => id !== 0)]
+    }
+    delete newUserChat.eventType
+    setChats([
+      newUserChat,
+      ...chats?.value?.slice() ?? []
     ])
   }
 })
@@ -147,7 +168,7 @@ watch(newReadNotificationSocketUpdate, (data) => {
     <ListChat>
       <template #list>
         <ul>
-          <li v-for="item in chats" :key="item.id">
+          <li v-for="item in chats" :key="item.chatId">
             <ChatItem :item="item" />
           </li>
         </ul>
