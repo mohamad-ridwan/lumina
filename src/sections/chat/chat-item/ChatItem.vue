@@ -41,7 +41,7 @@ const handleClickUser = async () => {
     mainUserId: profile.value.data.id
   })
   // leave room previous
-  if (chatRoom?.chatId) {
+  if (chatRoom.value?.chatId) {
     socket.emit('leaveRoom', {
       chatRoomId: chatRoom.value?.chatRoomId,
       chatId: chatRoom.value?.chatId,
