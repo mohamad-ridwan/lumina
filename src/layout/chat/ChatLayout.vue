@@ -10,7 +10,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, onBeforeMount, onMounted, onUnmounted, onUpdated, ref, watch } from 'vue';
+import { onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 
 // store
