@@ -11,6 +11,7 @@ import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
 import { computed, onBeforeMount, onMounted, onUnmounted, onUpdated, ref, watch } from 'vue';
+import { RecycleScroller } from 'vue-virtual-scroller';
 
 // store
 // profile store
@@ -168,9 +169,9 @@ watch(newReadNotificationSocketUpdate, (data) => {
     <ListChat>
       <template #list>
         <ul>
-          <li v-for="item in chats" :key="item.chatId">
+          <RecycleScroller class="scroller" :items="chats" :item-size="64" key-field="chatId" v-slot="{ item }">
             <ChatItem :item="item" />
-          </li>
+          </RecycleScroller>
         </ul>
       </template>
     </ListChat>
