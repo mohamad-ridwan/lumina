@@ -1,12 +1,12 @@
 <template>
   <div>
-    <Button label="Spam Message" @click="showDialog" />
-
     <Dialog v-model:visible="dialogVisible" modal header="Konfirmasi Spam Message" :style="{ width: '50vw' }">
-      <p>Apakah Anda yakin ingin mengaktifkan spam auto-send message?</p>
+      <p v-if="!spamInterval">Apakah Anda yakin ingin mengaktifkan spam auto-send message?</p>
+      <p v-else>Spam message sedang berjalan. Klik "Stop Spam" untuk menghentikan.</p>
       <template #footer>
-        <Button label="Batal" @click="dialogVisible = false" class="p-button-text" />
-        <Button label="Konfirmasi" @click="startSpam" autofocus />
+        <Button v-if="!spamInterval" label="Batal" @click="dialogVisible = false" class="p-button-text" />
+        <Button v-if="!spamInterval" label="Konfirmasi" @click="startSpam" autofocus />
+        <Button v-if="spamInterval" label="Stop Spam" @click="stopSpam" />
       </template>
     </Dialog>
   </div>
@@ -14,28 +14,23 @@
 
 <script setup>
 import { onUnmounted, ref } from 'vue';
-import { Button } from 'primevue/button';
-import { Dialog } from 'primevue/dialog';
-import { useChatRoomStore } from './stores/chatRoom';
-import { usersStore } from './stores/users';
 import { storeToRefs } from 'pinia';
-import { generateRandomId } from './utils/generateRandomId';
 import { socket } from '@/services/socket/socket';
+import { useChatRoomStore } from '@/stores/chat-room';
+import { usersStore } from '@/stores/users';
+import { generateRandomId } from '@/helpers/generateRandomId';
+import { Button, Dialog } from 'primevue';
 
 const userStore = usersStore();
 const { profile } = storeToRefs(userStore);
 const chatRoomStore = useChatRoomStore();
 const { chatRoom } = storeToRefs(chatRoomStore);
 
-const dialogVisible = ref(false);
+const dialogVisible = ref(true);
 const spamInterval = ref(null);
 
-const showDialog = () => {
-  dialogVisible.value = true;
-};
-
 const startSpam = () => {
-  dialogVisible.value = false;
+  dialogVisible.value = true;
   spamInterval.value = setInterval(() => {
     const randomMessage = generateRandomMessage();
     socket.emit('sendMessage', {
@@ -57,6 +52,7 @@ const startSpam = () => {
 const stopSpam = () => {
   clearInterval(spamInterval.value);
   spamInterval.value = null;
+  dialogVisible.value = true;
 };
 
 const generateRandomMessage = () => {
@@ -66,6 +62,7 @@ const generateRandomMessage = () => {
     'Ini pesan spam otomatis.',
     'Random message!',
     'Test spam!',
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla fermentum sollicitudin porta. Aenean luctus congue metus sed eleifend. Nunc bibendum nisl eu porta porttitor. ',
   ];
   const randomIndex = Math.floor(Math.random() * messages.length);
   return messages[randomIndex];
