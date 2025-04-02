@@ -1,5 +1,6 @@
 import './assets/main.css'
 import 'primeicons/primeicons.css'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -11,6 +12,7 @@ import router from './router'
 import { theme } from './assets/theme'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
+import VueVirtualScroller from 'vue-virtual-scroller'
 
 const MyPreset = definePreset(Aura, {
   // Kustomisasi tema Anda di sini
@@ -99,6 +101,7 @@ app.use(ToastService)
 app.use(ConfirmationService)
 
 app.use(createPinia())
+app.use(VueVirtualScroller)
 app.use(router)
 
 app.mount('#app')
