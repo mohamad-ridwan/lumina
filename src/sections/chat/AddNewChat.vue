@@ -6,16 +6,18 @@ import { fetchSearchUsers } from '@/services/api/users';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
+import { storeToRefs } from 'pinia';
 import ConfirmPopup from 'primevue/confirmpopup';
 import { ref, watch } from 'vue';
 
 // store
 // profile store
 const userStore = usersStore()
-const { profile } = userStore
+const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom, chatRoom } = chatRoomStore
+const { setChatRoom } = chatRoomStore
+const { chatRoom } = storeToRefs(chatRoomStore)
 
 // props
 const emits = defineEmits(['click'])
@@ -44,7 +46,7 @@ const debouncedSearch = debounce(async (newValue) => {
   }
   const usersCurrently = await fetchSearchUsers({
     username: newValue,
-    senderId: profile?.data?.id
+    senderId: profile.value?.data?.id
   })
   if (usersCurrently?.data) {
     contactUsers.value = usersCurrently.data
@@ -53,7 +55,7 @@ const debouncedSearch = debounce(async (newValue) => {
 }, 1000);
 
 const handleClickContact = async (userId) => {
-  const isAlreadyInChatRoom = chatRoom?.userIds?.filter(id => id !== userId)?.[0]
+  const isAlreadyInChatRoom = chatRoom.value?.userIds?.slice()?.find(id => id === userId)
   if (isAlreadyInChatRoom) {
     emits('click', false)
     return
@@ -61,23 +63,23 @@ const handleClickContact = async (userId) => {
 
   // get chat room
   const chatRoomCurrently = await fetchChatRoom({
-    userIds: [profile.data.id, userId],
-    mainUserId: profile.data.id
+    userIds: [profile.value.data.id, userId],
+    mainUserId: profile.value.data.id
   })
 
   // leave room previous
-  if (chatRoom?.chatId) {
+  if (chatRoom.value?.chatId) {
     socket.emit('leaveRoom', {
-      chatRoomId: chatRoom?.chatRoomId,
-      chatId: chatRoom?.chatId,
-      userId: profile?.data.id
+      chatRoomId: chatRoom.value?.chatRoomId,
+      chatId: chatRoom.value?.chatId,
+      userId: profile.value?.data.id
     })
   }
 
   socket.emit('joinRoom', {
     chatRoomId: chatRoomCurrently?.chatRoomId,
     chatId: chatRoomCurrently?.chatId,
-    userId: profile?.data.id
+    userId: profile.value?.data.id
   })
 
   if (chatRoomCurrently?.data) {
