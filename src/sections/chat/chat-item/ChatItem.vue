@@ -1,11 +1,10 @@
 <script setup>
 // import
 import ChatProfile from '@/components/ChatProfile.vue';
-import { fetchChatRoom } from '@/services/api/chat-room';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
-import { onBeforeMount, onMounted, ref, watch, } from 'vue';
+import { computed, onBeforeMount, onMounted, ref, watch, } from 'vue';
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { storeToRefs } from 'pinia';
@@ -21,7 +20,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom } = chatRoomStore
+const { handleClickUser } = chatRoomStore
 const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
@@ -30,33 +29,7 @@ const userProfileSocketUpdate = ref(null)
 
 // logic
 const userIdsCurrently = item.userIds.slice().find(id => id !== profile.value.data.id)
-
-const handleClickUser = async () => {
-  // get chat room
-  if (chatRoom.value?.chatId === item?.chatId) {
-    return
-  }
-  const chatRoomCurrently = await fetchChatRoom({
-    userIds: item.userIds,
-    mainUserId: profile.value.data.id
-  })
-  // leave room previous
-  if (chatRoom.value?.chatId) {
-    socket.emit('leaveRoom', {
-      chatRoomId: chatRoom.value?.chatRoomId,
-      chatId: chatRoom.value?.chatId,
-      userId: profile.value?.data.id
-    })
-  }
-  socket.emit('joinRoom', {
-    chatRoomId: chatRoomCurrently?.chatRoomId,
-    chatId: chatRoomCurrently?.chatId,
-    userId: profile.value?.data.id
-  })
-  if (chatRoomCurrently?.data) {
-    setChatRoom(chatRoomCurrently)
-  }
-}
+const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
 
 // hooks rendering
 onMounted(() => {
@@ -90,7 +63,7 @@ onBeforeMount(() => {
 
 <template>
   <ChatProfile :username="name" :from-me="item.latestMessage.senderUserId === profile?.data?.id"
-    :text-message="item.latestMessage.textMessage" @click="handleClickUser"
+    :text-message="item.latestMessage.textMessage" @click="handleClickUser(profile?.data.id, item)"
     :latest-message-timestamp="dayjs(item.latestMessageTimestamp).format('HH.mm')"
-    :unread-count="item.unreadCount[profile.data.id]" :is-active="item.chatRoomId === chatRoom.chatRoomId" />
+    :unread-count="item.unreadCount[profile.data.id]" :is-active="item.chatRoomId === memoizedChatRoomId" />
 </template>

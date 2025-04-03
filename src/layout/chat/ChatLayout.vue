@@ -6,12 +6,12 @@ import ListChat from '@/sections/chat/ListChat.vue';
 import SearchMessenger from '@/sections/chat/SearchMessenger.vue'
 import { fetchChats } from '@/services/api/chats';
 import { socket } from '@/services/socket/socket';
-import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
 import { onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
+import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 
 // store
 // profile store
@@ -21,9 +21,6 @@ const { profile } = userStore
 const chatStore = chatsStore()
 const { setChats } = chatStore
 const { chats } = storeToRefs(chatStore)
-// chat room store
-const chatRoomStore = useChatRoomStore()
-const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 // worker state
@@ -53,7 +50,9 @@ async function handleGetChats() {
 
         if (res?.length > 0 && !isDone) {
           // start check chats worker
-          checkChatsWorker.value = new Worker(new URL('/src/services/workers/check-chats-worker.js', import.meta.url))
+          if (!checkChatsWorker.value) {
+            checkChatsWorker.value = new Worker(new URL('/src/services/workers/check-chats-worker.js', import.meta.url))
+          }
 
           // check new data chats from store & streams progress
           checkChatsWorker.value.postMessage({
@@ -67,6 +66,10 @@ async function handleGetChats() {
 
             if (event.data.chats.length === totalDataStreamsChats.value) {
               isStreamsDone.value = true
+              apiChatsWorker.value.terminate()
+              apiChatsWorker.value = null
+              checkChatsWorker.value.terminate()
+              checkChatsWorker.value = null
             }
           }
         } else if (res?.length === 0 || !res) {
@@ -156,11 +159,10 @@ watch(newReadNotificationSocketUpdate, (data) => {
     setChats(newChats)
   }
 })
-
 </script>
 
 <template>
-  <div :class="`${chatRoom?.chatId ? 'hidden md:flex' : 'md:flex'} flex-col gap-2`">
+  <ChatLayoutWrapper>
     <Header>
       <template #search>
         <SearchMessenger />
@@ -175,5 +177,5 @@ watch(newReadNotificationSocketUpdate, (data) => {
         </ul>
       </template>
     </ListChat>
-  </div>
+  </ChatLayoutWrapper>
 </template>

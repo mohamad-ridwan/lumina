@@ -7,6 +7,7 @@ export const fetchChats = async (userId, apiChatsWorker, resDataCallback, errCal
     errCallback({
       ...(await response.json()),
     })
+    return
   }
 
   const reader = response.body.getReader()
