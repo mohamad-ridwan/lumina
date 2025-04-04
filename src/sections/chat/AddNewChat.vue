@@ -1,22 +1,24 @@
 <script setup>
 import ChatProfile from '@/components/ChatProfile.vue';
 import Input from '@/components/Input.vue';
-import { fetchChatRoom } from '@/services/api/chat-room';
 import { fetchSearchUsers } from '@/services/api/users';
-import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
+import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
 import ConfirmPopup from 'primevue/confirmpopup';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 // store
 // profile store
 const userStore = usersStore()
 const { profile } = storeToRefs(userStore)
+// chat store
+const chatStore = chatsStore()
+const { chats } = storeToRefs(chatStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom } = chatRoomStore
+const { handleClickUser } = chatRoomStore
 const { chatRoom } = storeToRefs(chatRoomStore)
 
 // props
@@ -28,6 +30,10 @@ const searchValue = ref('')
 const contactUsers = ref([])
 
 // logic
+const memoizedUserIds = computed(() => {
+  return chatRoom.value?.userIds?.slice()
+})
+
 function debounce(func, delay) {
   let timeoutId;
   return function (...args) {
@@ -55,36 +61,15 @@ const debouncedSearch = debounce(async (newValue) => {
 }, 1000);
 
 const handleClickContact = async (userId) => {
-  const isAlreadyInChatRoom = chatRoom.value?.userIds?.slice()?.find(id => id === userId)
+  const isAlreadyInChatRoom = memoizedUserIds.value?.find(id => id === userId)
   if (isAlreadyInChatRoom) {
     emits('click', false)
     return
   }
 
-  // get chat room
-  const chatRoomCurrently = await fetchChatRoom({
-    userIds: [profile.value.data.id, userId],
-    mainUserId: profile.value.data.id
-  })
+  const chatCurrently = chats.value?.slice()?.find(chat => chat.userIds?.slice()?.find(id => id === userId))
+  handleClickUser(profile.value.data.id, chatCurrently)
 
-  // leave room previous
-  if (chatRoom.value?.chatId) {
-    socket.emit('leaveRoom', {
-      chatRoomId: chatRoom.value?.chatRoomId,
-      chatId: chatRoom.value?.chatId,
-      userId: profile.value?.data.id
-    })
-  }
-
-  socket.emit('joinRoom', {
-    chatRoomId: chatRoomCurrently?.chatRoomId,
-    chatId: chatRoomCurrently?.chatId,
-    userId: profile.value?.data.id
-  })
-
-  if (chatRoomCurrently?.data) {
-    setChatRoom(chatRoomCurrently)
-  }
   // close popup
   emits('click', false)
 }
