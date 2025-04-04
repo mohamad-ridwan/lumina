@@ -37,7 +37,10 @@ watch(newMessageUpdate, (data) => {
   if (memoizedChatRoomId.value === data?.chatRoomId && data.eventType === 'send-message') {
     setChatRoom({
       ...chatRoom.value,
-      data: [data.latestMessage, ...memoizedChatRoomData.value]
+      data: [{
+        ...data.latestMessage,
+        id: data.latestMessage.messageId,
+      }, ...memoizedChatRoomData.value]
     })
   }
 })
