@@ -6,7 +6,7 @@ import { usersStore } from '@/stores/users';
 import { Form } from '@primevue/forms';
 import { storeToRefs } from 'pinia';
 import { InputText } from 'primevue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 // store
 // profile store
@@ -21,11 +21,15 @@ const initialValues = ref({
   textMessage: ''
 });
 
+// logic
+const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
+const memoizedChatId = computed(() => chatRoom.value.chatId);
+
 const onFormSubmit = () => {
   if (initialValues.value.textMessage.trim()) {
     socket.emit('sendMessage', {
-      chatRoomId: chatRoom.value.chatRoomId,
-      chatId: chatRoom.value.chatId,
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
       latestMessage: {
         messageId: generateRandomId(15),
         senderUserId: profile.value.data.id,
