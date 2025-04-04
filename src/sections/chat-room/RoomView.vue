@@ -6,7 +6,7 @@ import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
 import { computed, onBeforeUnmount, onMounted, onUnmounted } from 'vue';
 import { socket } from '@/services/socket/socket';
-import SpamMessage from '@/spam-message/SpamMessage.vue';
+// import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 
@@ -49,11 +49,13 @@ onMounted(() => {
 
 onUnmounted(() => {
   // leave room
-  socket.emit('leaveRoom', {
-    chatRoomId: memoizedChatRoomId.value,
-    chatId: memoizedChatId.value,
-    userId: profile?.data.id
-  })
+  if (memoizedChatId.value) {
+    socket.emit('leaveRoom', {
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      userId: profile?.data.id
+    })
+  }
 })
 
 onBeforeUnmount(() => {

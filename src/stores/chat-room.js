@@ -1,7 +1,7 @@
 import { fetchChatRoom } from '@/services/api/chat-room'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, toRaw } from 'vue'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -100,23 +100,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             handleSetCheckChatRoomWorker()
           }
 
-          // check new data messages from store & streams progress
-          let messagesDataCurrently = []
-          if (chatRoom.value?.data) {
-            messagesDataCurrently = chatRoom.value?.data.map((message) => {
-              return {
-                messageId: message.messageId,
-                senderUserId: message.senderUserId,
-                messageType: message.messageType,
-                textMessage: message.textMessage,
-                latestMessageTimestamp: message.latestMessageTimestamp,
-                status: message.status,
-              }
-            })
-          }
-
           checkChatRoomWorker.value.postMessage({
-            messages: messagesDataCurrently,
+            messages: structuredClone(toRaw(chatRoom.value?.data)),
             streams: res,
           })
 

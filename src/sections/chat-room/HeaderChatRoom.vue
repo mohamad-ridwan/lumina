@@ -1,8 +1,9 @@
 <script setup>
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
+import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 // props
 const { recipientId, profileId, profileIdConnection } = defineProps(['recipientId', 'profileId', 'profileIdConnection'])
@@ -11,10 +12,19 @@ const { recipientId, profileId, profileIdConnection } = defineProps(['recipientI
 // chat room store
 const chatRoomStore = useChatRoomStore()
 const { setChatRoom } = chatRoomStore
+const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 const username = ref(null)
 const userProfileSocketUpdate = ref(null)
+
+// logic
+const memoizedChatRoomId = computed(() => {
+  return chatRoom.value?.chatRoomId
+})
+const memoizedChatId = computed(() => {
+  return chatRoom.value?.chatId
+})
 
 // hooks rendering
 watch(() => {
@@ -51,6 +61,13 @@ watch(userProfileSocketUpdate, (data) => {
 })
 
 function handleBack() {
+  if (memoizedChatId.value) {
+    socket.emit('leaveRoom', {
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      userId: profileId
+    })
+  }
   setChatRoom({})
 }
 </script>

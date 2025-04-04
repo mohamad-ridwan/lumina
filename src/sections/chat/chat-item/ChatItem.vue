@@ -65,5 +65,5 @@ onBeforeMount(() => {
   <ChatProfile :username="name" :from-me="item.latestMessage.senderUserId === profile?.data?.id"
     :text-message="item.latestMessage.textMessage" @click="handleClickUser(profile?.data.id, item)"
     :latest-message-timestamp="dayjs(item.latestMessageTimestamp).format('HH.mm')"
-    :unread-count="item.unreadCount[profile.data.id]" :is-active="item.chatRoomId === memoizedChatRoomId" />
+    :unread-count="item.unreadCount[profile?.data.id]" :is-active="item.chatRoomId === memoizedChatRoomId" />
 </template>
