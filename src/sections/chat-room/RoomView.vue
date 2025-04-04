@@ -9,6 +9,7 @@ import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 
 // store
 // profile store
@@ -78,15 +79,20 @@ onBeforeUnmount(() => {
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
-    <main class="flex-1 overflow-y-auto p-4 space-y-2 flex flex-col-reverse bg-[#f9fafb]">
-      <template v-for="item in memoizedChatRoomData" :key="item.messageId">
-        <SenderMessage v-if="item.senderUserId === profile.data.id" :text-message="item.textMessage"
-          :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :message-id="item.messageId" />
-        <RecipientMessage v-if="item.senderUserId !== profile.data.id" :text-message="item.textMessage"
-          :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :chat-id="memoizedChatId"
-          :chat-room-id="memoizedChatRoomId" :message-id="item.messageId" />
+    <DynamicScroller :items="memoizedChatRoomData" :min-item-size="54" class="flex-1 !p-4 space-y-2 bg-[#f9fafb]">
+      <template v-slot="{ item, index, active }">
+        <DynamicScrollerItem :item="item" :active="active" :size-dependencies="[
+          item.textMessage,
+        ]" :data-index="index" :key="item.messageId">
+          <SenderMessage v-if="item.senderUserId === profile.data.id" :text-message="item.textMessage"
+            :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status"
+            :message-id="item.messageId" />
+          <RecipientMessage v-if="item.senderUserId !== profile.data.id" :text-message="item.textMessage"
+            :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :chat-id="memoizedChatId"
+            :chat-room-id="memoizedChatRoomId" :message-id="item.messageId" />
+        </DynamicScrollerItem>
       </template>
-    </main>
+    </DynamicScroller>
 
     <FooterChatRoom />
   </div>

@@ -2,7 +2,7 @@ self.addEventListener('message', (event) => {
   let messagesMap = new Map()
 
   event.data.messages.forEach((message) => {
-    messagesMap.set(message.messageId, message)
+    messagesMap.set(message.messageId, { ...message, id: message.messageId })
   })
 
   event.data.streams.forEach((streamItem) => {
@@ -15,7 +15,7 @@ self.addEventListener('message', (event) => {
       }
     } else {
       // Jika messageId belum ada di messagesMap, tambahkan
-      messagesMap.set(streamItem.messageId, streamItem)
+      messagesMap.set(streamItem.messageId, { ...streamItem, id: streamItem.messageId })
     }
   })
 

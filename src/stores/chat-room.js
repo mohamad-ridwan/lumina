@@ -132,27 +132,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       // err callback
       () => {},
     )
-
-    // const chatRoomCurrently = await fetchChatRoom({
-    //   userIds: item.userIds,
-    //   mainUserId: profile.value.data.id
-    // })
-    // // leave room previous
-    // if (chatRoom.value?.chatId) {
-    //   socket.emit('leaveRoom', {
-    //     chatRoomId: chatRoom.value?.chatRoomId,
-    //     chatId: chatRoom.value?.chatId,
-    //     userId: profile.value?.data.id
-    //   })
-    // }
-    // socket.emit('joinRoom', {
-    //   chatRoomId: chatRoomCurrently?.chatRoomId,
-    //   chatId: chatRoomCurrently?.chatId,
-    //   userId: profile.value?.data.id
-    // })
-    // if (chatRoomCurrently?.data) {
-    //   setChatRoom(chatRoomCurrently)
-    // }
   }
 
   return {
