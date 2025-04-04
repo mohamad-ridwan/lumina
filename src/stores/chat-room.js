@@ -67,6 +67,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     // set worker to use in streams
     handleSetChatRoomWorker()
 
+    // reset chat room data
+    chatRoom.value.data = []
+
     // leave room previous
     if (chatRoom.value?.chatId) {
       socket.emit('leaveRoom', {
