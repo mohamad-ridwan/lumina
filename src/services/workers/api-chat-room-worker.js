@@ -83,9 +83,9 @@ self.addEventListener('message', (event) => {
 
   getTotalData().then((res) => {
     if (res?.data?.length > 0) {
-      self.postMessage({ messages: newMessages, isDone: true })
-    } else if ((res?.status && res?.status !== 'success') || res?.data?.length === 0) {
-      self.postMessage({ messages: [], isDone: true })
+      self.postMessage({ messages: newMessages, isDone: true, fullRes: res })
+    } else if ((res?.message && res?.message !== 'Chat room data') || res?.data?.length === 0) {
+      self.postMessage({ messages: [], isDone: true, fullRes: res })
     }
   })
 })

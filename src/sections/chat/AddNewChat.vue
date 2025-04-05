@@ -68,7 +68,15 @@ const handleClickContact = async (userId) => {
   }
 
   const chatCurrently = chats.value?.slice()?.find(chat => chat.userIds?.slice()?.find(id => id === userId))
-  handleClickUser(profile.value.data.id, chatCurrently)
+  let itemCurrently = {}
+  if (chatCurrently) {
+    itemCurrently = chatCurrently
+  } else {
+    itemCurrently = {
+      userIds: [userId, profile.value.data.id],
+    }
+  }
+  handleClickUser(profile.value.data.id, itemCurrently, !chatCurrently ?? false)
 
   // close popup
   emits('click', false)

@@ -54,9 +54,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     isChatRoomStreamsDone.value = true
   }
 
-  async function handleClickUser(userId, item) {
+  async function handleClickUser(userId, item, isNewChatRoom) {
     // get chat room
-    if (chatRoom.value?.chatId === item?.chatId) {
+    if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
     // stop worker first
@@ -83,17 +83,19 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       })
     }
 
-    socket.emit('joinRoom', {
-      chatRoomId: item?.chatRoomId,
-      chatId: item?.chatId,
-      userId: userId,
-    })
+    if (!isNewChatRoom) {
+      socket.emit('joinRoom', {
+        chatRoomId: item?.chatRoomId,
+        chatId: item?.chatId,
+        userId: userId,
+      })
+    }
 
     fetchChatRoom(
       { userIds: item.userIds, mainUserId: userId },
       chatRoomWorker.value,
       // response callback
-      (res, isDone, totalData) => {
+      (res, isDone, totalData, fullRes) => {
         if (totalData !== null) {
           setTotalDataStreamsChatRoom(totalData)
         }
@@ -129,11 +131,29 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             }
           }
         } else if (res?.length === 0 || !res) {
-          handleChatRoomStreamsDone()
-          if (checkChatRoomWorker.value) {
-            handleStopCheckChatRoomWorker()
+          // join room jika chat room baru
+          if (isNewChatRoom && fullRes?.chatRoomId) {
+            socket.emit('joinRoom', {
+              chatRoomId: fullRes?.chatRoomId,
+              chatId: fullRes?.chatId,
+              userId: userId,
+            })
+
+            Object.assign(chatRoom.value, {
+              chatId: fullRes.chatId,
+              chatRoomId: fullRes.chatRoomId,
+              userIds: fullRes.userIds,
+              data: [],
+            })
           }
-          handleStopChatRoomWorker()
+
+          if (fullRes) {
+            handleChatRoomStreamsDone()
+            if (checkChatRoomWorker.value) {
+              handleStopCheckChatRoomWorker()
+            }
+            handleStopChatRoomWorker()
+          }
         }
       },
       // err callback

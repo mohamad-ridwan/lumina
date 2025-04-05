@@ -27,6 +27,7 @@ export const fetchChatRoom = async (req, apiChatRoomWorker, resDataCallback, err
       event.data.messages, // Ganti chats dengan messages
       event.data.isDone,
       event.data.isDone ? event.data.messages.length : null,
+      event.data?.fullRes,
     )
   }
 
