@@ -176,7 +176,7 @@ watch(newReadNotificationSocketUpdate, (data) => {
     </Header>
     <ListChat>
       <template #list>
-        <RecycleScroller class="px-3" :items="chats" :item-size="64" key-field="chatId" v-slot="{ item }">
+        <RecycleScroller class="px-3 pb-3 flex-1" :items="chats" :item-size="64" key-field="chatId" v-slot="{ item }">
           <ChatItem :item="item" />
         </RecycleScroller>
       </template>
