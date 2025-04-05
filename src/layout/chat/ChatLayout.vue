@@ -9,7 +9,7 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 
@@ -96,6 +96,8 @@ onBeforeMount(async () => {
 })
 
 onMounted(() => {
+  document.body.style.overflow = 'hidden'
+
   socket.on('newMessage', (data) => {
     newMessateSocketUpdate.value = data
   })
@@ -110,6 +112,10 @@ onUnmounted(() => {
     apiChatsWorker.value.terminate()
     checkChatsWorker.value?.terminate()
   }
+})
+
+onBeforeUnmount(() => {
+  document.body.style.overflowY = 'auto'
 })
 
 watch(newMessateSocketUpdate, (data) => {
@@ -170,11 +176,9 @@ watch(newReadNotificationSocketUpdate, (data) => {
     </Header>
     <ListChat>
       <template #list>
-        <ul>
-          <RecycleScroller class="scroller" :items="chats" :item-size="64" key-field="chatId" v-slot="{ item }">
-            <ChatItem :item="item" />
-          </RecycleScroller>
-        </ul>
+        <RecycleScroller class="px-3" :items="chats" :item-size="64" key-field="chatId" v-slot="{ item }">
+          <ChatItem :item="item" />
+        </RecycleScroller>
       </template>
     </ListChat>
   </ChatLayoutWrapper>

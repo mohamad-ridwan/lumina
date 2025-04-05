@@ -1,7 +1,7 @@
 <script setup></script>
 
 <template>
-  <ul class="px-3">
+  <ul class="flex-1 overflow-y-auto">
     <slot name="list"></slot>
   </ul>
 </template>

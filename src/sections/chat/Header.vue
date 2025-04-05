@@ -56,7 +56,7 @@ const handleLogout = () => {
 <template>
   <AddNewChat @click="confirm.close()" />
 
-  <div class="flex flex-col pt-4 px-4 pb-3 gap-5">
+  <div class="flex flex-col pt-4 px-4 pb-3 gap-5 w-full bg-white">
     <div class="flex w-full justify-between items-center">
       <h1 class="font-bold text-lg">Chats</h1>
       <div class="flex items-center gap-4">
