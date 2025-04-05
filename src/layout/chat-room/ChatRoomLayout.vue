@@ -4,12 +4,11 @@ import RoomView from '@/sections/chat-room/RoomView.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, toRaw, watch } from 'vue';
 
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom } = chatRoomStore
 const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
@@ -35,13 +34,7 @@ onMounted(() => {
 
 watch(newMessageUpdate, (data) => {
   if (memoizedChatRoomId.value === data?.chatRoomId && data.eventType === 'send-message') {
-    setChatRoom({
-      ...chatRoom.value,
-      data: [{
-        ...data.latestMessage,
-        id: data.latestMessage.messageId,
-      }, ...memoizedChatRoomData.value]
-    })
+    chatRoom.value.data = [{ ...data.latestMessage, id: data.latestMessage.messageId }, ...toRaw(memoizedChatRoomData.value)]
   }
 })
 </script>

@@ -77,13 +77,10 @@ onBeforeUnmount(() => {
 watch(memoizedChatRoomData, async (newMessages) => {
   if (newMessages.length > 0 && scroller.value) {
     await nextTick();
-    setTimeout(() => {
-      scroller.value.scrollToItem(newMessages.length - 1, {
-        smooth: true,
-        behavior: "smooth", // Efek scrolling halus
-        offset: 100, // Jaga agar tidak kepotong
-      });
-    }, 50);
+    scroller.value.scrollToItem(newMessages.length - 1, {
+      smooth: true,
+      behavior: "smooth",
+    });
   }
 });
 </script>
