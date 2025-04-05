@@ -36,7 +36,7 @@ const handleClick = () => {
           <p v-if="textMessage"
             class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 w-full truncate">
             <span v-if="fromMe" class="hidden sm:inline">You:</span>
-            <span class="truncate max-w-[95%]">{{ textMessage }}</span>
+            <span class="truncate w-full">{{ textMessage }}</span>
           </p>
         </div>
       </div>
