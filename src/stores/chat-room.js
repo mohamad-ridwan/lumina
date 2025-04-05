@@ -63,12 +63,16 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     if (chatRoomWorker.value) {
       handleStopChatRoomWorker()
     }
+    if (checkChatRoomWorker.value) {
+      handleStopCheckChatRoomWorker()
+    }
 
     // set worker to use in streams
     handleSetChatRoomWorker()
 
     // reset chat room data
     chatRoom.value.data = []
+    setTotalDataStreamsChatRoom(null)
 
     // leave room previous
     if (chatRoom.value?.chatId) {
@@ -101,16 +105,19 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           }
 
           checkChatRoomWorker.value.postMessage({
-            messages: [...toRaw(chatRoom.value?.data)],
+            messages: toRaw(chatRoom.value.data),
             streams: res,
           })
 
           // listen to check chatRoom data currently
           checkChatRoomWorker.value.onmessage = (event) => {
-            chatRoom.value.chatId = item.chatId
-            chatRoom.value.chatRoomId = item.chatRoomId
-            chatRoom.value.userIds = item.userIds.slice()
-            chatRoom.value.data = markRaw(event.data.messages)
+            const { messages } = event.data
+            Object.assign(chatRoom.value, {
+              chatId: item.chatId,
+              chatRoomId: item.chatRoomId,
+              userIds: item.userIds.slice(),
+              data: markRaw(messages),
+            })
 
             if (
               event.data.messages.length === totalDataStreamsChatRoom.value ||
