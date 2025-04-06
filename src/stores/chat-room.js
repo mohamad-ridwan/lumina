@@ -2,7 +2,7 @@ import { fetchChatRoom } from '@/services/api/chat-room'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { markRaw, ref } from 'vue'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -96,13 +96,16 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
     chatRoomSource.onmessage = (event) => {
       const message = JSON.parse(event.data)
-      if (message?.messageId) {
+      if (message?.length) {
         Object.assign(chatRoom.value, {
           chatId: item.chatId,
           chatRoomId: item.chatRoomId,
           userIds: item.userIds.slice(),
         })
-        chatRoom.value.data.push({ ...message, id: message?.messageId })
+        chatRoom.value.data = [
+          ...markRaw(chatRoom.value.data),
+          ...markRaw(message.map((item) => ({ ...item, id: item.messageId }))),
+        ]
       }
     }
 
