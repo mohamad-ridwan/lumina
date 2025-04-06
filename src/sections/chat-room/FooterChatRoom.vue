@@ -5,7 +5,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
 import { Form } from '@primevue/forms';
 import { storeToRefs } from 'pinia';
-import { InputText } from 'primevue';
+import { Button, Textarea } from 'primevue';
 import { computed, ref } from 'vue';
 
 // store
@@ -46,11 +46,14 @@ const onFormSubmit = () => {
 </script>
 
 <template>
-  <footer class="bg-white p-4 border-t-[#f1f1f1] border-t-[1px]">
-    <Form :initialValues="initialValues" @submit="onFormSubmit" class="flex">
-      <InputText v-model="initialValues.textMessage" name="textMessage" type="text" placeholder="Type Message..." fluid
-        class="!text-sm flex-1 rounded-l-md p-2 bg-[#f1f1f1]" />
-      <button class="bg-[#6b7280] text-white p-2 rounded-r-md">Send</button>
+  <footer class="bg-white p-4 border-t-[#f1f1f1] border-t-[1px] w-full">
+    <Form :initialValues="initialValues" @submit="onFormSubmit" class="flex items-end w-full gap-2">
+      <Textarea v-model="initialValues.textMessage" rows="1" cols="20"
+        class="!text-sm flex-1 rounded-l-md p-2 bg-[#f1f1f1] min-h-[38px] max-h-[150px] w-full !overflow-y-auto"
+        placeholder="Type Message..." name="textMessage" :autoResize="true" />
+      <Button icon="pi pi-send" aria-label="Send Message"
+        class="!rounded-full !bg-[#2e74e8] hover:!bg-[#2e74e8] !h-[35px] !w-[35px] justify-center items-center flex cursor-pointer !text-white !outline-none !border-none !p-0"
+        size="large" icon-class="!text-[16px] !mr-0.5 !mt-0.5" type="submit" />
     </Form>
   </footer>
 </template>
