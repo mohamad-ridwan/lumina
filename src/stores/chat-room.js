@@ -89,7 +89,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       itemCurrently = item
     }
 
-    chatRoom.value.data = []
+    chatRoomMessages.value = []
 
     if (chatRoom.value?.chatId) {
       socket.emit('leaveRoom', {
