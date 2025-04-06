@@ -4,12 +4,13 @@ import RoomView from '@/sections/chat-room/RoomView.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onMounted, ref, watch } from 'vue';
+import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { chatRoom } = storeToRefs(chatRoomStore)
+const { resetChatRoomEventSource } = chatRoomStore
+const { chatRoom, chatRoomEventSource } = storeToRefs(chatRoomStore)
 
 // state
 const newMessageUpdate = ref(null)
@@ -30,6 +31,12 @@ onMounted(() => {
   socket.on('newMessage', (data) => {
     newMessageUpdate.value = data
   })
+})
+
+onBeforeUnmount(() => {
+  if (chatRoomEventSource.value) {
+    resetChatRoomEventSource()
+  }
 })
 
 watch(newMessageUpdate, (data) => {

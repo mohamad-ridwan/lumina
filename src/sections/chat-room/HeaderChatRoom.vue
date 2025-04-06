@@ -11,8 +11,8 @@ const { recipientId, profileId, profileIdConnection } = defineProps(['recipientI
 // store
 // chat room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom } = chatRoomStore
-const { chatRoom } = storeToRefs(chatRoomStore)
+const { setChatRoom, resetChatRoomEventSource } = chatRoomStore
+const { chatRoom, chatRoomEventSource } = storeToRefs(chatRoomStore)
 
 // state
 const username = ref(null)
@@ -61,6 +61,9 @@ watch(userProfileSocketUpdate, (data) => {
 })
 
 function handleBack() {
+  if (chatRoomEventSource.value) {
+    resetChatRoomEventSource()
+  }
   if (memoizedChatId.value) {
     socket.emit('leaveRoom', {
       chatRoomId: memoizedChatRoomId.value,

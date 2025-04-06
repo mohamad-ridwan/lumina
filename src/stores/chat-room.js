@@ -11,6 +11,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const checkChatRoomWorker = ref(null)
   const totalDataStreamsChatRoom = ref(null)
   const isChatRoomStreamsDone = ref(false)
+  const chatRoomEventSource = ref(null)
 
   function setChatRoom(chatRoomData) {
     chatRoom.value = chatRoomData
@@ -55,6 +56,11 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     isChatRoomStreamsDone.value = true
   }
 
+  function resetChatRoomEventSource() {
+    chatRoomEventSource.value.close()
+    chatRoomEventSource.value = null
+  }
+
   async function handleClickUser(userId, item, isNewChatRoom) {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
@@ -90,11 +96,15 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       userId: userId,
     })
 
-    const chatRoomSource = new EventSource(
+    if (chatRoomEventSource.value) {
+      resetChatRoomEventSource()
+    }
+
+    chatRoomEventSource.value = new EventSource(
       `${clientUrl}/chat-room/stream?chatId=${itemCurrently?.chatId}&chatRoomId=${itemCurrently?.chatRoomId}`,
     )
 
-    chatRoomSource.onmessage = (event) => {
+    chatRoomEventSource.value.onmessage = (event) => {
       const message = JSON.parse(event.data)
       if (message?.length) {
         Object.assign(chatRoom.value, {
@@ -109,13 +119,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       }
     }
 
-    chatRoomSource.addEventListener('done', () => {
-      chatRoomSource.close()
+    chatRoomEventSource.value.addEventListener('done', () => {
+      resetChatRoomEventSource()
     })
 
-    chatRoomSource.addEventListener('error', (e) => {
+    chatRoomEventSource.value.addEventListener('error', (e) => {
       console.error('Streaming error:', e)
-      chatRoomSource.close()
+      resetChatRoomEventSource()
     })
   }
 
@@ -125,6 +135,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     checkChatRoomWorker,
     totalDataStreamsChatRoom,
     isChatRoomStreamsDone,
+    chatRoomEventSource,
+    resetChatRoomEventSource,
     handleClickUser,
     handleChatRoomStreamsDone,
     handleSetCheckChatRoomWorker,
