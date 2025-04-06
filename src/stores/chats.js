@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { markRaw, shallowRef } from 'vue'
 
 export const chatsStore = defineStore('chats', () => {
-  const chats = ref([])
+  const chats = shallowRef([])
 
   function setChats(chatsData) {
-    chats.value = chatsData
+    chats.value = markRaw(chatsData)
   }
 
   return { chats, setChats }

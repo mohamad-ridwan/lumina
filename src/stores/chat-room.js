@@ -6,6 +6,7 @@ import { markRaw, ref } from 'vue'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
+  const chatRoomMessages = ref([])
   // worker progress
   const chatRoomWorker = ref(null)
   const checkChatRoomWorker = ref(null)
@@ -17,13 +18,21 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     chatRoom.value = chatRoomData
   }
 
+  function handleAddNewMessage(newMessage) {
+    chatRoomMessages.value = markRaw([
+      markRaw({ ...newMessage.latestMessage, id: newMessage.latestMessage.messageId }),
+      ...markRaw(chatRoomMessages.value),
+    ])
+  }
+
   function handleReadMessage(messageId) {
-    let chatDataCurrently = chatRoom.value.data
+    let chatDataCurrently = markRaw(chatRoomMessages.value)
     const currentMessageIndex = chatDataCurrently.findIndex((msg) => msg.messageId === messageId)
     if (currentMessageIndex === -1) {
       return
     }
     chatDataCurrently[currentMessageIndex].status = 'READ'
+    chatRoomMessages.value = markRaw(chatDataCurrently)
   }
 
   function handleSetChatRoomWorker() {
@@ -112,10 +121,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           chatRoomId: item.chatRoomId,
           userIds: item.userIds.slice(),
         })
-        chatRoom.value.data = [
-          ...markRaw(chatRoom.value.data),
-          ...markRaw(message.map((item) => ({ ...item, id: item.messageId }))),
-        ]
+        chatRoomMessages.value = markRaw([...markRaw(chatRoomMessages.value), ...markRaw(message)])
       }
     }
 
@@ -136,6 +142,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     totalDataStreamsChatRoom,
     isChatRoomStreamsDone,
     chatRoomEventSource,
+    chatRoomMessages,
+    handleAddNewMessage,
     resetChatRoomEventSource,
     handleClickUser,
     handleChatRoomStreamsDone,

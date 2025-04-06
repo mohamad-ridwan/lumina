@@ -4,12 +4,12 @@ import RoomView from '@/sections/chat-room/RoomView.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { resetChatRoomEventSource } = chatRoomStore
+const { resetChatRoomEventSource, handleAddNewMessage } = chatRoomStore
 const { chatRoom, chatRoomEventSource } = storeToRefs(chatRoomStore)
 
 // state
@@ -21,9 +21,6 @@ const memoizedChatRoomId = computed(() => {
 })
 const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
-})
-const memoizedChatRoomData = computed(() => {
-  return chatRoom.value?.data
 })
 
 // hooks rendering
@@ -41,7 +38,7 @@ onBeforeUnmount(() => {
 
 watch(newMessageUpdate, (data) => {
   if (memoizedChatRoomId.value === data?.chatRoomId && data.eventType === 'send-message') {
-    chatRoom.value.data = [{ ...data.latestMessage, id: data.latestMessage.messageId }, ...markRaw(memoizedChatRoomData.value)]
+    handleAddNewMessage(data)
   }
 })
 </script>

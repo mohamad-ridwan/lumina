@@ -17,7 +17,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = userStore
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { chatRoom } = storeToRefs(chatRoomStore)
+const { chatRoom, chatRoomMessages } = storeToRefs(chatRoomStore)
 
 // state
 const scroller = ref(null)
@@ -30,7 +30,7 @@ const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
 const memoizedChatRoomData = computed(() => {
-  return chatRoom.value?.data.slice().reverse()
+  return chatRoomMessages.value?.slice().reverse()
 })
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
