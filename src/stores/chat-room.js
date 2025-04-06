@@ -74,6 +74,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       itemCurrently = item
     }
 
+    chatRoom.value.data = []
+
     if (chatRoom.value?.chatId) {
       socket.emit('leaveRoom', {
         chatRoomId: chatRoom.value?.chatRoomId,
@@ -100,9 +102,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           chatRoomId: item.chatRoomId,
           userIds: item.userIds.slice(),
         })
-        if (!chatRoom.value.data) {
-          chatRoom.value.data = []
-        }
         chatRoom.value.data.push({ ...message, id: message?.messageId })
       }
     }
