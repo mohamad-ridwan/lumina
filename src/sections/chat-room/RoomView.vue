@@ -74,7 +74,7 @@ onBeforeUnmount(() => {
   }
 })
 
-watch(memoizedChatRoomData.value?.length, async (newMessages) => {
+watch(memoizedChatRoomData, async (newMessages) => {
   if (newMessages.length > 0 && scroller.value) {
     await nextTick();
     scroller.value.scrollToItem(newMessages.length - 1, {
