@@ -1,7 +1,8 @@
 import { fetchChatRoom } from '@/services/api/chat-room'
+import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { markRaw, ref, toRaw } from 'vue'
+import { ref } from 'vue'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -55,26 +56,24 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   }
 
   async function handleClickUser(userId, item, isNewChatRoom) {
-    // get chat room
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
-    // stop worker first
-    if (chatRoomWorker.value) {
-      handleStopChatRoomWorker()
+
+    let itemCurrently = {}
+    if (isNewChatRoom) {
+      const chatCurrently = await fetchChatRoom({
+        userIds: item.userIds,
+        mainUserId: userId,
+      })
+      if (!chatCurrently?.latestMessage) {
+        return
+      }
+      itemCurrently = chatCurrently
+    } else {
+      itemCurrently = item
     }
-    if (checkChatRoomWorker.value) {
-      handleStopCheckChatRoomWorker()
-    }
 
-    // set worker to use in streams
-    handleSetChatRoomWorker()
-
-    // reset chat room data
-    chatRoom.value.data = []
-    setTotalDataStreamsChatRoom(null)
-
-    // leave room previous
     if (chatRoom.value?.chatId) {
       socket.emit('leaveRoom', {
         chatRoomId: chatRoom.value?.chatRoomId,
@@ -83,82 +82,39 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       })
     }
 
-    if (!isNewChatRoom) {
-      socket.emit('joinRoom', {
-        chatRoomId: item?.chatRoomId,
-        chatId: item?.chatId,
-        userId: userId,
-      })
+    socket.emit('joinRoom', {
+      chatRoomId: itemCurrently?.chatRoomId,
+      chatId: itemCurrently?.chatId,
+      userId: userId,
+    })
+
+    const chatRoomSource = new EventSource(
+      `${clientUrl}/chat-room/stream?chatId=${itemCurrently?.chatId}&chatRoomId=${itemCurrently?.chatRoomId}`,
+    )
+
+    chatRoomSource.onmessage = (event) => {
+      const message = JSON.parse(event.data)
+      if (message?.messageId) {
+        Object.assign(chatRoom.value, {
+          chatId: item.chatId,
+          chatRoomId: item.chatRoomId,
+          userIds: item.userIds.slice(),
+        })
+        if (!chatRoom.value.data) {
+          chatRoom.value.data = []
+        }
+        chatRoom.value.data.push({ ...message, id: message?.messageId })
+      }
     }
 
-    fetchChatRoom(
-      { userIds: item.userIds, mainUserId: userId },
-      chatRoomWorker.value,
-      // response callback
-      (res, isDone, totalData, fullRes) => {
-        if (totalData !== null) {
-          setTotalDataStreamsChatRoom(totalData)
-        }
+    chatRoomSource.addEventListener('done', () => {
+      chatRoomSource.close()
+    })
 
-        if (res?.length > 0 && !isDone) {
-          if (!checkChatRoomWorker.value) {
-            // start the worker
-            handleSetCheckChatRoomWorker()
-          }
-
-          checkChatRoomWorker.value.postMessage({
-            messages: toRaw(chatRoom.value.data),
-            streams: res,
-          })
-
-          // listen to check chatRoom data currently
-          checkChatRoomWorker.value.onmessage = (event) => {
-            const { messages } = event.data
-            Object.assign(chatRoom.value, {
-              chatId: item.chatId,
-              chatRoomId: item.chatRoomId,
-              userIds: item.userIds.slice(),
-              data: markRaw(messages),
-            })
-
-            if (
-              event.data.messages.length === totalDataStreamsChatRoom.value ||
-              totalDataStreamsChatRoom.value
-            ) {
-              handleChatRoomStreamsDone()
-              handleStopChatRoomWorker()
-              handleStopCheckChatRoomWorker()
-            }
-          }
-        } else if (res?.length === 0 || !res) {
-          // join room jika chat room baru
-          if (isNewChatRoom && fullRes?.chatRoomId) {
-            socket.emit('joinRoom', {
-              chatRoomId: fullRes?.chatRoomId,
-              chatId: fullRes?.chatId,
-              userId: userId,
-            })
-
-            Object.assign(chatRoom.value, {
-              chatId: fullRes.chatId,
-              chatRoomId: fullRes.chatRoomId,
-              userIds: fullRes.userIds,
-              data: [],
-            })
-          }
-
-          if (fullRes) {
-            handleChatRoomStreamsDone()
-            if (checkChatRoomWorker.value) {
-              handleStopCheckChatRoomWorker()
-            }
-            handleStopChatRoomWorker()
-          }
-        }
-      },
-      // err callback
-      () => {},
-    )
+    chatRoomSource.addEventListener('error', (e) => {
+      console.error('Streaming error:', e)
+      chatRoomSource.close()
+    })
   }
 
   return {
