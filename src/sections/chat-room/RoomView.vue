@@ -17,7 +17,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = userStore
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { chatRoom, isChatRoomStreamsDone } = storeToRefs(chatRoomStore)
+const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 const scroller = ref(null)

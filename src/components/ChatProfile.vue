@@ -50,7 +50,11 @@ const handleClick = () => {
         <!-- Unread Messages Indicator -->
         <div v-if="unreadCount"
           class="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[#2e74e8] flex justify-center items-center">
-          <span class="text-[10px] sm:text-[12px] text-white font-semibold">{{ unreadCount }}</span>
+          <span class="text-white font-semibold rounded-full flex items-center justify-center" :class="[
+            unreadCount?.toString()?.length > 3 ? 'text-[8px] px-1.5 h-3' :
+              unreadCount?.toString()?.length > 2 ? 'text-[9px] px-2 h-3' :
+                'text-[10px] sm:text-[12px] px-2 h-3'
+          ]">{{ unreadCount }}</span>
         </div>
       </div>
 
