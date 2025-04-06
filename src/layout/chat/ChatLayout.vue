@@ -4,14 +4,14 @@ import ChatItem from '@/sections/chat/chat-item/ChatItem.vue';
 import Header from '@/sections/chat/Header.vue';
 import ListChat from '@/sections/chat/ListChat.vue';
 import SearchMessenger from '@/sections/chat/SearchMessenger.vue'
-import { fetchChats } from '@/services/api/chats';
 import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
+import { clientUrl } from '@/services/apiBaseUrl';
 
 // store
 // profile store
@@ -23,71 +23,46 @@ const { setChats } = chatStore
 const { chats } = storeToRefs(chatStore)
 
 // state
-// worker state
-const apiChatsWorker = ref(null)
-const checkChatsWorker = ref(null)
-
-const totalDataStreamsChats = ref(null)
-const isStreamsDone = ref(false)
 const newMessateSocketUpdate = ref(null)
 const newReadNotificationSocketUpdate = ref(null)
+const chatsEventSource = ref(null)
 
 // logic
+function resetChatsEventSource() {
+  chatsEventSource.value.close()
+  chatsEventSource.value = null
+}
+
 async function handleGetChats() {
-  if (profile?.data?.id) {
-    // set worker to use on streams
-    apiChatsWorker.value = new Worker(new URL('/src/services/workers/api-chats-worker.js', import.meta.url))
+  chatsEventSource.value = new EventSource(
+    `${clientUrl}/chats?userId=${profile.data.id}`,
+  )
 
-    fetchChats(
-      profile.data.id,
-      apiChatsWorker.value,
-      // res data callback
-      (res, isDone, totalData) => {
-        // update total data
-        if (totalData !== null) {
-          totalDataStreamsChats.value = totalData
+  chatsEventSource.value.onmessage = (event) => {
+    const message = JSON.parse(event.data)
+
+    if (message?.length) {
+      const chatIds = new Set()
+      const chatsCurrently = [...markRaw(chats.value), ...markRaw(message)]
+      const newChats = chatsCurrently.filter(item => {
+        if (chatIds.has(item.chatId)) {
+          return false; // Hilangkan duplikat
         }
-
-        if (res?.length > 0 && !isDone) {
-          // start check chats worker
-          if (!checkChatsWorker.value) {
-            checkChatsWorker.value = new Worker(new URL('/src/services/workers/check-chats-worker.js', import.meta.url))
-          }
-
-          // check new data chats from store & streams progress
-          checkChatsWorker.value.postMessage({
-            chats: chats.value.slice(),
-            streams: res
-          })
-
-          // listen to check chats currently
-          checkChatsWorker.value.onmessage = (event) => {
-            setChats(event.data.chats)
-
-            if (event.data.chats.length === totalDataStreamsChats.value) {
-              isStreamsDone.value = true
-              apiChatsWorker.value.terminate()
-              apiChatsWorker.value = null
-              checkChatsWorker.value.terminate()
-              checkChatsWorker.value = null
-            }
-          }
-        } else if (res?.length === 0 || !res) {
-          isStreamsDone.value = true
-          if (checkChatsWorker.value) {
-            checkChatsWorker.value.terminate()
-            checkChatsWorker.value = null
-          }
-          apiChatsWorker.value.terminate()
-          apiChatsWorker.value = null
-        }
-      },
-      // err callback
-      () => {
-
-      }
-    )
+        chatIds.add(item.chatId);
+        return true; // Pertahankan kemunculan pertama
+      });
+      setChats(newChats)
+    }
   }
+
+  chatsEventSource.value.addEventListener('done', () => {
+    resetChatsEventSource()
+  })
+
+  chatsEventSource.value.addEventListener('error', (e) => {
+    console.error('Streaming error:', e)
+    resetChatsEventSource()
+  })
 }
 
 // hooks rendering
@@ -105,13 +80,6 @@ onMounted(() => {
   socket.on('readNotification', (data) => {
     newReadNotificationSocketUpdate.value = data
   })
-})
-
-onUnmounted(() => {
-  if (apiChatsWorker.value) {
-    apiChatsWorker.value.terminate()
-    checkChatsWorker.value?.terminate()
-  }
 })
 
 onBeforeUnmount(() => {
