@@ -10,6 +10,7 @@ import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
+import { Button } from 'primevue';
 
 // store
 // profile store
@@ -21,6 +22,8 @@ const { chatRoom, chatRoomMessages } = storeToRefs(chatRoomStore)
 
 // state
 const scroller = ref(null)
+const SCROLL_THRESHOLD = 200;
+const showScrollDownButton = ref(false);
 
 // logic
 const memoizedChatRoomId = computed(() => {
@@ -37,6 +40,13 @@ const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
 })
 
+const scrollToBottom = () => {
+  if (scroller.value) {
+    // Karena tampilan dibalik, scroll ke 0 akan membawa ke bagian "bawah" (pesan terbaru)
+    scroller.value.scrollToItem(0);
+    showScrollDownButton.value = false;
+  }
+};
 function handleBeforeUnload() {
   if (memoizedChatId.value) {
     socket.emit('leaveRoom', {
@@ -95,6 +105,18 @@ onMounted(() => {
     }, { passive: false });
   }
 })
+
+const handleScroll = () => {
+  if (scroller.value?.$el) {
+    const scrollTop = scroller.value.$el.scrollTop;
+    showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD;
+  }
+};
+
+onMounted(() => {
+  // Tambahkan event listener untuk scroll
+  scroller.value?.$el.addEventListener('scroll', handleScroll);
+});
 </script>
 
 <template>
@@ -119,6 +141,11 @@ onMounted(() => {
         </DynamicScrollerItem>
       </template>
     </DynamicScroller>
+
+    <Button v-if="showScrollDownButton" @click="scrollToBottom"
+      class="!absolute !bottom-24 !right-4 !bg-white !shadow !rounded-full p-2 !transition-opacity !duration-300 !ease-in-out !border-none"
+      :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
+      aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black" iconPos="only" />
 
     <FooterChatRoom />
   </div>
