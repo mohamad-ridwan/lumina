@@ -2,13 +2,15 @@
 import { theme } from '@/assets/theme';
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AddNewChat from './AddNewChat.vue';
 import { deleteSessionLogin } from '@/storage-management/local-storage/session-login';
 import { useRouter } from 'vue-router';
 import { usersStore } from '@/stores/users';
 import { chatsStore } from '@/stores/chats';
 import { useChatRoomStore } from '@/stores/chat-room';
+import { socket } from '@/services/socket/socket';
+import { storeToRefs } from 'pinia';
 
 // props
 const { scroller } = defineProps(['scroller'])
@@ -20,6 +22,7 @@ const router = useRouter()
 // users store
 const userStore = usersStore()
 const { setProfile } = userStore
+const { profile } = storeToRefs(userStore)
 // chat store
 const chatStore = chatsStore()
 const { setChats } = chatStore
@@ -29,6 +32,9 @@ const { setChatRoom } = chatRoomStore
 
 // state
 const confirmState = ref(null)
+
+// logic
+const profileId = computed(() => profile.value?.data.id)
 
 const showTemplate = (event) => {
   if (confirmState.value) {
@@ -48,6 +54,7 @@ const showTemplate = (event) => {
 }
 
 const handleLogout = () => {
+  socket.emit('userOffline', profileId.value)
   deleteSessionLogin()
   router.push('/login')
   setProfile(null)
