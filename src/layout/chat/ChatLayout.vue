@@ -26,6 +26,7 @@ const { chats } = storeToRefs(chatStore)
 const newMessateSocketUpdate = ref(null)
 const newReadNotificationSocketUpdate = ref(null)
 const chatsEventSource = ref(null)
+const scroller = ref(null)
 
 // logic
 const memoizedChats = computed(() => chats.value)
@@ -139,14 +140,15 @@ watch(newReadNotificationSocketUpdate, (data) => {
 
 <template>
   <ChatLayoutWrapper>
-    <Header>
+    <Header :scroller="scroller">
       <template #search>
         <SearchMessenger />
       </template>
     </Header>
     <ListChat>
       <template #list>
-        <RecycleScroller class="px-3 pb-3 flex-1" :items="chats" :item-size="64" key-field="chatId" v-slot="{ item }">
+        <RecycleScroller ref="scroller" class="px-3 pb-3 flex-1" :items="chats" :item-size="64" key-field="chatId"
+          v-slot="{ item }">
           <ChatItem :item="item" />
         </RecycleScroller>
       </template>

@@ -10,6 +10,9 @@ import { usersStore } from '@/stores/users';
 import { chatsStore } from '@/stores/chats';
 import { useChatRoomStore } from '@/stores/chat-room';
 
+// props
+const { scroller } = defineProps(['scroller'])
+
 const confirm = useConfirm();
 const router = useRouter()
 
@@ -51,6 +54,12 @@ const handleLogout = () => {
   setChats([])
   setChatRoom({})
 }
+
+const handleScrollToTop = () => {
+  if (scroller) {
+    scroller.scrollToItem(0)
+  }
+}
 </script>
 
 <template>
@@ -58,7 +67,9 @@ const handleLogout = () => {
 
   <div class="flex flex-col pt-4 px-4 pb-3 gap-5 w-full bg-white">
     <div class="flex w-full justify-between items-center">
-      <h1 class="font-bold text-lg">Chats</h1>
+      <button class="!cursor-pointer" name="chats" @click="handleScrollToTop">
+        <h1 class="font-bold text-lg">Chats</h1>
+      </button>
       <div class="flex items-center gap-4">
         <Button icon="pi pi-plus" aria-label="Chat" :class="theme.regularBtn" size="small" icon-class="!text-xs"
           @click="showTemplate($event)" />
