@@ -1,7 +1,7 @@
 <script setup>
 import { Button } from 'primevue';
 
-const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer, latestMessageTimestamp, unreadCount, isActive, image } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image'])
+const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer, latestMessageTimestamp, unreadCount, isActive, image, status } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status'])
 
 const emits = defineEmits(['click'])
 
@@ -20,7 +20,13 @@ const handleClick = () => {
       <!-- Avatar + Info -->
       <div class="flex items-center gap-3 min-w-0">
         <!-- Avatar -->
-        <img :src="image" alt="profile" :class="`object-cover rounded-full ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
+        <div class="relative">
+          <img :src="image" alt="profile"
+            :class="`object-cover rounded-full ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
+          <div v-if="status === 'online'" class="absolute bottom-0.5 right-0">
+            <div class="h-[12px] w-[12px] rounded-full bg-green-500 border-[1px] border-white"></div>
+          </div>
+        </div>
 
         <!-- Chat Info -->
         <div class="flex flex-col min-w-0">
