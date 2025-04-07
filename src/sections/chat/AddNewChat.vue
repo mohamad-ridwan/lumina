@@ -103,7 +103,7 @@ watch(searchValue, (newValue) => {
         <ul>
           <li v-for="item in contactUsers" :key="item.id" class="border-b-[0.2px] border-[#f1f1f1]">
             <ChatProfile :username="item.username" font-size-username="text-xs" img-size="h-[30px] w-[30px]"
-              height-container="!h-[2.5rem]" @click="handleClickContact(item.id)" />
+              height-container="!h-[2.5rem]" :image="item.image" @click="handleClickContact(item.id)" />
           </li>
           <li v-if="contactUsers.length === 0 && searchValue.trim()">
             <span class="text-xs text-[#6b7280]">User not found</span>
