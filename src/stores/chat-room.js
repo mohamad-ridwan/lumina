@@ -109,6 +109,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       resetChatRoomEventSource()
     }
 
+    Object.assign(chatRoom.value, {
+      chatId: item.chatId,
+      chatRoomId: item.chatRoomId,
+      userIds: item.userIds.slice(),
+    })
+
     chatRoomEventSource.value = new EventSource(
       `${clientUrl}/chat-room/stream?chatId=${itemCurrently?.chatId}&chatRoomId=${itemCurrently?.chatRoomId}`,
     )
@@ -116,11 +122,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     chatRoomEventSource.value.onmessage = (event) => {
       const message = JSON.parse(event.data)
       if (message?.length) {
-        Object.assign(chatRoom.value, {
-          chatId: item.chatId,
-          chatRoomId: item.chatRoomId,
-          userIds: item.userIds.slice(),
-        })
         chatRoomMessages.value = markRaw([...markRaw(chatRoomMessages.value), ...markRaw(message)])
       }
     }

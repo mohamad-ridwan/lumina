@@ -45,8 +45,7 @@ async function handleGetChats() {
 
     if (message?.length) {
       const chatIds = new Set()
-      const chatsCurrently = [...markRaw(memoizedChats.value), ...markRaw(message)]
-      const newChats = chatsCurrently.filter(item => {
+      const newChats = [...markRaw(memoizedChats.value), ...markRaw(message)].filter(item => {
         if (chatIds.has(item.chatId)) {
           return false; // Hilangkan duplikat
         }
@@ -126,13 +125,14 @@ watch(newMessateSocketUpdate, (data) => {
 })
 
 watch(newReadNotificationSocketUpdate, (data) => {
-  const chatUserIndex = markRaw(chats.value)?.slice()?.findIndex(chat => chat?.chatId === data?.chatId)
+  const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.chatId === data?.chatId)
   if (chatUserIndex !== -1) {
-    let newChats = markRaw(chats.value)?.slice()
-    newChats[chatUserIndex].unreadCount = {
-      ...data.unreadCount
-    }
-    setChats(newChats)
+    chats.value[chatUserIndex] = markRaw({
+      ...markRaw(chats.value[chatUserIndex]),
+      unreadCount: data.unreadCount
+    })
+    chats.value = markRaw([...chats.value])
+    setChats(chats.value, true)
   }
 })
 </script>
@@ -146,8 +146,7 @@ watch(newReadNotificationSocketUpdate, (data) => {
     </Header>
     <ListChat>
       <template #list>
-        <RecycleScroller class="px-3 pb-3 flex-1" :items="memoizedChats" :item-size="64" key-field="chatId"
-          v-slot="{ item }">
+        <RecycleScroller class="px-3 pb-3 flex-1" :items="chats" :item-size="64" key-field="chatId" v-slot="{ item }">
           <ChatItem :item="item" />
         </RecycleScroller>
       </template>
