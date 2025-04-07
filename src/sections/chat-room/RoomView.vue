@@ -143,9 +143,9 @@ onMounted(() => {
     </DynamicScroller>
 
     <Button v-if="showScrollDownButton" @click="scrollToBottom"
-      class="!absolute !bottom-24 !right-4 !bg-white !shadow !rounded-full p-2 !transition-opacity !duration-300 !ease-in-out !border-none"
+      class="!absolute !bottom-24 !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !transition-opacity !duration-300 !ease-in-out !border-none"
       :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
-      aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black" iconPos="only" />
+      aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm" iconPos="only" />
 
     <FooterChatRoom />
   </div>
