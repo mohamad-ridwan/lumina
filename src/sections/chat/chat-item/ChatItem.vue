@@ -4,7 +4,7 @@ import ChatProfile from '@/components/ChatProfile.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
-import { computed, onBeforeMount, onMounted, ref, watch, } from 'vue';
+import { computed, onBeforeMount, onMounted, ref, shallowRef, watch, } from 'vue';
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -32,7 +32,8 @@ const { handleClickUser } = chatRoomStore
 const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
-const name = ref('')
+const name = shallowRef('')
+const image = shallowRef(null)
 const userProfileSocketUpdate = ref(null)
 
 // logic
@@ -77,6 +78,7 @@ watch(userProfileSocketUpdate, (data) => {
     (data?.actionType === 'chats')
   ) {
     name.value = data.profile.username
+    image.value = data.profile.image
   }
 })
 
@@ -96,5 +98,5 @@ onBeforeMount(() => {
   <ChatProfile :username="name" :from-me="item.latestMessage.senderUserId === profile?.data?.id"
     :text-message="item.latestMessage.textMessage" @click="handleClickUser(profile?.data.id, item)"
     :latest-message-timestamp="formattedDate" :unread-count="item.unreadCount[profile?.data.id]"
-    :is-active="item.chatRoomId === memoizedChatRoomId" />
+    :is-active="item.chatRoomId === memoizedChatRoomId" :image="image" />
 </template>
