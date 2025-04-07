@@ -20,7 +20,7 @@ const handleClick = () => {
       <!-- Avatar + Info -->
       <div class="flex items-center gap-3 min-w-0">
         <!-- Avatar -->
-        <img :src="image" alt="Avatar" :class="`object-cover rounded-full ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
+        <img :src="image" alt="profile" :class="`object-cover rounded-full ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
 
         <!-- Chat Info -->
         <div class="flex flex-col min-w-0">

@@ -3,7 +3,7 @@ import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, shallowRef, watch } from 'vue';
 
 // props
 const { recipientId, profileId, profileIdConnection } = defineProps(['recipientId', 'profileId', 'profileIdConnection'])
@@ -15,7 +15,8 @@ const { setChatRoom, resetChatRoomEventSource } = chatRoomStore
 const { chatRoom, chatRoomEventSource } = storeToRefs(chatRoomStore)
 
 // state
-const username = ref(null)
+const username = shallowRef(null)
+const image = shallowRef(null)
 const userProfileSocketUpdate = ref(null)
 
 // logic
@@ -57,6 +58,7 @@ watch(userProfileSocketUpdate, (data) => {
     data?.profile?.id === recipientId
   ) {
     username.value = data.profile.username
+    image.value = data.profile.image
   }
 })
 
@@ -80,6 +82,9 @@ function handleBack() {
     <Button icon="pi pi-angle-left" aria-label="Back"
       class="!rounded-full !bg-transparent hover:!bg-transparent !h-[25px] !w-[25px] justify-center items-center flex cursor-pointer !text-black !outline-none !border-none !p-0"
       size="large" icon-class="!text-lg" @click="handleBack" />
-    <h2 class="text-lg font-semibold">{{ username }}</h2>
+    <div class="flex items-center gap-3">
+      <img :src="image" alt="profile" :class="`object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11`">
+      <h2 class="text-sm sm:text-lg font-semibold">{{ username }}</h2>
+    </div>
   </header>
 </template>
