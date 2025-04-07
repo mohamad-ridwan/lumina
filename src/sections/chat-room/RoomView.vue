@@ -4,7 +4,7 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -30,7 +30,8 @@ const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
 const memoizedChatRoomData = computed(() => {
-  return chatRoomMessages.value?.slice().reverse()
+  // return chatRoomMessages.value?.slice().reverse()
+  return chatRoomMessages.value?.slice()
 })
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
@@ -74,15 +75,26 @@ onBeforeUnmount(() => {
   }
 })
 
-watch(memoizedChatRoomData, async (newMessages) => {
-  if (newMessages.length > 0 && scroller.value) {
-    await nextTick();
-    scroller.value.scrollToItem(newMessages.length - 1, {
-      smooth: true,
-      behavior: "smooth",
-    });
+// watch(memoizedChatRoomData, async (newMessages) => {
+//   if (newMessages.length > 0 && scroller.value) {
+//     await nextTick();
+//     scroller.value.scrollToItem(newMessages.length - 1, {
+//       smooth: true,
+//       behavior: "smooth",
+//     });
+//   }
+// });
+
+onMounted(() => {
+  const el = scroller.value?.$el; // atau scroller container
+
+  if (el) {
+    el.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      el.scrollTop -= e.deltaY;
+    }, { passive: false });
   }
-});
+})
 </script>
 
 <template>
@@ -92,7 +104,8 @@ watch(memoizedChatRoomData, async (newMessages) => {
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
     <DynamicScroller ref="scroller" :items="memoizedChatRoomData" :min-item-size="54"
-      class="flex-1 !p-4 space-y-2 bg-[#f9fafb]">
+      class="flex-1 !p-4 space-y-2 bg-[#f9fafb]"
+      style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl;">
       <template v-slot="{ item, index, active }">
         <DynamicScrollerItem :item="item" :active="active" :size-dependencies="[
           item.textMessage,
