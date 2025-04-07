@@ -4,7 +4,7 @@ import ChatProfile from '@/components/ChatProfile.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
-import { computed, onBeforeMount, onMounted, ref, shallowRef, watch, } from 'vue';
+import { computed, markRaw, onBeforeMount, onMounted, ref, shallowRef, watch, } from 'vue';
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -12,6 +12,7 @@ import weekday from 'dayjs/plugin/weekday';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import { storeToRefs } from 'pinia';
+import { chatsStore } from '@/stores/chats';
 
 dayjs.extend(localizedFormat)
 dayjs.extend(relativeTime);
@@ -30,15 +31,21 @@ const { profile, profileIdConnection } = storeToRefs(userStore)
 const chatRoomStore = useChatRoomStore()
 const { handleClickUser } = chatRoomStore
 const { chatRoom } = storeToRefs(chatRoomStore)
+// chats store
+const chatStore = chatsStore()
+const { setChats } = chatStore
+const { chats } = storeToRefs(chatStore)
 
 // state
 const name = shallowRef('')
 const image = shallowRef(null)
 const userProfileSocketUpdate = ref(null)
+const userOnlineInfoSocketUpdate = shallowRef(null)
 
 // logic
 const userIdsCurrently = item.userIds.slice().find(id => id !== profile.value.data.id)
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
+const memoizedChats = computed(() => chats.value)
 
 const formattedDate = computed(() => {
   if (!item?.latestMessageTimestamp) {
@@ -68,6 +75,9 @@ onMounted(() => {
   socket.on('user-profile', (data) => {
     userProfileSocketUpdate.value = data
   })
+  socket.on('getUserOnlineInfo', (data) => {
+    userOnlineInfoSocketUpdate.value = data
+  })
 })
 
 watch(userProfileSocketUpdate, (data) => {
@@ -82,6 +92,24 @@ watch(userProfileSocketUpdate, (data) => {
   }
 })
 
+watch(userOnlineInfoSocketUpdate, (data) => {
+  if (
+    (data?.senderId === profile.value?.data?.id) &&
+    (data?.profileIdConnection === profileIdConnection.value) &&
+    (data.recipientId === userIdsCurrently)
+  ) {
+    const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.userIds.find(id => id === data.recipientId))
+    if (chatUserIndex !== -1) {
+      chats.value[chatUserIndex] = markRaw({
+        ...markRaw(chats.value[chatUserIndex]),
+        lastSeenTime: data.status
+      })
+      chats.value = markRaw([...chats.value])
+      setChats(chats.value)
+    }
+  }
+})
+
 onBeforeMount(() => {
   if (profile && userIdsCurrently) {
     socket.emit('user-profile', {
@@ -89,6 +117,11 @@ onBeforeMount(() => {
       senderId: profile.value.data.id,
       profileIdConnection: profileIdConnection.value,
       actionType: 'chats'
+    })
+    socket.emit('getUserOnlineInfo', {
+      recipientId: userIdsCurrently,
+      senderId: profile.value?.data.id,
+      profileIdConnection: profileIdConnection.value,
     })
   }
 })
