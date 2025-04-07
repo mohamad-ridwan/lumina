@@ -54,7 +54,17 @@ watch(userOnlineSocketUpdate, (id) => {
 })
 
 watch(userOfflineSocketUpdate, (data) => {
-
+  if (data?.id) {
+    const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.userIds.find(recipientId => recipientId === data.id))
+    if (chatUserIndex !== -1) {
+      chats.value[chatUserIndex] = markRaw({
+        ...markRaw(chats.value[chatUserIndex]),
+        lastSeenTime: data.lastSeenTime
+      })
+      chats.value = markRaw([...chats.value])
+      setChats(chats.value)
+    }
+  }
 })
 </script>
 
