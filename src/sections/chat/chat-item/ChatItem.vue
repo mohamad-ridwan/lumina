@@ -36,8 +36,6 @@ const chatStore = chatsStore()
 const { chats } = storeToRefs(chatStore)
 
 // state
-const name = shallowRef('')
-const image = shallowRef(null)
 const userProfileSocketUpdate = ref(null)
 const userOnlineInfoSocketUpdate = shallowRef(null)
 
@@ -86,8 +84,16 @@ watch(userProfileSocketUpdate, (data) => {
     (data.profile.id === userIdsCurrently) &&
     (data?.actionType === 'chats')
   ) {
-    name.value = data.profile.username
-    image.value = data.profile.image
+    const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.chatId === item?.chatId)
+    if (chatUserIndex !== -1) {
+      chats.value[chatUserIndex] = {
+        ...chats.value[chatUserIndex],
+        username: data.profile.username,
+        image: data.profile.image
+      }
+      chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data
+      triggerRef(chats)
+    }
   }
 })
 
@@ -127,8 +133,8 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <ChatProfile :username="name" :from-me="item.latestMessage.senderUserId === profile?.data?.id"
+  <ChatProfile :username="item?.username" :from-me="item.latestMessage.senderUserId === profile?.data?.id"
     :text-message="item.latestMessage.textMessage" @click="handleClickUser(profile?.data.id, item)"
     :latest-message-timestamp="formattedDate" :unread-count="item.unreadCount[profile?.data.id]"
-    :is-active="item.chatRoomId === memoizedChatRoomId" :image="image" :status="item.lastSeenTime" />
+    :is-active="item.chatRoomId === memoizedChatRoomId" :image="item?.image" :status="item.lastSeenTime" />
 </template>

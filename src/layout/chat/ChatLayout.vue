@@ -36,7 +36,10 @@ const searchMessengerData = computed(() => {
     return memoizedChats.value
   }
 
-  return memoizedChats.value.filter(chat => chat?.latestMessage?.textMessage?.toLowerCase()?.includes(searchValue.value.toLowerCase()))
+  return memoizedChats.value.filter(chat =>
+    chat?.latestMessage?.textMessage?.toLowerCase()?.includes(searchValue.value.toLowerCase()) ||
+    chat?.username?.toLowerCase()?.includes(searchValue.value.toLowerCase())
+  )
 })
 
 function resetChatsEventSource() {
