@@ -4,7 +4,7 @@ import ChatProfile from '@/components/ChatProfile.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
-import { computed, markRaw, onBeforeMount, onMounted, ref, shallowRef, watch, } from 'vue';
+import { computed, markRaw, onBeforeMount, onMounted, ref, shallowRef, triggerRef, watch, } from 'vue';
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -33,7 +33,6 @@ const { handleClickUser } = chatRoomStore
 const { chatRoom } = storeToRefs(chatRoomStore)
 // chats store
 const chatStore = chatsStore()
-const { setChats } = chatStore
 const { chats } = storeToRefs(chatStore)
 
 // state
@@ -100,12 +99,12 @@ watch(userOnlineInfoSocketUpdate, (data) => {
   ) {
     const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.userIds.find(id => id === data.recipientId))
     if (chatUserIndex !== -1) {
-      chats.value[chatUserIndex] = markRaw({
-        ...markRaw(chats.value[chatUserIndex]),
+      chats.value[chatUserIndex] = {
+        ...chats.value[chatUserIndex],
         lastSeenTime: data.status
-      })
-      chats.value = markRaw([...chats.value])
-      setChats(chats.value)
+      }
+      chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data array
+      triggerRef(chats)
     }
   }
 })
