@@ -8,7 +8,7 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, triggerRef, watch } from 'vue';
+import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 import { clientUrl } from '@/services/apiBaseUrl';
@@ -27,9 +27,17 @@ const newMessateSocketUpdate = ref(null)
 const newReadNotificationSocketUpdate = ref(null)
 const chatsEventSource = ref(null)
 const scroller = ref(null)
+const searchValue = shallowRef('')
 
 // logic
 const memoizedChats = computed(() => chats.value)
+const searchMessengerData = computed(() => {
+  if (!searchValue.value.trim()) {
+    return memoizedChats.value
+  }
+
+  return memoizedChats.value.filter(chat => chat?.latestMessage?.textMessage?.toLowerCase()?.includes(searchValue.value.toLowerCase()))
+})
 
 function resetChatsEventSource() {
   chatsEventSource.value.close()
@@ -141,13 +149,13 @@ watch(newReadNotificationSocketUpdate, (data) => {
   <ChatLayoutWrapper>
     <Header :scroller="scroller">
       <template #search>
-        <SearchMessenger />
+        <SearchMessenger v-model="searchValue" />
       </template>
     </Header>
     <ListChat>
       <template #list>
-        <RecycleScroller ref="scroller" class="px-3 pb-3 flex-1" :items="chats" :item-size="64" key-field="chatId"
-          v-slot="{ item }" :key="item?.chatId">
+        <RecycleScroller ref="scroller" class="px-3 pb-3 flex-1" :items="searchMessengerData" :item-size="64"
+          key-field="chatId" v-slot="{ item }" :key="item?.chatId">
           <ChatItem :item="item" :key="item.chatId" />
         </RecycleScroller>
       </template>
