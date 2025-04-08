@@ -63,6 +63,8 @@ onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
+// ini tetap diberikan karena mungkin nanti ada view component lain
+// dan begitu posisi ada di chat room, dan mau ke view component tersebut udah dipastikan leave room
 onUnmounted(() => {
   // leave room
   if (memoizedChatId.value) {
@@ -77,6 +79,8 @@ onUnmounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
 
+  // ini tetap diberikan karena mungkin nanti ada view component lain
+  // dan begitu posisi ada di chat room, dan mau ke view component tersebut udah dipastikan leave room
   if (memoizedChatId.value) {
     socket.emit('leaveRoom', {
       chatRoomId: memoizedChatRoomId.value,

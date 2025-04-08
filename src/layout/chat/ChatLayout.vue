@@ -8,7 +8,7 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, triggerRef, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 import { clientUrl } from '@/services/apiBaseUrl';
@@ -46,7 +46,7 @@ async function handleGetChats() {
 
     if (message?.length) {
       const chatIds = new Set()
-      const newChats = [...markRaw(memoizedChats.value), ...markRaw(message)].filter(item => {
+      const newChats = [...markRaw(memoizedChats.value), ...message].filter(item => {
         if (chatIds.has(item.chatId)) {
           return false; // Hilangkan duplikat
         }
@@ -99,13 +99,13 @@ watch(newMessateSocketUpdate, (data) => {
       unreadCount: data.unreadCount,
       latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
     }
-    const removeChatUserCurrently = markRaw(memoizedChats.value)?.slice()?.filter(chat =>
+    const removeChatUserCurrently = memoizedChats.value?.slice()?.filter(chat =>
       chat.chatId !== data?.chatId
     )
     setChats([
-      markRaw(newChatUserCurrently),
+      newChatUserCurrently,
       ...removeChatUserCurrently
-    ])
+    ], true)
   } else if (
     !chatCurrently && data.eventType === 'send-message' &&
     data?.unreadCount?.[profile.data.id] !== undefined
@@ -118,22 +118,21 @@ watch(newMessateSocketUpdate, (data) => {
       userIds: [Object.entries(data.unreadCount).find((k) => k[0] === profile.data.id).find(id => id !== 0), Object.entries(data.unreadCount).find((k) => k[0] !== profile.data.id).find(id => id !== 0)]
     }
     delete newUserChat.eventType
-    setChats([
-      markRaw(newUserChat),
-      ...markRaw(memoizedChats?.value)?.slice() ?? []
-    ])
+    chats.value.unshift(newUserChat)
+    chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data
+    triggerRef(chats)
   }
 })
 
 watch(newReadNotificationSocketUpdate, (data) => {
   const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.chatId === data?.chatId)
   if (chatUserIndex !== -1) {
-    chats.value[chatUserIndex] = markRaw({
-      ...markRaw(chats.value[chatUserIndex]),
+    chats.value[chatUserIndex] = {
+      ...chats.value[chatUserIndex],
       unreadCount: data.unreadCount
-    })
-    chats.value = markRaw([...chats.value])
-    setChats(chats.value, true)
+    }
+    chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data
+    triggerRef(chats)
   }
 })
 </script>
@@ -148,8 +147,8 @@ watch(newReadNotificationSocketUpdate, (data) => {
     <ListChat>
       <template #list>
         <RecycleScroller ref="scroller" class="px-3 pb-3 flex-1" :items="chats" :item-size="64" key-field="chatId"
-          v-slot="{ item }">
-          <ChatItem :item="item" />
+          v-slot="{ item }" :key="item?.chatId">
+          <ChatItem :item="item" :key="item.chatId" />
         </RecycleScroller>
       </template>
     </ListChat>

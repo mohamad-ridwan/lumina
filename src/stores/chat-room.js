@@ -23,20 +23,20 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   }
 
   function handleAddNewMessage(newMessage) {
-    chatRoomMessages.value = markRaw([
-      markRaw({ ...newMessage.latestMessage, id: newMessage.latestMessage.messageId }),
+    chatRoomMessages.value = [
+      { ...newMessage.latestMessage, id: newMessage.latestMessage.messageId },
       ...markRaw(chatRoomMessages.value),
-    ])
+    ]
   }
 
   function handleReadMessage(messageId) {
-    let chatDataCurrently = markRaw(chatRoomMessages.value)
+    let chatDataCurrently = chatRoomMessages.value
     const currentMessageIndex = chatDataCurrently.findIndex((msg) => msg.messageId === messageId)
     if (currentMessageIndex === -1) {
       return
     }
     chatDataCurrently[currentMessageIndex].status = 'READ'
-    chatRoomMessages.value = markRaw(chatDataCurrently)
+    chatRoomMessages.value = chatDataCurrently
   }
 
   function handleSetChatRoomWorker() {
@@ -85,9 +85,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         userIds: item.userIds,
         mainUserId: userId,
       })
-      if (!chatCurrently?.latestMessage) {
-        return
-      }
       itemCurrently = chatCurrently
     } else {
       itemCurrently = item
@@ -114,9 +111,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
 
     Object.assign(chatRoom.value, {
-      chatId: item.chatId,
-      chatRoomId: item.chatRoomId,
-      userIds: item.userIds.slice(),
+      chatId: itemCurrently.chatId,
+      chatRoomId: itemCurrently.chatRoomId,
+      userIds: itemCurrently.userIds.slice(),
     })
 
     chatRoomEventSource.value = new EventSource(
@@ -126,7 +123,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     chatRoomEventSource.value.onmessage = (event) => {
       const message = JSON.parse(event.data)
       if (message?.length) {
-        setChatRoomMessages(markRaw([...markRaw(chatRoomMessages.value), ...markRaw(message)]))
+        setChatRoomMessages(markRaw([...markRaw(chatRoomMessages.value), ...message]))
       }
     }
 

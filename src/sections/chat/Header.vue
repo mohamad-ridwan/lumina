@@ -28,13 +28,20 @@ const chatStore = chatsStore()
 const { setChats } = chatStore
 // chat room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom } = chatRoomStore
+const { setChatRoom, setChatRoomMessages } = chatRoomStore
+const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 const confirmState = ref(null)
 
 // logic
 const profileId = computed(() => profile.value?.data.id)
+const memoizedChatId = computed(() => {
+  return chatRoom.value?.chatId
+})
+const memoizedChatRoomId = computed(() => {
+  return chatRoom.value?.chatRoomId
+})
 
 const showTemplate = (event) => {
   if (confirmState.value) {
@@ -54,12 +61,22 @@ const showTemplate = (event) => {
 }
 
 const handleLogout = () => {
+  // offline first
   socket.emit('userOffline', profileId.value)
+  // leave room
+  if (memoizedChatId.value) {
+    socket.emit('leaveRoom', {
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      userId: profileId.value
+    })
+  }
   deleteSessionLogin()
   router.push('/login')
   setProfile(null)
   setChats([])
   setChatRoom({})
+  setChatRoomMessages([])
 }
 
 const handleScrollToTop = () => {
