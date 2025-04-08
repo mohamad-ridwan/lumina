@@ -18,6 +18,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = userStore
 // chat-room store
 const chatRoomStore = useChatRoomStore()
+const { setChatRoomMessages } = chatRoomStore
 const { chatRoom, chatRoomMessages } = storeToRefs(chatRoomStore)
 
 // state
@@ -117,6 +118,10 @@ onMounted(() => {
   // Tambahkan event listener untuk scroll
   scroller.value?.$el.addEventListener('scroll', handleScroll);
 });
+
+onUnmounted(() => {
+  setChatRoomMessages([])
+})
 </script>
 
 <template>

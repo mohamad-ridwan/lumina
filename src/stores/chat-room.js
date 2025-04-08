@@ -18,6 +18,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     chatRoom.value = chatRoomData
   }
 
+  function setChatRoomMessages(value) {
+    chatRoomMessages.value = value
+  }
+
   function handleAddNewMessage(newMessage) {
     chatRoomMessages.value = markRaw([
       markRaw({ ...newMessage.latestMessage, id: newMessage.latestMessage.messageId }),
@@ -89,7 +93,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       itemCurrently = item
     }
 
-    chatRoomMessages.value = []
+    setChatRoomMessages([])
 
     if (chatRoom.value?.chatId) {
       socket.emit('leaveRoom', {
@@ -122,7 +126,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     chatRoomEventSource.value.onmessage = (event) => {
       const message = JSON.parse(event.data)
       if (message?.length) {
-        chatRoomMessages.value = markRaw([...markRaw(chatRoomMessages.value), ...markRaw(message)])
+        setChatRoomMessages(markRaw([...markRaw(chatRoomMessages.value), ...markRaw(message)]))
       }
     }
 
@@ -144,6 +148,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     isChatRoomStreamsDone,
     chatRoomEventSource,
     chatRoomMessages,
+    setChatRoomMessages,
     handleAddNewMessage,
     resetChatRoomEventSource,
     handleClickUser,
