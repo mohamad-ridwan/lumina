@@ -1,9 +1,17 @@
 <script setup>
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
+import { chatsStore } from '@/stores/chats';
 import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
-import { computed, onMounted, ref, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import calendar from 'dayjs/plugin/calendar'
+
+// config depedencies
+dayjs.extend(relativeTime)
+dayjs.extend(calendar)
 
 // props
 const { recipientId, profileId, profileIdConnection } = defineProps(['recipientId', 'profileId', 'profileIdConnection'])
@@ -13,21 +21,73 @@ const { recipientId, profileId, profileIdConnection } = defineProps(['recipientI
 const chatRoomStore = useChatRoomStore()
 const { setChatRoom, resetChatRoomEventSource } = chatRoomStore
 const { chatRoom, chatRoomEventSource } = storeToRefs(chatRoomStore)
+// chats store
+const chatStore = chatsStore()
+const { chats } = storeToRefs(chatStore)
 
 // state
 const username = shallowRef(null)
 const image = shallowRef(null)
 const userProfileSocketUpdate = ref(null)
+const now = ref(Date.now())
 
 // logic
+let intervalId = undefined
+
 const memoizedChatRoomId = computed(() => {
   return chatRoom.value?.chatRoomId
 })
 const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
+const memoizedStatusUserOnline = computed(() => {
+  return chats.value?.find(chat => chat?.userIds?.find(id => id === recipientId))?.lastSeenTime
+})
+
+const lastSeenText = computed(() => {
+  const status = memoizedStatusUserOnline.value
+  if (!status || status === 'online') return ''
+
+  const lastSeenTime = dayjs(Number(status))
+  const nowTime = dayjs(now.value)
+
+  if (nowTime.diff(lastSeenTime, 'minute') < 1) {
+    return 'just now'
+  } else if (nowTime.diff(lastSeenTime, 'hour') < 24) {
+    return lastSeenTime.fromNow()
+  } else if (nowTime.diff(lastSeenTime, 'day') < 7) {
+    return lastSeenTime.calendar()
+  } else {
+    return lastSeenTime.format('MMMM D, YYYY')
+  }
+})
+
+function handleBack() {
+  if (chatRoomEventSource.value) {
+    resetChatRoomEventSource()
+  }
+  if (memoizedChatId.value) {
+    socket.emit('leaveRoom', {
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      userId: profileId
+    })
+  }
+  setChatRoom({})
+}
 
 // hooks rendering
+onMounted(() => {
+  intervalId = setInterval(() => {
+    now.value = Date.now()
+  }, 60000) // update setiap menit
+})
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
+})
+
 watch(() => {
   socket.emit('user-profile', {
     profileId: recipientId,
@@ -61,20 +121,6 @@ watch(userProfileSocketUpdate, (data) => {
     image.value = data.profile.image
   }
 })
-
-function handleBack() {
-  if (chatRoomEventSource.value) {
-    resetChatRoomEventSource()
-  }
-  if (memoizedChatId.value) {
-    socket.emit('leaveRoom', {
-      chatRoomId: memoizedChatRoomId.value,
-      chatId: memoizedChatId.value,
-      userId: profileId
-    })
-  }
-  setChatRoom({})
-}
 </script>
 
 <template>
@@ -83,8 +129,20 @@ function handleBack() {
       class="!rounded-full !bg-transparent hover:!bg-transparent !h-[25px] !w-[25px] justify-center items-center flex cursor-pointer !text-black !outline-none !border-none !p-0"
       size="large" icon-class="!text-lg" @click="handleBack" />
     <div class="flex items-center gap-3">
-      <img :src="image" alt="profile" :class="`object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11`">
-      <h2 class="text-sm sm:text-lg font-semibold">{{ username }}</h2>
+      <div class="relative">
+        <img :src="image" alt="profile" :class="`object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11`">
+        <div v-if="memoizedStatusUserOnline && memoizedStatusUserOnline === 'online'"
+          class="absolute bottom-0.5 right-0">
+          <div class="h-[11px] w-[11px] rounded-full bg-green-500 border-[1px] border-white"></div>
+        </div>
+      </div>
+      <div class="flex flex-col">
+        <h2 class="text-sm sm:text-lg font-semibold">{{ username }}</h2>
+        <span v-if="memoizedStatusUserOnline && memoizedStatusUserOnline !== 'online'"
+          class="text-[11px] text-[#6b7280]">
+          Last seen {{ lastSeenText }}
+        </span>
+      </div>
     </div>
   </header>
 </template>
