@@ -161,13 +161,13 @@ onMounted(() => {
 })
 
 watch(typingStartSocketUpdate, (data) => {
-  if (data?.recipientId === profile.value?.data?.id) {
+  if (data?.senderId === userIdsCurrently && data?.recipientId === profile.value?.data.id) {
     anyUserTyping.value = true
   }
 })
 
 watch(typingStopSocketUpdate, (data) => {
-  if (data?.recipientId === profile.value?.data?.id) {
+  if (data?.senderId === userIdsCurrently && data?.recipientId === profile.value?.data.id) {
     anyUserTyping.value = false
   }
 })
