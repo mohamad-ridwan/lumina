@@ -11,6 +11,19 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import { Button } from 'primevue';
+import dayjs from 'dayjs';
+import 'dayjs/locale/id';
+import isToday from 'dayjs/plugin/isToday';
+import isYesterday from 'dayjs/plugin/isYesterday';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import weekday from 'dayjs/plugin/weekday';
+import DateHeader from './DateHeader.vue';
+import { generateRandomId } from '@/helpers/generateRandomId';
+
+dayjs.extend(isToday);
+dayjs.extend(isYesterday);
+dayjs.extend(weekOfYear);
+dayjs.extend(weekday);
 
 // store
 // profile store
@@ -33,9 +46,58 @@ const memoizedChatRoomId = computed(() => {
 const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
-const memoizedChatRoomData = computed(() => {
-  return chatRoomMessages.value?.slice()
-})
+// const memoizedChatRoomData = computed(() => {
+//   return chatRoomMessages.value?.slice()
+// })
+const memoizedChatRoomDataWithHeaders = computed(() => {
+  if (!chatRoomMessages.value) {
+    return [];
+  }
+
+  const groupedMessages = new Map();
+
+  for (const item of chatRoomMessages.value) {
+    const itemDate = dayjs(Number(item.latestMessageTimestamp)).startOf('day');
+    const formattedDate = formatDate(itemDate);
+
+    if (!groupedMessages.has(formattedDate)) {
+      groupedMessages.set(formattedDate, { date: itemDate, items: [] });
+    }
+    groupedMessages.get(formattedDate)?.items.push(item);
+  }
+
+  const result = [];
+  for (const [formattedDate, group] of groupedMessages) {
+    result.push(...group.items); // push messages first
+    const messageId = generateRandomId(15)
+    result.push({
+      id: messageId,
+      messageId: messageId,
+      isHeader: true,
+      headerText: formattedDate,
+      messageId: `header-${formattedDate}`
+    }); // then push header
+  }
+
+  return result;
+});
+
+const formatDate = (date) => {
+  const today = dayjs().startOf('day');
+  const yesterday = dayjs().subtract(1, 'day').startOf('day');
+  const now = dayjs();
+  const dateToCheck = dayjs(date);
+
+  if (dateToCheck.isSame(today, 'day')) {
+    return 'Today';
+  } else if (dateToCheck.isSame(yesterday, 'day')) {
+    return 'Yesterday';
+  } else if (dateToCheck.isSame(now, 'week') && !dateToCheck.isSame(today, 'day') && !dateToCheck.isSame(yesterday, 'day')) {
+    return dateToCheck.format('dddd');
+  } else {
+    return dateToCheck.format('DD MMMM YYYY');
+  }
+};
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
 })
@@ -133,19 +195,22 @@ onUnmounted(() => {
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
-    <DynamicScroller ref="scroller" :items="memoizedChatRoomData" :min-item-size="54"
+    <DynamicScroller ref="scroller" :items="memoizedChatRoomDataWithHeaders" :min-item-size="54"
       class="flex-1 !p-4 space-y-2 bg-[#f9fafb]"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl;">
       <template v-slot="{ item, index, active }">
+        <DateHeader v-if="item?.isHeader" :date="item.headerText" />
         <DynamicScrollerItem :item="item" :active="active" :size-dependencies="[
           item.textMessage,
         ]" :data-index="index" :key="item.messageId">
-          <SenderMessage v-if="item.senderUserId === profile.data.id" :text-message="item.textMessage"
-            :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status"
+          <SenderMessage v-if="!item?.isHeader && item.senderUserId === profile.data.id"
+            :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
+            :status="item.status" :message-id="item.messageId" />
+          <RecipientMessage v-if="!item?.isHeader && item.senderUserId !== profile.data.id"
+            :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
+            :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
             :message-id="item.messageId" />
-          <RecipientMessage v-if="item.senderUserId !== profile.data.id" :text-message="item.textMessage"
-            :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :chat-id="memoizedChatId"
-            :chat-room-id="memoizedChatRoomId" :message-id="item.messageId" />
+
         </DynamicScrollerItem>
       </template>
     </DynamicScroller>
@@ -158,3 +223,17 @@ onUnmounted(() => {
     <FooterChatRoom />
   </div>
 </template>
+
+<style scoped>
+.dynamic-scroller>div.vue-recycle-scroller__slot {
+  position: sticky;
+  bottom: 6rem;
+  z-index: 1;
+}
+
+.dynamic-scroller>div.vue-recycle-scroller__slot:first-child {
+  position: sticky;
+  top: 6rem;
+  z-index: 1;
+}
+</style>
