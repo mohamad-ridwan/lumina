@@ -24,6 +24,9 @@ const initialValues = ref({
 // logic
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
 const memoizedChatId = computed(() => chatRoom.value.chatId);
+const formattedText = computed(() => {
+  return initialValues.value.textMessage.replace(/\n/g, '<br>');
+});
 
 const onFormSubmit = () => {
   if (initialValues.value.textMessage.trim()) {
@@ -34,7 +37,7 @@ const onFormSubmit = () => {
         messageId: generateRandomId(15),
         senderUserId: profile.value.data.id,
         messageType: 'text',
-        textMessage: initialValues.value.textMessage,
+        textMessage: formattedText.value,
         latestMessageTimestamp: Date.now(),
         status: "UNREAD"
       },
