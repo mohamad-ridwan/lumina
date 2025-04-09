@@ -4,7 +4,7 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -44,6 +44,7 @@ const currentStickyHeader = ref({
   latestMessageTimestamp: 0,
   text: ''
 })
+const showDateHeader = shallowRef(false)
 
 // logic
 const memoizedChatRoomId = computed(() => {
@@ -256,13 +257,24 @@ onMounted(() => {
   }
 })
 
+let scrollTimeout = null;
+
+const scrollStop = () => {
+  showDateHeader.value = true
+  scrollTimeout = setTimeout(() => {
+    showDateHeader.value = false
+  }, 500);
+}
+
 const handleScroll = () => {
   if (scroller.value?.$el) {
+    clearTimeout(scrollTimeout)
     const scrollTop = scroller.value.$el.scrollTop;
     nextTick(() => {
       onScroll()
     })
     showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD;
+    scrollStop()
   }
 };
 
@@ -283,7 +295,7 @@ onUnmounted(() => {
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
     <div v-if="currentStickyHeader.text"
-      class="absolute top-20 z-10 rotate-180 flex justify-center items-center w-full">
+      :class="`absolute top-20 z-10 rotate-180 flex justify-center items-center w-full ${showDateHeader ? 'opacity-100' : 'opacity-0'} transition-all`">
       <DateHeader :date="currentStickyHeader.text" />
     </div>
 
