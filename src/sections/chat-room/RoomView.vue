@@ -19,6 +19,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import weekday from 'dayjs/plugin/weekday';
 import DateHeader from './DateHeader.vue';
 import { generateRandomId } from '@/helpers/generateRandomId';
+import UserTypingIndicator from './UserTypingIndicator.vue';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -28,7 +29,7 @@ dayjs.extend(weekday);
 // store
 // profile store
 const userStore = usersStore()
-const { profile, profileIdConnection } = userStore
+const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { setChatRoomMessages } = chatRoomStore
@@ -45,6 +46,17 @@ const currentStickyHeader = ref({
   text: ''
 })
 const showDateHeader = shallowRef(false)
+const typingStartSocketUpdate = shallowRef({
+  key: 0,
+  senderId: null,
+  recipientId: null
+})
+const typingStopSocketUpdate = shallowRef({
+  key: 0,
+  senderId: null,
+  recipientId: null
+})
+const anyUserTyping = shallowRef(false)
 
 // logic
 const memoizedChatRoomId = computed(() => {
@@ -97,7 +109,16 @@ const memoizedChatRoomDataWithHeaders = computed(() => {
     });
   }
 
-  return result;
+  if (anyUserTyping.value) {
+    const typingId = generateRandomId(15)
+    result.unshift({
+      id: typingId,
+      messageId: typingId,
+      isTyping: true
+    })
+  }
+
+  return result
 });
 
 const formatDate = (date) => {
@@ -283,6 +304,36 @@ onMounted(() => {
   scroller.value?.$el.addEventListener('scroll', handleScroll);
 });
 
+onMounted(() => {
+  socket.on('typing-start', (data) => {
+    typingStartSocketUpdate.value = {
+      ...data,
+      key: typingStartSocketUpdate.value.key + 1
+    }
+  })
+})
+
+onMounted(() => {
+  socket.on('typing-stop', (data) => {
+    typingStopSocketUpdate.value = {
+      ...data,
+      key: typingStopSocketUpdate.value.key + 1
+    }
+  })
+})
+
+watch(typingStartSocketUpdate, (data) => {
+  if (data?.recipientId === profile.value?.data?.id) {
+    anyUserTyping.value = true
+  }
+})
+
+watch(typingStopSocketUpdate, (data) => {
+  if (data?.recipientId === profile.value?.data?.id) {
+    anyUserTyping.value = false
+  }
+})
+
 onUnmounted(() => {
   setChatRoomMessages([])
 })
@@ -290,7 +341,7 @@ onUnmounted(() => {
 
 <template>
   <!-- <SpamMessage /> -->
-  <div class="flex flex-col h-screen border-l-[#f1f1f1] border-l-[1px] relative">
+  <div class="flex flex-col bg-[#f9fafb] h-screen border-l-[#f1f1f1] border-l-[1px] relative">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
@@ -311,16 +362,19 @@ onUnmounted(() => {
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">
-            <SenderMessage v-if="!item?.isHeader && item.senderUserId === profile.data.id"
+            <SenderMessage v-if="item?.textMessage && item.senderUserId === profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :message-id="item.messageId" />
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">
-            <RecipientMessage v-if="!item?.isHeader && item.senderUserId !== profile.data.id"
+            <RecipientMessage v-if="item?.textMessage && item.senderUserId !== profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
               :message-id="item.messageId" />
+          </div>
+          <div v-if="item?.isTyping">
+            <UserTypingIndicator />
           </div>
         </DynamicScrollerItem>
       </template>
