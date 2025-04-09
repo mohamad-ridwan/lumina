@@ -34,7 +34,6 @@ const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
 const memoizedChatRoomData = computed(() => {
-  // return chatRoomMessages.value?.slice().reverse()
   return chatRoomMessages.value?.slice()
 })
 const memoizedUserIds = computed(() => {
