@@ -1,5 +1,6 @@
 <script setup>
 import { Button } from 'primevue';
+import { computed } from 'vue';
 
 const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer, latestMessageTimestamp, unreadCount, isActive, image, status } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status'])
 
@@ -8,6 +9,10 @@ const emits = defineEmits(['click'])
 const handleClick = () => {
   emits('click')
 }
+
+const formattedTextMessage = computed(() => {
+  return textMessage.replace(/<br\s*\/?>/gi, ' ');
+});
 </script>
 
 <template>
@@ -40,7 +45,7 @@ const handleClick = () => {
           <p v-if="textMessage"
             class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 w-full truncate">
             <span v-if="fromMe" class="hidden sm:inline">You:</span>
-            <span class="truncate w-full">{{ textMessage }}</span>
+            <span class="truncate w-full">{{ formattedTextMessage }}</span>
           </p>
         </div>
       </div>

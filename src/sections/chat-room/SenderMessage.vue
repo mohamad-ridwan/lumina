@@ -34,12 +34,12 @@ watch(markMessageAsReadSocketUpdate, (data) => {
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2">
     <div class="bg-[#2e74e8] rounded-lg p-2 max-w-xs self-end" style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
-      <p class="text-white text-sm rotate-180" style="direction: ltr;">{{ textMessage }}</p>
+      <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
     </div>
     <div class="flex flex-row-reverse items-center gap-1 pl-1" style="direction: ltr;">
       <span class="text-xs text-[#111827] self-end rotate-180" style="direction: ltr;">{{
         dayjs(Number(latestMessageTimestamp)).format('HH.mm')
-      }}</span>
+        }}</span>
       <div class="relative flex items-center">
         <i
           :class="`pi pi-check !text-[11px] ${status === 'UNREAD' ? 'text-gray-400' : 'text-[#2e74e8]'} rotate-180`"></i>
