@@ -25,19 +25,21 @@ const formattedTextMessage = computed(() => {
       <!-- Avatar + Info -->
       <div class="flex items-center gap-3 min-w-0">
         <!-- Avatar -->
-        <div class="relative">
-          <img :src="image" alt="profile"
-            :class="`object-cover rounded-full ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
-          <div v-if="status === 'online'" class="absolute bottom-0.5 right-0">
-            <div class="h-[12px] w-[12px] rounded-full bg-green-500 border-[1px] border-white"></div>
+        <div :class="`${imgSize ?? 'w-12 sm:w-14'}`">
+          <div :class="`relative ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
+            <img :src="image" alt="profile" :class="`object-cover rounded-full h-full w-full`">
+            <div v-if="status === 'online'" class="absolute bottom-0.5 right-0">
+              <div class="h-[12px] w-[12px] rounded-full bg-green-500 border-[1px] border-white"></div>
+            </div>
           </div>
         </div>
+
 
         <!-- Chat Info -->
         <div class="flex flex-col min-w-0">
           <!-- Username -->
-          <h1
-            :class="`font-bold truncate ${isActive ? 'text-white' : 'text-[#111827]'} ${fontSizeUsername ?? 'text-sm sm:text-base'}`">
+          <h1 :class="`font-bold truncate ${isActive ? 'text-white' : 'text-[#111827]'} ${fontSizeUsername
+            ?? 'text-sm sm:text-base'}`">
             {{ username }}
           </h1>
 
