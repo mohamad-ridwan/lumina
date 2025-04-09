@@ -2,7 +2,7 @@
 import { Button } from 'primevue';
 import { computed } from 'vue';
 
-const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer, latestMessageTimestamp, unreadCount, isActive, image, status } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status'])
+const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer, latestMessageTimestamp, unreadCount, isActive, image, status, isTyping } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping'])
 
 const emits = defineEmits(['click'])
 
@@ -42,11 +42,13 @@ const formattedTextMessage = computed(() => {
           </h1>
 
           <!-- Last message -->
-          <p v-if="textMessage"
-            class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 w-full truncate">
+          <p v-if="!isTyping && textMessage"
+            class="opacity-0 animate-fade-in flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 w-full truncate">
             <span v-if="fromMe" class="hidden sm:inline">You:</span>
             <span class="truncate w-full">{{ formattedTextMessage }}</span>
           </p>
+          <p v-if="isTyping" class="opacity-0 animate-fade-in italic text-xs text-gray-600 dark:text-gray-400">
+            Typing...</p>
         </div>
       </div>
 
@@ -70,3 +72,20 @@ const formattedTextMessage = computed(() => {
     </div>
   </Button>
 </template>
+
+<style scoped>
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-in-out forwards;
+  /* Sesuaikan durasi dan easing */
+}
+</style>

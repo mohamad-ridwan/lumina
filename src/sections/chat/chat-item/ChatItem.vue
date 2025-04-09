@@ -38,6 +38,17 @@ const { chats } = storeToRefs(chatStore)
 // state
 const userProfileSocketUpdate = ref(null)
 const userOnlineInfoSocketUpdate = shallowRef(null)
+const typingStartSocketUpdate = shallowRef({
+  key: 0,
+  senderId: null,
+  recipientId: null
+})
+const typingStopSocketUpdate = shallowRef({
+  key: 0,
+  senderId: null,
+  recipientId: null
+})
+const anyUserTyping = shallowRef(false)
 
 // logic
 const userIdsCurrently = item.userIds.slice().find(id => id !== profile.value.data.id)
@@ -130,11 +141,42 @@ onBeforeMount(() => {
     })
   }
 })
+
+onMounted(() => {
+  socket.on('typing-start', (data) => {
+    typingStartSocketUpdate.value = {
+      ...data,
+      key: typingStartSocketUpdate.value.key + 1
+    }
+  })
+})
+
+onMounted(() => {
+  socket.on('typing-stop', (data) => {
+    typingStopSocketUpdate.value = {
+      ...data,
+      key: typingStopSocketUpdate.value.key + 1
+    }
+  })
+})
+
+watch(typingStartSocketUpdate, (data) => {
+  if (data?.recipientId === profile.value?.data?.id) {
+    anyUserTyping.value = true
+  }
+})
+
+watch(typingStopSocketUpdate, (data) => {
+  if (data?.recipientId === profile.value?.data?.id) {
+    anyUserTyping.value = false
+  }
+})
 </script>
 
 <template>
   <ChatProfile :username="item?.username" :from-me="item.latestMessage.senderUserId === profile?.data?.id"
     :text-message="item.latestMessage.textMessage" @click="handleClickUser(profile?.data.id, item)"
     :latest-message-timestamp="formattedDate" :unread-count="item.unreadCount[profile?.data.id]"
-    :is-active="item.chatRoomId === memoizedChatRoomId" :image="item?.image" :status="item.lastSeenTime" />
+    :is-active="item.chatRoomId === memoizedChatRoomId" :image="item?.image" :status="item.lastSeenTime"
+    :is-typing="anyUserTyping" />
 </template>
