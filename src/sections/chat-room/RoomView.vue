@@ -326,8 +326,8 @@ onUnmounted(() => {
       </template>
     </DynamicScroller>
 
-    <Button v-if="showScrollDownButton" @click="scrollToBottom"
-      class="!absolute !bottom-24 !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !transition-opacity !duration-300 !ease-in-out !border-none"
+    <Button @click="scrollToBottom"
+      class="!absolute !bottom-24 !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !duration-300 !ease-in-out !border-none !transition-all"
       :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
       aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm" iconPos="only" />
 
