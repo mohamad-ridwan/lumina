@@ -223,6 +223,12 @@ onBeforeUnmount(() => {
   }
 })
 
+watch(loadingMessages, (loading) => {
+  if (loading) {
+    showScrollDownButton.value = false
+  }
+}, { immediate: true })
+
 watch(loadingMessages, async (loading) => {
   if (loading) return
   await nextTick()
