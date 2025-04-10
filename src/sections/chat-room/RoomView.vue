@@ -6,7 +6,7 @@ import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
-// import SpamMessage from '@/spam-message/SpamMessage.vue';
+import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
@@ -57,6 +57,9 @@ const typingStopSocketUpdate = shallowRef({
 })
 // const memoizedChatRoomDataWithHeaders = ref([]);
 const anyUserTyping = shallowRef(false)
+const isUserInitiatedScroll = shallowRef(false)
+const scrollTimeout = shallowRef(null)
+const scrollTimeOutDateHeader = shallowRef(null)
 
 // logic
 const memoizedChatRoomId = computed(() => {
@@ -230,38 +233,35 @@ onMounted(() => {
   }
 })
 
-let isUserInitiatedScroll = false
-
 const markUserScroll = () => {
-  isUserInitiatedScroll = true
+  isUserInitiatedScroll.value = true
   // Reset otomatis dalam beberapa ms
-  clearTimeout(scrollTimeout)
-  scrollTimeout = setTimeout(() => {
-    isUserInitiatedScroll = false
+  clearTimeout(scrollTimeout.value)
+  scrollTimeout.value = setTimeout(() => {
+    isUserInitiatedScroll.value = false
   }, 100)
 }
 
-// let isUserScrolling = false
-let scrollTimeout = null;
-
 const scrollStop = () => {
-  showDateHeader.value = true
-  scrollTimeout = setTimeout(() => {
-    showDateHeader.value = false
-  }, 500);
+  clearTimeout(scrollTimeOutDateHeader.value)
+  if (showDateHeader.value) {
+    scrollTimeOutDateHeader.value = setTimeout(() => {
+      showDateHeader.value = false
+    }, 500);
+  }
 }
 
 const handleScroll = () => {
   const scrollTop = scroller.value?.$el?.scrollTop ?? 0
 
-  if (isUserInitiatedScroll) {
+  if (isUserInitiatedScroll.value) {
+    showDateHeader.value = true
     nextTick(() => {
       onScroll()
     })
-    scrollStop()
+    showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
   }
-
-  showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
+  scrollStop()
 }
 
 onMounted(() => {
@@ -323,7 +323,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- <SpamMessage v-once /> -->
+  <SpamMessage v-once />
   <div class="flex flex-col bg-[#f9fafb] h-screen border-l-[#f1f1f1] border-l-[1px] relative">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
