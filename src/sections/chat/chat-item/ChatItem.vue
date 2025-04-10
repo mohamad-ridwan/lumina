@@ -13,6 +13,7 @@ import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import { storeToRefs } from 'pinia';
 import { chatsStore } from '@/stores/chats';
+import ChatProfileSkeleton from './ChatProfileSkeleton.vue';
 
 dayjs.extend(localizedFormat)
 dayjs.extend(relativeTime);
@@ -174,9 +175,11 @@ watch(typingStopSocketUpdate, (data) => {
 </script>
 
 <template>
-  <ChatProfile :username="item?.username" :from-me="item.latestMessage.senderUserId === profile?.data?.id"
-    :text-message="item.latestMessage.textMessage" @click="handleClickUser(profile?.data.id, item)"
-    :latest-message-timestamp="formattedDate" :unread-count="item.unreadCount[profile?.data.id]"
-    :is-active="item.chatRoomId === memoizedChatRoomId" :image="item?.image" :status="item.lastSeenTime"
-    :is-typing="anyUserTyping" />
+  <ChatProfileSkeleton v-if="!item?.image || !item?.username" />
+
+  <ChatProfile v-if="item?.username && item?.image" :username="item?.username"
+    :from-me="item.latestMessage.senderUserId === profile?.data?.id" :text-message="item.latestMessage.textMessage"
+    @click="handleClickUser(profile?.data.id, item)" :latest-message-timestamp="formattedDate"
+    :unread-count="item.unreadCount[profile?.data.id]" :is-active="item.chatRoomId === memoizedChatRoomId"
+    :image="item?.image" :status="item.lastSeenTime" :is-typing="anyUserTyping" />
 </template>
