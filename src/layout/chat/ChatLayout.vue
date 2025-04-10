@@ -103,7 +103,7 @@ watch(newMessateSocketUpdate, (data) => {
   const chatCurrently = markRaw(memoizedChats.value)?.slice()?.find(chat => chat?.chatId === data?.chatId)
   // jika data ada di chats store
   // tinggal ubah datanya
-  if (chatCurrently && data.eventType === 'send-message') {
+  if (chatCurrently && data.eventType === 'send-message' && !data?.isHeader) {
     const newChatUserCurrently = {
       ...chatCurrently,
       latestMessage: data.latestMessage,
@@ -119,7 +119,8 @@ watch(newMessateSocketUpdate, (data) => {
     ], true)
   } else if (
     !chatCurrently && data.eventType === 'send-message' &&
-    data?.unreadCount?.[profile.data.id] !== undefined
+    data?.unreadCount?.[profile.data.id] !== undefined &&
+    !data?.isHeader
   ) {
     // jika belum ada di chats store
     // buat baru dan masukkan ke awal index
@@ -150,7 +151,7 @@ watch(newReadNotificationSocketUpdate, (data) => {
 
 <template>
   <ChatLayoutWrapper>
-    <Header :scroller="scroller">
+    <Header v-memo="[scroller]" :scroller="scroller">
       <template #search>
         <SearchMessenger v-model="searchValue" />
       </template>

@@ -2,7 +2,7 @@ import { fetchChatRoom } from '@/services/api/chat-room'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { markRaw, ref } from 'vue'
+import { markRaw, ref, toRaw } from 'vue'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -23,20 +23,35 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   }
 
   function handleAddNewMessage(newMessage) {
-    chatRoomMessages.value = [
-      { ...newMessage.latestMessage, id: newMessage.latestMessage.messageId },
-      ...markRaw(chatRoomMessages.value),
-    ]
+    if (newMessage?.isHeader) {
+      const newData = {
+        ...newMessage,
+        id: newMessage.messageId,
+      }
+      delete newData.eventType
+      chatRoomMessages.value = markRaw([newData, ...markRaw(chatRoomMessages.value)])
+    } else {
+      chatRoomMessages.value = markRaw([
+        {
+          ...newMessage.latestMessage,
+          id: newMessage.latestMessage.messageId,
+        },
+        ...markRaw(chatRoomMessages.value),
+      ])
+    }
   }
 
   function handleReadMessage(messageId) {
-    let chatDataCurrently = chatRoomMessages.value
-    const currentMessageIndex = chatDataCurrently.findIndex((msg) => msg.messageId === messageId)
+    // let chatDataCurrently = chatRoomMessages.value
+    const currentMessageIndex = toRaw(chatRoomMessages.value)?.findIndex(
+      (msg) => msg.messageId === messageId,
+    )
     if (currentMessageIndex === -1) {
       return
     }
-    chatDataCurrently[currentMessageIndex].status = 'READ'
-    chatRoomMessages.value = chatDataCurrently
+    chatRoomMessages.value[currentMessageIndex].status = 'READ'
+    // triggerRef(chatRoomMessages)
+    // chatRoomMessages.value = chatDataCurrently
   }
 
   function handleSetChatRoomWorker() {

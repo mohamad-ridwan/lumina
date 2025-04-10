@@ -18,7 +18,6 @@ import isYesterday from 'dayjs/plugin/isYesterday';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import weekday from 'dayjs/plugin/weekday';
 import DateHeader from './DateHeader.vue';
-import { generateRandomId } from '@/helpers/generateRandomId';
 import UserTypingIndicator from './UserTypingIndicator.vue';
 
 dayjs.extend(isToday);
@@ -56,6 +55,7 @@ const typingStopSocketUpdate = shallowRef({
   senderId: null,
   recipientId: null
 })
+// const memoizedChatRoomDataWithHeaders = ref([]);
 const anyUserTyping = shallowRef(false)
 
 // logic
@@ -65,61 +65,21 @@ const memoizedChatRoomId = computed(() => {
 const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
-// const memoizedChatRoomData = computed(() => {
-//   return chatRoomMessages.value?.slice()
-// })
-const memoizedChatRoomDataWithHeaders = computed(() => {
+const memoizedMessages = computed(() => {
   if (!chatRoomMessages.value) {
-    return [];
-  }
-
-  const groupedMessages = new Map();
-
-  for (const item of chatRoomMessages.value) {
-    const itemDate = dayjs(Number(item.latestMessageTimestamp)).startOf('day');
-    const formattedDate = formatDate(itemDate);
-
-    if (!groupedMessages.has(formattedDate)) {
-      groupedMessages.set(formattedDate, { date: itemDate, items: [] });
-    }
-
-    groupedMessages.get(formattedDate)?.items.push(item);
-  }
-
-  const result = [];
-
-  for (const [formattedDate, group] of groupedMessages) {
-    const messages = group.items;
-
-    if (!messages.length) continue;
-    const lastMessage = messages[messages.length - 1];
-
-    // Tambahkan pesan-pesan
-    result.push(...messages);
-
-    // Tambahkan header terakhir (untuk penanda grouping)
-    const endMessageId = generateRandomId(15);
-    result.push({
-      id: endMessageId,
-      messageId: endMessageId,
-      isHeader: true,
-      isEndHeader: true,
-      headerText: formattedDate,
-      latestMessageTimestamp: lastMessage.latestMessageTimestamp, // akhir grup
-    });
+    return []
   }
 
   if (anyUserTyping.value) {
-    const typingId = generateRandomId(15)
-    result.unshift({
-      id: typingId,
-      messageId: typingId,
+    return [{
+      id: 'typing',
+      messageId: 'typing',
       isTyping: true
-    })
+    }, ...chatRoomMessages.value]
   }
 
-  return result
-});
+  return chatRoomMessages.value
+})
 
 const formatDate = (date) => {
   const today = dayjs().startOf('day');
@@ -181,7 +141,7 @@ const onScroll = () => {
 
   itemElements.forEach((el) => {
     const rect = el.getBoundingClientRect()
-    const visualBottom = rect.bottom + 580
+    const visualBottom = rect.bottom
     const distance = Math.abs(visualBottom - containerBottom)
 
     const isAboveViewport = visualBottom <= containerBottom - 30
@@ -202,7 +162,7 @@ const onScroll = () => {
   }
 }
 
-watch(() => memoizedChatRoomDataWithHeaders.value, (data) => {
+watch(chatRoomMessages, (data) => {
   if (data.length === 0) {
     currentStickyHeader.value = {
       latestMessageTimestamp: 0,
@@ -216,12 +176,14 @@ watch(() => memoizedChatRoomDataWithHeaders.value, (data) => {
     })
     onScroll()
   })
-})
+}, { immediate: true })
 
 watch(
   () => scroller.value,
   () => {
-    onScroll()
+    nextTick(() => {
+      onScroll()
+    })
   },
   { immediate: true }
 )
@@ -257,16 +219,6 @@ onBeforeUnmount(() => {
   }
 })
 
-// watch(memoizedChatRoomData, async (newMessages) => {
-//   if (newMessages.length > 0 && scroller.value) {
-//     await nextTick();
-//     scroller.value.scrollToItem(newMessages.length - 1, {
-//       smooth: true,
-//       behavior: "smooth",
-//     });
-//   }
-// });
-
 onMounted(() => {
   const el = scroller.value?.$el; // atau scroller container
 
@@ -278,6 +230,18 @@ onMounted(() => {
   }
 })
 
+let isUserInitiatedScroll = false
+
+const markUserScroll = () => {
+  isUserInitiatedScroll = true
+  // Reset otomatis dalam beberapa ms
+  clearTimeout(scrollTimeout)
+  scrollTimeout = setTimeout(() => {
+    isUserInitiatedScroll = false
+  }, 100)
+}
+
+// let isUserScrolling = false
 let scrollTimeout = null;
 
 const scrollStop = () => {
@@ -288,21 +252,40 @@ const scrollStop = () => {
 }
 
 const handleScroll = () => {
-  if (scroller.value?.$el) {
-    clearTimeout(scrollTimeout)
-    const scrollTop = scroller.value.$el.scrollTop;
+  const scrollTop = scroller.value?.$el?.scrollTop ?? 0
+
+  if (isUserInitiatedScroll) {
     nextTick(() => {
       onScroll()
     })
-    showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD;
     scrollStop()
   }
-};
+
+  showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
+}
 
 onMounted(() => {
-  // Tambahkan event listener untuk scroll
-  scroller.value?.$el.addEventListener('scroll', handleScroll);
-});
+  const el = scroller.value?.$el
+  if (!el) return
+
+  // Tangkap gesture dari user
+  el.addEventListener('wheel', markUserScroll, { passive: true })
+  el.addEventListener('touchstart', markUserScroll, { passive: true })
+  el.addEventListener('pointerdown', markUserScroll, { passive: true })
+
+  // Scroll listener
+  el.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  const el = scroller.value?.$el
+  if (!el) return
+
+  el.removeEventListener('wheel', markUserScroll)
+  el.removeEventListener('touchstart', markUserScroll)
+  el.removeEventListener('pointerdown', markUserScroll)
+  el.removeEventListener('scroll', handleScroll)
+})
 
 onMounted(() => {
   socket.on('typing-start', (data) => {
@@ -340,7 +323,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- <SpamMessage /> -->
+  <!-- <SpamMessage v-once /> -->
   <div class="flex flex-col bg-[#f9fafb] h-screen border-l-[#f1f1f1] border-l-[1px] relative">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
@@ -350,7 +333,7 @@ onUnmounted(() => {
       <DateHeader :date="currentStickyHeader.text" />
     </div>
 
-    <DynamicScroller id="scrollChatRoom" ref="scroller" :items="memoizedChatRoomDataWithHeaders" :min-item-size="54"
+    <DynamicScroller id="scrollChatRoom" ref="scroller" :items="memoizedMessages" :min-item-size="54"
       class="flex-1 !p-4 space-y-2 bg-[#f9fafb]" :buffer="0" :page-mode="false"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl;">
       <template v-slot="{ item, index, active }">
@@ -385,20 +368,6 @@ onUnmounted(() => {
       :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
       aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm" iconPos="only" />
 
-    <FooterChatRoom />
+    <FooterChatRoom v-once />
   </div>
 </template>
-
-<style scoped>
-.dynamic-scroller>div.vue-recycle-scroller__slot {
-  position: sticky;
-  bottom: 6rem;
-  z-index: 1;
-}
-
-.dynamic-scroller>div.vue-recycle-scroller__slot:first-child {
-  position: sticky;
-  top: 6rem;
-  z-index: 1;
-}
-</style>
