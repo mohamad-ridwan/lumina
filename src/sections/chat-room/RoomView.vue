@@ -223,7 +223,10 @@ onBeforeUnmount(() => {
   }
 })
 
-onMounted(() => {
+watch(loadingMessages, async (loading) => {
+  if (loading) return
+  await nextTick()
+
   const el = scroller.value?.$el; // atau scroller container
 
   if (el) {
@@ -265,7 +268,11 @@ const handleScroll = () => {
   scrollStop()
 }
 
-onMounted(() => {
+watch(loadingMessages, async (loading) => {
+  if (loading) return
+
+  await nextTick()
+
   const el = scroller.value?.$el
   if (!el) return
 
@@ -319,6 +326,7 @@ watch(typingStopSocketUpdate, (data) => {
 })
 
 onUnmounted(() => {
+  loadingMessages.value = false
   setChatRoomMessages([])
 })
 </script>
