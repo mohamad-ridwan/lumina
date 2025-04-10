@@ -13,6 +13,7 @@ import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 import { clientUrl } from '@/services/apiBaseUrl';
 import NoSearchResult from './NoSearchResult.vue';
+import NoChats from './NoChats.vue';
 
 // store
 // profile store
@@ -168,6 +169,9 @@ watch(newReadNotificationSocketUpdate, (data) => {
           :key="item?.chatId">
           <ChatItem :item="item" :key="item.chatId" />
         </RecycleScroller>
+
+        <!-- no chats -->
+        <NoChats v-if="!searchValue.trim() && searchMessengerData.length === 0" />
       </template>
     </ListChat>
   </ChatLayoutWrapper>
