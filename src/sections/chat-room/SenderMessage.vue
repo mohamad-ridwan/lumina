@@ -33,7 +33,8 @@ watch(markMessageAsReadSocketUpdate, (data) => {
 
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2">
-    <div class="bg-[#2e74e8] rounded-lg p-2 max-w-xs self-end" style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+    <div class="bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-xs self-end"
+      style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
       <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
     </div>
     <div class="flex flex-row-reverse items-center gap-1 pl-1" style="direction: ltr;">

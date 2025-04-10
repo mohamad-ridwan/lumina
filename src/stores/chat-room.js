@@ -2,11 +2,12 @@ import { fetchChatRoom } from '@/services/api/chat-room'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { markRaw, ref, toRaw } from 'vue'
+import { markRaw, ref, shallowRef, toRaw } from 'vue'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
   const chatRoomMessages = ref([])
+  const loadingMessages = shallowRef(true)
   // worker progress
   const chatRoomWorker = ref(null)
   const checkChatRoomWorker = ref(null)
@@ -93,6 +94,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
+    loadingMessages.value = true
 
     let itemCurrently = {}
     if (isNewChatRoom) {
@@ -140,15 +142,18 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       if (message?.length) {
         setChatRoomMessages(markRaw([...markRaw(chatRoomMessages.value), ...message]))
       }
+      loadingMessages.value = false
     }
 
     chatRoomEventSource.value.addEventListener('done', () => {
       resetChatRoomEventSource()
+      loadingMessages.value = false
     })
 
     chatRoomEventSource.value.addEventListener('error', (e) => {
       console.error('Streaming error:', e)
       resetChatRoomEventSource()
+      loadingMessages.value = false
     })
   }
 
@@ -160,6 +165,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     isChatRoomStreamsDone,
     chatRoomEventSource,
     chatRoomMessages,
+    loadingMessages,
     setChatRoomMessages,
     handleAddNewMessage,
     resetChatRoomEventSource,

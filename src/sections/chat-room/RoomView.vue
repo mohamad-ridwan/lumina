@@ -19,6 +19,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import weekday from 'dayjs/plugin/weekday';
 import DateHeader from './DateHeader.vue';
 import UserTypingIndicator from './UserTypingIndicator.vue';
+import SkeletonMessages from './SkeletonMessages.vue';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -32,7 +33,7 @@ const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { setChatRoomMessages } = chatRoomStore
-const { chatRoom, chatRoomMessages } = storeToRefs(chatRoomStore)
+const { chatRoom, chatRoomMessages, loadingMessages } = storeToRefs(chatRoomStore)
 
 // state
 const scroller = ref(null)
@@ -333,8 +334,10 @@ onUnmounted(() => {
       <DateHeader :date="currentStickyHeader.text" />
     </div>
 
-    <DynamicScroller id="scrollChatRoom" ref="scroller" :items="memoizedMessages" :min-item-size="54"
-      class="flex-1 !p-4 space-y-2 bg-[#f9fafb]" :buffer="0" :page-mode="false"
+    <SkeletonMessages v-if="loadingMessages" />
+
+    <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages"
+      :min-item-size="54" class="flex-1 !p-4 space-y-2 bg-[#f9fafb]" :buffer="0" :page-mode="false"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl;">
       <template v-slot="{ item, index, active }">
         <DynamicScrollerItem :item="item" :active="active" :size-dependencies="[
