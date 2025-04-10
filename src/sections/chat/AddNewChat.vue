@@ -92,7 +92,7 @@ watch(searchValue, (newValue) => {
 <template>
   <ConfirmPopup group="templating">
     <template #message>
-      <div class="min-w-[250px] p-2.5 flex flex-col gap-2">
+      <div class="min-w-[250px] max-h-[70vh] overflow-hidden p-2.5 flex flex-col gap-2">
         <div class="flex flex-col gap-2">
           <h1 class="font-bold text-sm text-center">New Chat</h1>
           <Input v-model="searchValue" class-icon="left-3"
@@ -100,7 +100,7 @@ watch(searchValue, (newValue) => {
             placeholder="Search username or number" py-input="!py-1.5" font-size-input="!text-[12px]" />
         </div>
 
-        <ul>
+        <ul class="overflow-y-auto h-fit">
           <li v-for="item in contactUsers" :key="item.id" class="border-b-[0.2px] border-[#f1f1f1]">
             <ChatProfile :username="item.username" font-size-username="text-xs" img-size="h-[30px] w-[30px]"
               height-container="!h-[2.5rem]" :image="item.image" @click="handleClickContact(item.id)" />
