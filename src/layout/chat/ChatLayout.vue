@@ -12,6 +12,7 @@ import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, shal
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 import { clientUrl } from '@/services/apiBaseUrl';
+import NoSearchResult from './NoSearchResult.vue';
 
 // store
 // profile store
@@ -158,8 +159,13 @@ watch(newReadNotificationSocketUpdate, (data) => {
     </Header>
     <ListChat>
       <template #list>
-        <RecycleScroller ref="scroller" class="px-3 pb-3 flex-1" :items="searchMessengerData" :item-size="64"
-          key-field="chatId" v-slot="{ item }" :key="item?.chatId">
+        <!-- no result search messenger -->
+        <NoSearchResult v-if="searchValue.trim() && searchMessengerData.length === 0" />
+
+        <!-- chat list -->
+        <RecycleScroller v-if="!searchValue.trim() && searchMessengerData.length > 0" ref="scroller"
+          class="px-3 pb-3 flex-1" :items="searchMessengerData" :item-size="64" key-field="chatId" v-slot="{ item }"
+          :key="item?.chatId">
           <ChatItem :item="item" :key="item.chatId" />
         </RecycleScroller>
       </template>
