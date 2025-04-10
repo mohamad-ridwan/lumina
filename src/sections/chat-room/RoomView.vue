@@ -104,6 +104,9 @@ const formatDate = (date) => {
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
 })
+const memoizedUserIdCurrently = computed(() => {
+  return memoizedUserIds.value?.find(id => id !== profile.value?.data.id)
+})
 
 const scrollToBottom = () => {
   if (scroller.value) {
@@ -320,13 +323,13 @@ onMounted(() => {
 })
 
 watch(typingStartSocketUpdate, (data) => {
-  if (data?.recipientId === profile.value?.data?.id) {
+  if (data?.senderId === memoizedUserIdCurrently.value && data?.recipientId === profile.value?.data?.id) {
     anyUserTyping.value = true
   }
 })
 
 watch(typingStopSocketUpdate, (data) => {
-  if (data?.recipientId === profile.value?.data?.id) {
+  if (data?.senderId === memoizedUserIdCurrently.value && data?.recipientId === profile.value?.data?.id) {
     anyUserTyping.value = false
   }
 })
