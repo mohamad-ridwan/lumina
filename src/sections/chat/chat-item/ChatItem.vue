@@ -107,7 +107,7 @@ watch(userProfileSocketUpdate, (data) => {
       triggerRef(chats)
     }
   }
-})
+}, { immediate: true })
 
 watch(userOnlineInfoSocketUpdate, (data) => {
   if (
@@ -125,7 +125,7 @@ watch(userOnlineInfoSocketUpdate, (data) => {
       triggerRef(chats)
     }
   }
-})
+}, { immediate: true })
 
 onBeforeMount(() => {
   if (profile && userIdsCurrently) {

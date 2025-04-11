@@ -14,6 +14,7 @@ import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 import { clientUrl } from '@/services/apiBaseUrl';
 import NoSearchResult from './NoSearchResult.vue';
 import NoChats from './NoChats.vue';
+import ChatProfileSkeleton from '@/sections/chat/chat-item/ChatProfileSkeleton.vue';
 
 // store
 // profile store
@@ -30,6 +31,7 @@ const newReadNotificationSocketUpdate = ref(null)
 const chatsEventSource = ref(null)
 const scroller = ref(null)
 const searchValue = shallowRef('')
+const loadingChats = shallowRef(true)
 
 // logic
 const memoizedChats = computed(() => chats.value)
@@ -68,27 +70,22 @@ async function handleGetChats() {
       });
       setChats(newChats)
     }
+    loadingChats.value = false
   }
 
   chatsEventSource.value.addEventListener('done', () => {
     resetChatsEventSource()
+    loadingChats.value = false
   })
 
   chatsEventSource.value.addEventListener('error', (e) => {
     console.error('Streaming error:', e)
     resetChatsEventSource()
+    loadingChats.value = false
   })
 }
 
 // hooks rendering
-onBeforeMount(async () => {
-  handleGetChats()
-})
-
-onMounted(() => {
-  document.body.style.overflow = 'hidden'
-})
-
 onBeforeMount(() => {
   socket.on('newMessage', (data) => {
     newMessateSocketUpdate.value = data
@@ -97,6 +94,14 @@ onBeforeMount(() => {
   socket.on('readNotification', (data) => {
     newReadNotificationSocketUpdate.value = data
   })
+})
+
+onBeforeMount(async () => {
+  handleGetChats()
+})
+
+onMounted(() => {
+  document.body.style.overflow = 'hidden'
 })
 
 onBeforeUnmount(() => {
@@ -162,18 +167,25 @@ watch(newReadNotificationSocketUpdate, (data) => {
     </Header>
     <ListChat>
       <template #list>
+        <!-- loading chats -->
+        <div v-if="loadingChats" class="flex-1 overflow-y-auto px-3 pb-3">
+          <ChatProfileSkeleton />
+          <ChatProfileSkeleton />
+          <ChatProfileSkeleton />
+        </div>
+
         <!-- no result search messenger -->
         <NoSearchResult v-if="searchValue.trim() && searchMessengerData.length === 0" />
 
         <!-- chat list -->
-        <RecycleScroller v-if="!searchValue.trim() && searchMessengerData.length > 0" ref="scroller"
+        <RecycleScroller v-if="!loadingChats && !searchValue.trim() && searchMessengerData.length > 0" ref="scroller"
           class="px-3 pb-3 flex-1" :items="searchMessengerData" :item-size="64" key-field="chatId" v-slot="{ item }"
           :key="item?.chatId">
           <ChatItem :item="item" :key="item.chatId" />
         </RecycleScroller>
 
         <!-- no chats -->
-        <NoChats v-if="!searchValue.trim() && searchMessengerData.length === 0" />
+        <NoChats v-if="!loadingChats && !searchValue.trim() && searchMessengerData.length === 0" />
       </template>
     </ListChat>
   </ChatLayoutWrapper>
