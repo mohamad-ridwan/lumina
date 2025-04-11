@@ -273,6 +273,8 @@ const handleScroll = () => {
       onScroll()
     })
     showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
+  } else if (scrollTop === 0) {
+    showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
   }
   scrollStop()
 }
@@ -288,6 +290,7 @@ watch(loadingMessages, async (loading) => {
   // Tangkap gesture dari user
   el.addEventListener('wheel', markUserScroll, { passive: true })
   el.addEventListener('touchstart', markUserScroll, { passive: true })
+  el.addEventListener('touchmove', markUserScroll, { passive: true })
   el.addEventListener('pointerdown', markUserScroll, { passive: true })
 
   // Scroll listener
@@ -300,6 +303,7 @@ onUnmounted(() => {
 
   el.removeEventListener('wheel', markUserScroll)
   el.removeEventListener('touchstart', markUserScroll)
+  el.removeEventListener('touchmove', markUserScroll)
   el.removeEventListener('pointerdown', markUserScroll)
   el.removeEventListener('scroll', handleScroll)
 })
