@@ -87,7 +87,9 @@ onBeforeMount(async () => {
 
 onMounted(() => {
   document.body.style.overflow = 'hidden'
+})
 
+onBeforeMount(() => {
   socket.on('newMessage', (data) => {
     newMessateSocketUpdate.value = data
   })
