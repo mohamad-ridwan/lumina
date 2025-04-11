@@ -27,12 +27,6 @@ const userIdCurrentlyState = shallowRef(null)
 // logic
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
 const memoizedChatId = computed(() => chatRoom.value.chatId);
-const userIdCurrently = computed(() => {
-  if (!chatRoom.value?.userIds) {
-    return null
-  }
-  return chatRoom.value?.userIds.find(id => id !== profile.value?.data?.id)
-})
 const formattedText = computed(() => {
   return initialValues.value.textMessage.replace(/\n/g, '<br>');
 });
@@ -101,11 +95,12 @@ onBeforeUnmount(() => {
   emitTypingStop()
 })
 
-watch(userIdCurrently, (id) => {
-  if (id) {
-    userIdCurrentlyState.value = id
+watch(chatRoom, (data) => {
+  if (!data?.userIds) {
+    return
   }
-})
+  userIdCurrentlyState.value = data?.userIds.find(id => id !== profile.value?.data?.id)
+}, { immediate: true })
 </script>
 
 <template>
