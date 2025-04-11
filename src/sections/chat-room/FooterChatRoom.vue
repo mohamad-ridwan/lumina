@@ -94,6 +94,9 @@ const handleInputChange = (event) => {
 // hooks rendering
 onUnmounted(() => {
   clearTimeout(typingTimeout.value);
+  if (isTyping.value) {
+    emitTypingStop()
+  }
 });
 </script>
 
