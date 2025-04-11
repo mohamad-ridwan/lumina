@@ -6,7 +6,7 @@ import { usersStore } from '@/stores/users';
 import { Form } from '@primevue/forms';
 import { storeToRefs } from 'pinia';
 import { Button, Textarea } from 'primevue';
-import { computed, onBeforeUnmount, onUnmounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onUnmounted, ref, shallowRef, watch } from 'vue';
 
 // store
 // profile store
@@ -22,6 +22,7 @@ const initialValues = ref({
 });
 const typingTimeout = ref(null);
 const isTyping = ref(false);
+const userIdCurrentlyState = shallowRef(null)
 
 // logic
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
@@ -70,12 +71,12 @@ const handleTextareaKeydown = (event) => {
 
 const emitTypingStart = () => {
   isTyping.value = true;
-  socket.emit('typing-start', { senderId: profile.value?.data.id, recipientId: userIdCurrently.value });
+  socket.emit('typing-start', { senderId: profile.value?.data.id, recipientId: userIdCurrentlyState.value });
 };
 
 const emitTypingStop = () => {
   isTyping.value = false;
-  socket.emit('typing-stop', { senderId: profile.value?.data.id, recipientId: userIdCurrently.value });
+  socket.emit('typing-stop', { senderId: profile.value?.data.id, recipientId: userIdCurrentlyState.value });
 };
 
 
@@ -98,6 +99,12 @@ onUnmounted(() => {
 
 onBeforeUnmount(() => {
   emitTypingStop()
+})
+
+watch(userIdCurrently, (id) => {
+  if (id) {
+    userIdCurrentlyState.value = id
+  }
 })
 </script>
 
