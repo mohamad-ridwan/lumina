@@ -346,7 +346,7 @@ onUnmounted(() => {
 
 <template>
   <!-- <SpamMessage v-once /> -->
-  <div class="flex flex-col bg-[#f9fafb] h-screen border-l-[#f1f1f1] border-l-[1px] relative">
+  <div class="flex flex-col bg-[#f9fafb] h-dvh border-l-[#f1f1f1] border-l-[1px] relative">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 

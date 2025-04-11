@@ -73,7 +73,7 @@ watch(userOnlineSocketUpdate, (data) => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 min-h-screen">
+  <div class="grid grid-cols-1 md:grid-cols-3 min-h-dvh">
     <ChatLayout />
     <ChatRoomLayout />
   </div>

@@ -12,7 +12,7 @@ const memoizedChatId = computed(() => chatRoom.value?.chatId);
 </script>
 
 <template>
-  <div :class="`${memoizedChatId ? 'hidden md:flex' : 'flex'} flex-col gap-2 relative h-screen`">
+  <div :class="`${memoizedChatId ? 'hidden md:flex' : 'flex'} flex-col gap-2 relative h-dvh`">
     <slot></slot>
   </div>
 </template>
