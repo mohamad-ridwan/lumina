@@ -178,9 +178,8 @@ watch(newReadNotificationSocketUpdate, (data) => {
         <NoSearchResult v-if="searchValue.trim() && searchMessengerData.length === 0" />
 
         <!-- chat list -->
-        <RecycleScroller v-if="!loadingChats && !searchValue.trim() && searchMessengerData.length > 0" ref="scroller"
-          class="px-3 pb-3 flex-1" :items="searchMessengerData" :item-size="64" key-field="chatId" v-slot="{ item }"
-          :key="item?.chatId">
+        <RecycleScroller v-if="!loadingChats && searchMessengerData.length > 0" ref="scroller" class="px-3 pb-3 flex-1"
+          :items="searchMessengerData" :item-size="64" key-field="chatId" v-slot="{ item }" :key="item?.chatId">
           <ChatItem :item="item" :key="item.chatId" />
         </RecycleScroller>
 
