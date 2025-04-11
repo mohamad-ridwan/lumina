@@ -63,6 +63,23 @@ const scrollTimeout = shallowRef(null)
 const scrollTimeOutDateHeader = shallowRef(null)
 
 // logic
+const formatDate = (date) => {
+  const today = dayjs().startOf('day');
+  const yesterday = dayjs().subtract(1, 'day').startOf('day');
+  const now = dayjs();
+  const dateToCheck = dayjs(date);
+
+  if (dateToCheck.isSame(today, 'day')) {
+    return 'Today';
+  } else if (dateToCheck.isSame(yesterday, 'day')) {
+    return 'Yesterday';
+  } else if (dateToCheck.isSame(now, 'week') && !dateToCheck.isSame(today, 'day') && !dateToCheck.isSame(yesterday, 'day')) {
+    return dateToCheck.format('dddd');
+  } else {
+    return dateToCheck.format('DD MMMM YYYY');
+  }
+};
+
 const memoizedChatRoomId = computed(() => {
   return chatRoom.value?.chatRoomId
 })
@@ -82,25 +99,13 @@ const memoizedMessages = computed(() => {
     }, ...chatRoomMessages.value]
   }
 
-  return chatRoomMessages.value
+  return chatRoomMessages.value?.map(chat => {
+    if (chat?.isHeader) {
+      return { ...chat, headerText: formatDate(Number(chat?.latestMessageTimestamp)) }
+    }
+    return chat
+  })
 })
-
-const formatDate = (date) => {
-  const today = dayjs().startOf('day');
-  const yesterday = dayjs().subtract(1, 'day').startOf('day');
-  const now = dayjs();
-  const dateToCheck = dayjs(date);
-
-  if (dateToCheck.isSame(today, 'day')) {
-    return 'Today';
-  } else if (dateToCheck.isSame(yesterday, 'day')) {
-    return 'Yesterday';
-  } else if (dateToCheck.isSame(now, 'week') && !dateToCheck.isSame(today, 'day') && !dateToCheck.isSame(yesterday, 'day')) {
-    return dateToCheck.format('dddd');
-  } else {
-    return dateToCheck.format('DD MMMM YYYY');
-  }
-};
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
 })
@@ -365,7 +370,7 @@ onUnmounted(() => {
           item.textMessage,
         ]" :data-index="index" :key="item.messageId">
           <div v-if="item?.isHeader">
-            <DateHeader v-if="item?.isEndHeader" :date="item.headerText" />
+            <DateHeader :date="item.headerText" />
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">
