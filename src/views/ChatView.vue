@@ -5,7 +5,7 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onBeforeMount, onMounted, shallowRef, triggerRef, watch } from 'vue';
+import { computed, markRaw, onBeforeMount, shallowRef, triggerRef, watch } from 'vue';
 
 // store
 const userStore = usersStore()
@@ -32,7 +32,7 @@ onBeforeMount(() => {
   }
 })
 
-onMounted(() => {
+onBeforeMount(() => {
   socket.on('userOnline', (id) => {
     userOnlineSocketUpdate.value.id = id
     userOnlineSocketUpdate.value.key = + 1

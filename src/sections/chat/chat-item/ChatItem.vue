@@ -80,7 +80,7 @@ const formattedDate = computed(() => {
 });
 
 // hooks rendering
-onMounted(() => {
+onBeforeMount(() => {
   socket.on('user-profile', (data) => {
     userProfileSocketUpdate.value = data
   })
