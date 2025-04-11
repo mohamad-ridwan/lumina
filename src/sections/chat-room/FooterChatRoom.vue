@@ -6,7 +6,7 @@ import { usersStore } from '@/stores/users';
 import { Form } from '@primevue/forms';
 import { storeToRefs } from 'pinia';
 import { Button, Textarea } from 'primevue';
-import { computed, onUnmounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onUnmounted, ref } from 'vue';
 
 // store
 // profile store
@@ -94,10 +94,11 @@ const handleInputChange = (event) => {
 // hooks rendering
 onUnmounted(() => {
   clearTimeout(typingTimeout.value);
-  if (isTyping.value) {
-    emitTypingStop()
-  }
 });
+
+onBeforeUnmount(() => {
+  emitTypingStop()
+})
 </script>
 
 <template>

@@ -392,6 +392,6 @@ onUnmounted(() => {
       :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
       aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm" iconPos="only" />
 
-    <FooterChatRoom v-once />
+    <FooterChatRoom />
   </div>
 </template>

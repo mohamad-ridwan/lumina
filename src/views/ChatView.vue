@@ -5,7 +5,7 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onBeforeMount, shallowRef, triggerRef, watch } from 'vue';
+import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, shallowRef, triggerRef, watch } from 'vue';
 
 // store
 const userStore = usersStore()
@@ -41,6 +41,28 @@ onBeforeMount(() => {
   socket.on('userOffline', (data) => {
     userOfflineSocketUpdate.value = data
   })
+})
+
+const notifyOnline = () => {
+  if (socket?.connected && profileId.value) {
+    socket.emit('userOnline', profileId.value)
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      notifyOnline()
+    }
+  })
+
+  window.addEventListener('focus', notifyOnline)
+  window.addEventListener('online', notifyOnline)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', notifyOnline)
+  window.removeEventListener('online', notifyOnline)
 })
 
 watch(userOfflineSocketUpdate, (data) => {
