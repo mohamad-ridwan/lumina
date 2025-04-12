@@ -4,7 +4,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onBeforeMount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import calendar from 'dayjs/plugin/calendar'
@@ -14,7 +14,7 @@ dayjs.extend(relativeTime)
 dayjs.extend(calendar)
 
 // props
-const { recipientId, profileId, } = defineProps(['recipientId', 'profileId', 'profileIdConnection'])
+const { recipientId, profileId, profileIdConnection } = defineProps(['recipientId', 'profileId', 'profileIdConnection'])
 
 // store
 // chat room store
@@ -26,9 +26,9 @@ const chatStore = chatsStore()
 const { chats } = storeToRefs(chatStore)
 
 // state
-// const username = shallowRef(null)
-// const image = shallowRef(null)
-// const userProfileSocketUpdate = ref(null)
+const username = shallowRef(null)
+const image = shallowRef(null)
+const userProfileSocketUpdate = ref(null)
 const now = ref(Date.now())
 
 // logic
@@ -43,15 +43,20 @@ const memoizedChatId = computed(() => {
 const memoizedStatusUserOnline = computed(() => {
   return chats.value?.find(chat => chat?.userIds?.find(id => id === recipientId))?.lastSeenTime
 })
+let key = 0
 const profileInfo = computed(() => {
   if (!memoizedChatId.value) {
     return {
-      username: null,
-      image: ''
+      key: key += 1
     }
   }
 
   const currentChat = chats.value.find(chat => chat?.chatId === memoizedChatId.value)
+  if (!currentChat) {
+    return {
+      key: key += 1
+    }
+  }
   return {
     username: currentChat?.username,
     image: currentChat?.image
@@ -102,39 +107,41 @@ onUnmounted(() => {
   }
 })
 
-// onBeforeMount(() => {
-//   socket.emit('user-profile', {
-//     profileId: recipientId,
-//     senderId: profileId,
-//     profileIdConnection,
-//     actionType: 'chat-room'
-//   })
-// })
+watch(profileInfo, (data) => {
+  if (data?.key) {
+    socket.emit('user-profile', {
+      profileId: recipientId,
+      senderId: profileId,
+      profileIdConnection,
+      actionType: 'chat-room'
+    })
+  }
+}, { immediate: true })
 
-// onMounted(() => {
-//   socket.on('user-profile', (data) => {
-//     if (
-//       data?.actionType === 'chat-room' &&
-//       data?.senderId === profileId &&
-//       data?.profileIdConnection === profileIdConnection &&
-//       data?.profile?.id === recipientId
-//     ) {
-//       userProfileSocketUpdate.value = data
-//     }
-//   })
-// })
+onBeforeMount(() => {
+  socket.on('user-profile', (data) => {
+    if (
+      data?.actionType === 'chat-room' &&
+      data?.senderId === profileId &&
+      data?.profileIdConnection === profileIdConnection &&
+      data?.profile?.id === recipientId
+    ) {
+      userProfileSocketUpdate.value = data
+    }
+  })
+})
 
-// watch(userProfileSocketUpdate, (data) => {
-//   if (
-//     data?.actionType === 'chat-room' &&
-//     data?.senderId === profileId &&
-//     data?.profileIdConnection === profileIdConnection &&
-//     data?.profile?.id === recipientId
-//   ) {
-//     username.value = data.profile.username
-//     image.value = data.profile.image
-//   }
-// })
+watch(userProfileSocketUpdate, (data) => {
+  if (
+    data?.actionType === 'chat-room' &&
+    data?.senderId === profileId &&
+    data?.profileIdConnection === profileIdConnection &&
+    data?.profile?.id === recipientId
+  ) {
+    username.value = data.profile.username
+    image.value = data.profile.image
+  }
+})
 </script>
 
 <template>
@@ -144,14 +151,15 @@ onUnmounted(() => {
       size="large" icon-class="!text-lg" @click="handleBack" />
     <div class="flex items-center gap-3">
       <div class="relative">
-        <img :src="profileInfo.image" alt="profile" :class="`object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11`">
+        <img :src="!profileInfo?.image ? image : profileInfo.image" alt="profile"
+          :class="`object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11`">
         <div v-if="memoizedStatusUserOnline && memoizedStatusUserOnline === 'online'"
           class="absolute bottom-0.5 right-0">
           <div class="h-[11px] w-[11px] rounded-full bg-green-500 border-[1px] border-white"></div>
         </div>
       </div>
       <div class="flex flex-col">
-        <h2 class="text-sm sm:text-lg font-semibold">{{ profileInfo.username }}</h2>
+        <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? username : profileInfo.username }}</h2>
         <span v-if="memoizedStatusUserOnline && memoizedStatusUserOnline !== 'online'"
           class="text-[11px] text-[#6b7280]">
           Last seen {{ lastSeenText }}

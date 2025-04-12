@@ -96,7 +96,12 @@ const memoizedMessages = computed(() => {
       id: 'typing',
       messageId: 'typing',
       isTyping: true
-    }, ...chatRoomMessages.value]
+    }, ...chatRoomMessages.value?.map(chat => {
+      if (chat?.isHeader) {
+        return { ...chat, headerText: formatDate(Number(chat?.latestMessageTimestamp)) }
+      }
+      return chat
+    })]
   }
 
   return chatRoomMessages.value?.map(chat => {
