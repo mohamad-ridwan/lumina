@@ -104,7 +104,7 @@ watch(chatRoom, (data) => {
 </script>
 
 <template>
-  <footer>
+  <footer class="sticky bottom-0 z-10 w-full">
     <div class="bg-white p-4 border-t-[#f1f1f1] border-t-[1px] w-full">
       <Form :initialValues="initialValues" @submit="onFormSubmit" class="flex items-end w-full gap-2">
         <Textarea v-model="initialValues.textMessage" rows="1" cols="20"

@@ -351,7 +351,7 @@ onUnmounted(() => {
 
 <template>
   <!-- <SpamMessage v-once /> -->
-  <div class="flex flex-col h-dvh relative bg-[#f9fafb] border-l border-[#f1f1f1]">
+  <div class="flex flex-col flex-1 overflow-hidden relative bg-[#f9fafb] border-l border-[#f1f1f1]">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
@@ -363,7 +363,7 @@ onUnmounted(() => {
     <SkeletonMessages v-if="loadingMessages" />
 
     <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages"
-      :min-item-size="54" class="flex-1 !p-4 space-y-2 bg-[#f9fafb]" :buffer="0" :page-mode="false"
+      :min-item-size="54" class="flex-1 space-y-2 bg-[#f9fafb] !p-4" :buffer="0" :page-mode="false"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl;">
       <template v-slot="{ item, index, active }">
         <DynamicScrollerItem :item="item" :active="active" :size-dependencies="[

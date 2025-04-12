@@ -23,7 +23,7 @@ const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
 
-// hooks rendering
+// Hooks rendering
 onMounted(() => {
   socket.on('newMessage', (data) => {
     newMessageUpdate.value = data
@@ -47,7 +47,22 @@ watch(newMessageUpdate, (data) => {
   <div :class="`col-span-2 ${!memoizedChatId ? 'hidden md:block' : 'md:block'}`">
     <MainBackground :chat-id="!memoizedChatId" />
     <template v-if="memoizedChatId">
-      <RoomView />
+      <div id="roomView" class="flex box-border overflow-hidden">
+        <RoomView />
+      </div>
     </template>
   </div>
 </template>
+
+<style scoped>
+html,
+body,
+#app {
+  overflow: hidden;
+}
+
+#roomView {
+  height: -webkit-fill-available;
+  height: 100dvh;
+}
+</style>

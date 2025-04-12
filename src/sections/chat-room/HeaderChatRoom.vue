@@ -138,7 +138,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header class="bg-white px-4 py-3 border-b-[#f1f1f1] border-b-[1px] flex items-center gap-4">
+  <header class="bg-white px-4 py-3 border-b-[#f1f1f1] border-b-[1px] flex items-center gap-4 sticky top-0 z-10 w-full">
     <Button icon="pi pi-angle-left" aria-label="Back"
       class="!rounded-full !bg-transparent hover:!bg-transparent !h-[25px] !w-[25px] justify-center items-center flex cursor-pointer !text-black !outline-none !border-none !p-0"
       size="large" icon-class="!text-lg" @click="handleBack" />

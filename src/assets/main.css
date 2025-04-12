@@ -4,7 +4,8 @@
 #app {
   margin: 0 auto;
   font-weight: normal;
-  height: 100dvh;
+  height: -webkit-fill-available;
+  height: 100vh;
 }
 
 /* Variabel gaya untuk tombol */

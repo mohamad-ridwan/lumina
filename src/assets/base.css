@@ -24,8 +24,13 @@
   margin: 0;
 }
 
+html {
+  height: -webkit-fill-available;
+}
+
 body {
-  height: 100dvh;
+  height: 100vh;
+  height: -webkit-fill-available;
   line-height: 1.6;
   font-family:
     Inter,
