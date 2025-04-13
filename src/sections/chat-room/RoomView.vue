@@ -32,8 +32,8 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages } = chatRoomStore
-const { chatRoom, chatRoomMessages, loadingMessages } = storeToRefs(chatRoomStore)
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource } = chatRoomStore
+const { chatRoom, chatRoomMessages, loadingMessages, chatRoomEventSource } = storeToRefs(chatRoomStore)
 
 // state
 const scroller = ref(null)
@@ -210,8 +210,24 @@ watch(
   { immediate: true }
 )
 
+const preventBackNavigation = () => {
+  if (chatRoomEventSource.value) {
+    resetChatRoomEventSource()
+  }
+  if (memoizedChatId.value) {
+    socket.emit('leaveRoom', {
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      userId: profile.value?.data.id
+    })
+  }
+  setChatRoom({})
+  history.pushState(null, null, window.location.pathname + window.location.search);
+}
+
 onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('popstate', preventBackNavigation)
 });
 
 // ini tetap diberikan karena mungkin nanti ada view component lain
@@ -356,6 +372,7 @@ watch(typingStopSocketUpdate, (data) => {
 onUnmounted(() => {
   loadingMessages.value = false
   setChatRoomMessages([])
+  window.removeEventListener('popstate', preventBackNavigation)
 })
 </script>
 
