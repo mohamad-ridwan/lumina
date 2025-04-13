@@ -31,6 +31,7 @@ html {
 body {
   height: 100vh;
   height: -webkit-fill-available;
+  overflow: hidden;
   line-height: 1.6;
   font-family:
     Inter,

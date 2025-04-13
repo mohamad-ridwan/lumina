@@ -55,7 +55,7 @@ const formattedTextMessage = computed(() => {
       </div>
 
       <!-- Time & Unread Count -->
-      <div v-if="latestMessageTimestamp" class="flex flex-col items-center gap-1 flex-shrink-0">
+      <div v-if="latestMessageTimestamp" class="flex flex-col items-end gap-1 flex-shrink-0">
         <span :class="`text-[10px] ${isActive ? 'text-gray-400' : unreadCount ? 'text-[#2e74e8]' : 'text-[#6b7280]'}`">
           {{ latestMessageTimestamp }}
         </span>

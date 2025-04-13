@@ -6,6 +6,7 @@
   font-weight: normal;
   height: -webkit-fill-available;
   height: 100vh;
+  overflow: hidden;
 }
 
 /* Variabel gaya untuk tombol */
