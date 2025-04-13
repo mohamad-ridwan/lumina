@@ -119,7 +119,7 @@ watch(newMessateSocketUpdate, (data) => {
       unreadCount: data.unreadCount,
       latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
     }
-    const removeChatUserCurrently = markRaw(memoizedChats.value)?.filter(chat =>
+    const removeChatUserCurrently = memoizedChats.value?.slice()?.filter(chat =>
       chat.chatId !== data?.chatId
     )
     setChats([
@@ -146,7 +146,7 @@ watch(newMessateSocketUpdate, (data) => {
 })
 
 watch(newReadNotificationSocketUpdate, (data) => {
-  const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.chatId === data?.chatId)
+  const chatUserIndex = markRaw(memoizedChats.value)?.findIndex(chat => chat?.chatId === data?.chatId)
   if (chatUserIndex !== -1) {
     chats.value[chatUserIndex] = {
       ...chats.value[chatUserIndex],

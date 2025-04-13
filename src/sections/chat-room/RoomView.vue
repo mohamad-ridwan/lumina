@@ -61,6 +61,7 @@ const anyUserTyping = shallowRef(false)
 const isUserInitiatedScroll = shallowRef(false)
 const scrollTimeout = shallowRef(null)
 const scrollTimeOutDateHeader = shallowRef(null)
+const footerHeight = shallowRef(null)
 
 // logic
 const formatDate = (date) => {
@@ -117,6 +118,10 @@ const memoizedUserIds = computed(() => {
 const memoizedUserIdCurrently = computed(() => {
   return memoizedUserIds.value?.find(id => id !== profile.value?.data.id)
 })
+
+const handleGetFooterHeight = (height) => {
+  footerHeight.value = height + 10
+}
 
 const scrollToBottom = () => {
   if (scroller.value) {
@@ -398,10 +403,11 @@ onUnmounted(() => {
     </DynamicScroller>
 
     <Button @click="scrollToBottom"
-      class="!absolute !bottom-24 !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !duration-300 !ease-in-out !border-none !transition-all"
+      class="!absolute !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !duration-300 !ease-in-out !border-none !transition-all"
       :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
-      aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm" iconPos="only" />
+      :style="`bottom: ${footerHeight}px;`" aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm"
+      iconPos="only" />
 
-    <FooterChatRoom />
+    <FooterChatRoom v-on:handle-get-footer-height="handleGetFooterHeight" />
   </div>
 </template>
