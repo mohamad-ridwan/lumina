@@ -109,7 +109,7 @@ onBeforeUnmount(() => {
 })
 
 watch(newMessateSocketUpdate, (data) => {
-  const chatCurrently = markRaw(memoizedChats.value)?.slice()?.find(chat => chat?.chatId === data?.chatId)
+  const chatCurrently = markRaw(memoizedChats.value)?.find(chat => chat?.chatId === data?.chatId)
   // jika data ada di chats store
   // tinggal ubah datanya
   if (chatCurrently && data.eventType === 'send-message' && !data?.isHeader) {
@@ -119,7 +119,7 @@ watch(newMessateSocketUpdate, (data) => {
       unreadCount: data.unreadCount,
       latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
     }
-    const removeChatUserCurrently = memoizedChats.value?.slice()?.filter(chat =>
+    const removeChatUserCurrently = markRaw(memoizedChats.value)?.filter(chat =>
       chat.chatId !== data?.chatId
     )
     setChats([
@@ -160,7 +160,7 @@ watch(newReadNotificationSocketUpdate, (data) => {
 
 <template>
   <ChatLayoutWrapper>
-    <Header v-memo="[scroller]" :scroller="scroller">
+    <Header :scroller="scroller">
       <template #search>
         <SearchMessenger v-model="searchValue" />
       </template>
