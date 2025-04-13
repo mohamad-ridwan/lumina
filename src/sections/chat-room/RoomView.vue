@@ -222,11 +222,14 @@ const preventBackNavigation = () => {
     })
   }
   setChatRoom({})
-  history.pushState(null, null, window.location.pathname + window.location.search);
+  setTimeout(() => {
+    history.pushState(null, "", window.location.href)
+  }, 100)
 }
 
 onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
+  history.pushState(null, "", window.location.href)
   window.addEventListener('popstate', preventBackNavigation)
 });
 
