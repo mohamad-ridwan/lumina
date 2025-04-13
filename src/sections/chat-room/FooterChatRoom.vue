@@ -8,7 +8,7 @@ import { storeToRefs } from 'pinia';
 import { Button, Textarea } from 'primevue';
 import { computed, nextTick, onBeforeUnmount, onUnmounted, ref, shallowRef, watch } from 'vue';
 
-const emit = defineEmits(['handleGetFooterHeight'])
+const emit = defineEmits(['handleGetFooterHeight', 'triggerSendMessage'])
 
 // store
 // profile store
@@ -34,7 +34,7 @@ const formattedText = computed(() => {
   return initialValues.value.textMessage.replace(/\n/g, '<br>');
 });
 
-const onFormSubmit = () => {
+const onFormSubmit = async () => {
   if (initialValues.value.textMessage.trim()) {
     socket.emit('sendMessage', {
       chatRoomId: memoizedChatRoomId.value,
@@ -50,6 +50,9 @@ const onFormSubmit = () => {
       eventType: 'send-message'
     })
     initialValues.value.textMessage = ''
+    emit('triggerSendMessage')
+    await nextTick()
+    emit('handleGetFooterHeight', footerRef.value?.getBoundingClientRect()?.height)
   }
 };
 

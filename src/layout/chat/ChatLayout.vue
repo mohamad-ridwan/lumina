@@ -19,7 +19,7 @@ import ChatProfileSkeleton from '@/sections/chat/chat-item/ChatProfileSkeleton.v
 // store
 // profile store
 const userStore = usersStore()
-const { profile } = userStore
+const { profile } = storeToRefs(userStore)
 // chats store
 const chatStore = chatsStore()
 const { setChats } = chatStore
@@ -53,7 +53,7 @@ function resetChatsEventSource() {
 
 async function handleGetChats() {
   chatsEventSource.value = new EventSource(
-    `${clientUrl}/chats?userId=${profile.data.id}`,
+    `${clientUrl}/chats?userId=${profile.value?.data.id}`,
   )
 
   chatsEventSource.value.onmessage = (event) => {
@@ -128,7 +128,7 @@ watch(newMessateSocketUpdate, (data) => {
     ], true)
   } else if (
     !chatCurrently && data.eventType === 'send-message' &&
-    data?.unreadCount?.[profile.data.id] !== undefined &&
+    data?.unreadCount?.[profile.value?.data.id] !== undefined &&
     !data?.isHeader
   ) {
     // jika belum ada di chats store
@@ -136,7 +136,7 @@ watch(newMessateSocketUpdate, (data) => {
     const newUserChat = {
       ...data,
       latestMessageTimestamp: data.latestMessage?.latestMessageTimestamp,
-      userIds: [Object.entries(data.unreadCount).find((k) => k[0] === profile.data.id).find(id => id !== 0), Object.entries(data.unreadCount).find((k) => k[0] !== profile.data.id).find(id => id !== 0)]
+      userIds: [Object.entries(data.unreadCount).find((k) => k[0] === profile.value?.data.id).find(id => id !== 0), Object.entries(data.unreadCount).find((k) => k[0] !== profile.value?.data.id).find(id => id !== 0)]
     }
     delete newUserChat.eventType
     chats.value.unshift(newUserChat)

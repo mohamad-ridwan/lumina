@@ -4,7 +4,7 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -37,7 +37,7 @@ const { chatRoom, chatRoomMessages, loadingMessages, chatRoomEventSource } = sto
 
 // state
 const scroller = ref(null)
-const SCROLL_THRESHOLD = 200;
+const SCROLL_THRESHOLD = 100;
 const showScrollDownButton = ref(false);
 const headerRefs = ref({})
 const observer = ref(null)
@@ -62,6 +62,8 @@ const isUserInitiatedScroll = shallowRef(false)
 const scrollTimeout = shallowRef(null)
 const scrollTimeOutDateHeader = shallowRef(null)
 const footerHeight = shallowRef(null)
+const stayScrollCurrently = shallowRef(null)
+const typingBubbleEl = ref(null)
 
 // logic
 const formatDate = (date) => {
@@ -140,6 +142,11 @@ function handleBeforeUnload() {
   }
 }
 
+const triggerSendMessage = () => {
+  const scrollTop = scroller.value?.$el?.scrollTop
+  stayScrollCurrently.value = scrollTop
+}
+
 function setHeaderRef(el, item) {
   if (!item?.latestMessageTimestamp) return
 
@@ -184,7 +191,24 @@ const onScroll = () => {
   }
 }
 
-watch(chatRoomMessages, (data) => {
+let previousScrollHeight = 0
+let previousScrollTop = 0
+
+const maintainScrollAfterInsert = async () => {
+  const scrollTop = scroller.value?.$el?.scrollTop ?? 0
+  if (scrollTop === 0) return
+
+  await nextTick()
+  const el = scroller.value?.$el
+  if (!el) return
+
+  const newScrollHeight = el.scrollHeight
+  const scrollDiff = newScrollHeight - previousScrollHeight
+
+  el.scrollTop = previousScrollTop + scrollDiff
+}
+
+watch(chatRoomMessages, async (data, oldData) => {
   if (data.length === 0) {
     currentStickyHeader.value = {
       latestMessageTimestamp: 0,
@@ -198,6 +222,21 @@ watch(chatRoomMessages, (data) => {
     })
     onScroll()
   })
+
+  const el = scroller.value?.$el
+  if (el) {
+    previousScrollHeight = el.scrollHeight
+  }
+
+  // handle scroll by new message
+  const newItemCount = data.length - (oldData?.length || 0)
+  // when recipient user send message,
+  // just stay on current scrollTop
+  if (newItemCount === 1 && data[0]?.senderUserId !== profile.value?.data.id) {
+    await maintainScrollAfterInsert()
+  } else if (newItemCount === 1 && data[0]?.senderUserId === profile.value?.data.id) {
+    el.scrollTop = 0
+  }
 }, { immediate: true })
 
 watch(
@@ -298,8 +337,38 @@ const scrollStop = () => {
   }
 }
 
+watch(anyUserTyping, async (newVal, oldVal) => {
+  const el = scroller.value?.$el
+  if (!el) return
+
+  const prevScrollHeight = el.scrollHeight
+  const prevScrollTop = el.scrollTop
+
+  await nextTick()
+
+  const newScrollHeight = el.scrollHeight
+
+  // Hitung delta tinggi container karena typing bubble muncul/hilang
+  const heightDiff = newScrollHeight - prevScrollHeight
+
+  // Koreksi scrollTop agar posisi tetap stabil
+  if (heightDiff !== 0) {
+    el.scrollTop = prevScrollTop + heightDiff
+  }
+})
+
 const handleScroll = () => {
   const scrollTop = scroller.value?.$el?.scrollTop ?? 0
+
+  const el = scroller.value?.$el
+  previousScrollTop = scrollTop
+  previousScrollHeight = el.scrollHeight
+
+  const typingBubbleHeight = typingBubbleEl.value?.getBoundingClientRect()?.height
+  if (typingBubbleHeight && typingBubbleHeight === scrollTop) {
+    typingBubbleEl.value = null
+    el.scrollTop = 0
+  }
 
   if (isUserInitiatedScroll.value) {
     showDateHeader.value = true
@@ -415,7 +484,7 @@ onUnmounted(() => {
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
               :message-id="item.messageId" />
           </div>
-          <div v-if="item?.isTyping">
+          <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />
           </div>
         </DynamicScrollerItem>
@@ -428,6 +497,7 @@ onUnmounted(() => {
       :style="`bottom: ${footerHeight}px;`" aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm"
       iconPos="only" />
 
-    <FooterChatRoom v-on:handle-get-footer-height="handleGetFooterHeight" />
+    <FooterChatRoom v-on:handle-get-footer-height="handleGetFooterHeight"
+      v-on:triggerSendMessage="triggerSendMessage" />
   </div>
 </template>
