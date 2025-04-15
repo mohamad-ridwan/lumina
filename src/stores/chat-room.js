@@ -2,7 +2,7 @@ import { fetchChatRoom } from '@/services/api/chat-room'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { ref, shallowRef, toRaw } from 'vue'
+import { markRaw, ref, shallowRef, toRaw } from 'vue'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -31,7 +31,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       }
       delete newData.eventType
       // chatRoomMessages.value = markRaw([newData, ...markRaw(chatRoomMessages.value)])
-      chatRoomMessages.value = [newData, ...chatRoomMessages.value]
+      chatRoomMessages.value = markRaw([newData, ...markRaw(chatRoomMessages.value)])
     } else {
       // chatRoomMessages.value = markRaw([
       //   {
@@ -41,13 +41,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       //   ...markRaw(chatRoomMessages.value),
       // ])
 
-      chatRoomMessages.value = [
+      chatRoomMessages.value = markRaw([
         {
           ...newMessage.latestMessage,
           id: newMessage.latestMessage.messageId,
         },
-        ...chatRoomMessages.value,
-      ]
+        ...markRaw(chatRoomMessages.value),
+      ])
     }
   }
 
@@ -150,7 +150,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       const message = JSON.parse(event.data)
       if (message?.length) {
         // setChatRoomMessages(markRaw([...markRaw(chatRoomMessages.value), ...message]))
-        setChatRoomMessages([...chatRoomMessages.value, ...message])
+        setChatRoomMessages(markRaw([...markRaw(chatRoomMessages.value), ...message]))
       }
       loadingMessages.value = false
     }
