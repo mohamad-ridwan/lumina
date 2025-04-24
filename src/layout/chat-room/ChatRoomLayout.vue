@@ -3,10 +3,14 @@ import MainBackground from '@/sections/chat-room/MainBackground.vue';
 import RoomView from '@/sections/chat-room/RoomView.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
+import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 // store
+// profile store
+const userStore = usersStore()
+const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { resetChatRoomEventSource, handleAddNewMessage } = chatRoomStore
@@ -38,7 +42,7 @@ onBeforeUnmount(() => {
 
 watch(newMessageUpdate, (data) => {
   if (memoizedChatRoomId.value === data?.chatRoomId && data.eventType === 'send-message') {
-    handleAddNewMessage(data)
+    handleAddNewMessage(data, profile.value?.data.id)
   }
 })
 </script>

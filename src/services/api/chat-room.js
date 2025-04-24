@@ -13,6 +13,20 @@ export const fetchChatRoom = async (req) => {
   return result
 }
 
+export const fetchMessagesPagination = async ({ chatId, chatRoomId, messageId, direction }) => {
+  const result = await fetchData(
+    `${clientUrl}/chat-room/messages?chatId=${chatId}&chatRoomId=${chatRoomId}&messageId=${messageId}&direction=${direction}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+
+  return result
+}
+
 // export const fetchChatRoom = async (req, apiChatRoomWorker, resDataCallback, errCallback) => {
 //   const response = await fetch(`${clientUrl}/chat-room`, {
 //     method: 'POST',

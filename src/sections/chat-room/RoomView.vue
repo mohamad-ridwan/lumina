@@ -4,10 +4,10 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue';
+import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
-// import SpamMessage from '@/spam-message/SpamMessage.vue';
-import { useChatRoomStore } from '@/stores/chat-room';
+import SpamMessage from '@/spam-message/SpamMessage.vue';
+import { ITEMS_PER_PAGE, SCROLL_THRESHOLD, useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import { Button } from 'primevue';
@@ -20,11 +20,15 @@ import weekday from 'dayjs/plugin/weekday';
 import DateHeader from './DateHeader.vue';
 import UserTypingIndicator from './UserTypingIndicator.vue';
 import SkeletonMessages from './SkeletonMessages.vue';
+import { fetchMessagesPagination } from '@/services/api/chat-room';
+import { general } from '@/helpers/general';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(weekOfYear);
 dayjs.extend(weekday);
+
+const { sortByTimestamp, removeDuplicates } = general
 
 // store
 // profile store
@@ -32,14 +36,23 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource } = chatRoomStore
-const { chatRoom, chatRoomMessages, loadingMessages, chatRoomEventSource } = storeToRefs(chatRoomStore)
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, } = chatRoomStore
+const {
+  chatRoom,
+  chatRoomMessages,
+  loadingMessages,
+  chatRoomEventSource,
+  headerRefs,
+  addNewMessageWorker,
+  scroller,
+  showScrollDownButton,
+  loadingMessagesPagination,
+  isStartIndex,
+  bufferNewMessages,
+  loadingAddNewMessageEventSource,
+} = storeToRefs(chatRoomStore)
 
 // state
-const scroller = ref(null)
-const SCROLL_THRESHOLD = 100;
-const showScrollDownButton = ref(false);
-const headerRefs = ref({})
 const observer = ref(null)
 const currentStickyHeader = ref({
   latestMessageTimestamp: 0,
@@ -107,12 +120,7 @@ const memoizedMessages = computed(() => {
     })]
   }
 
-  return chatRoomMessages.value?.map(chat => {
-    if (chat?.isHeader) {
-      return { ...chat, headerText: formatDate(Number(chat?.latestMessageTimestamp)) }
-    }
-    return chat
-  })
+  return chatRoomMessages.value
 })
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
@@ -122,7 +130,7 @@ const memoizedUserIdCurrently = computed(() => {
 })
 
 const handleGetFooterHeight = (height) => {
-  footerHeight.value = height + 10
+  footerHeight.value = height + 20
 }
 
 const scrollToBottom = () => {
@@ -196,7 +204,11 @@ let previousScrollTop = 0
 
 const maintainScrollAfterInsert = async () => {
   const scrollTop = scroller.value?.$el?.scrollTop ?? 0
-  if (scrollTop === 0) return
+  if (scrollTop !== 0 && !showScrollDownButton.value) {
+    const el = scroller.value?.$el
+    el.scrollTop = 0
+  }
+  if (scrollTop === 0 || !showScrollDownButton.value) return
 
   await nextTick()
   const el = scroller.value?.$el
@@ -232,10 +244,21 @@ watch(chatRoomMessages, async (data, oldData) => {
   const newItemCount = data.length - (oldData?.length || 0)
   // when recipient user send message,
   // just stay on current scrollTop
-  if (newItemCount === 1 && data[0]?.senderUserId !== profile.value?.data.id) {
-    await maintainScrollAfterInsert()
-  } else if (newItemCount === 1 && data[0]?.senderUserId === profile.value?.data.id) {
-    el.scrollTop = 0
+  if (
+    (newItemCount === 1 ||
+      (data?.[0]?.latestMessageTimestamp !== oldData?.[0]?.latestMessageTimestamp))
+    &&
+    data[0]?.senderUserId !== profile.value?.data.id
+  ) {
+    maintainScrollAfterInsert()
+  } else if (
+    newItemCount === 1 &&
+    data[0]?.senderUserId === profile.value?.data.id &&
+    (data?.[0]?.latestMessageTimestamp !== oldData?.[0]?.latestMessageTimestamp)
+  ) {
+    if (el?.scrollTop !== undefined && el?.scrollTop !== 0) {
+      el.scrollTop = 0
+    }
   }
 }, { immediate: true })
 
@@ -248,6 +271,18 @@ watch(
   },
   { immediate: true }
 )
+
+onBeforeMount(() => {
+  if (!addNewMessageWorker.value) {
+    handleSetAddNewMessageWorker()
+  }
+})
+
+onBeforeUnmount(() => {
+  if (addNewMessageWorker.value) {
+    handleStopAddNewMessageWorker()
+  }
+})
 
 const preventBackNavigation = () => {
   if (chatRoomEventSource.value) {
@@ -357,6 +392,87 @@ watch(anyUserTyping, async (newVal, oldVal) => {
   }
 })
 
+const handleGetMessagesPagination = async () => {
+  const el = scroller.value?.$el
+
+  const nearBottom =
+    el.scrollTop + el.clientHeight >= el.scrollHeight - SCROLL_THRESHOLD
+
+  if (
+    loadingMessagesPagination.value ||
+    (
+      (el.scrollTop > SCROLL_THRESHOLD && !nearBottom) ||
+      chatRoomMessages.value.length === 0
+    ) ||
+    loadingAddNewMessageEventSource.value
+  ) return
+
+  bufferNewMessages.value = []
+  loadingMessagesPagination.value = true
+
+  let direction = null
+
+  if (el.scrollTop < SCROLL_THRESHOLD && !nearBottom) {
+    direction = 'prev'
+  } else if (nearBottom) {
+    direction = 'next'
+  }
+  const result = await fetchMessagesPagination({
+    chatRoomId: memoizedChatRoomId.value,
+    chatId: memoizedChatId.value,
+    messageId: direction === 'prev' ? chatRoomMessages.value[0]?.messageId : chatRoomMessages.value[chatRoomMessages.value.length - 1]?.messageId,
+    direction
+  })
+
+  let newData = []
+  let newChatRoomMessages = []
+
+  if (result?.data?.length > 0) {
+    newData = result.data.map((item => ({
+      ...item,
+      id: item.messageId,
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+    })))
+  }
+
+  if (result?.meta?.direction === 'prev' && result?.data?.length > 0) {
+    newChatRoomMessages = removeDuplicates([
+      ...newData,
+      ...chatRoomMessages.value
+    ], 'messageId').sort(sortByTimestamp)
+  } else if (result?.meta?.direction === 'next' && result?.data?.length > 0) {
+    newChatRoomMessages = removeDuplicates([
+      ...chatRoomMessages.value,
+      ...newData,
+    ], 'messageId').sort(sortByTimestamp)
+  }
+
+  if (newData.length > 0) {
+    chatRoomMessages.value = markRaw(newChatRoomMessages)
+
+    await nextTick()
+
+    if (result?.meta?.direction === 'prev') {
+      const newScrollHeight = el.scrollHeight
+      const scrollDiff = newScrollHeight - previousScrollHeight
+
+      el.scrollTop = previousScrollTop + scrollDiff
+
+      chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
+    } else if (result?.meta?.direction === 'next') {
+      chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(20, chatRoomMessages.value.length))
+    }
+  }
+
+  if (result?.meta?.direction === 'prev' && result?.data?.length === 0) {
+    isStartIndex.value = true
+  } else if (result?.meta?.direction === 'prev' && result?.data?.length > 0) {
+    isStartIndex.value = false
+  }
+  loadingMessagesPagination.value = false
+}
+
 const handleScroll = () => {
   const scrollTop = scroller.value?.$el?.scrollTop ?? 0
 
@@ -364,18 +480,27 @@ const handleScroll = () => {
   previousScrollTop = scrollTop
   previousScrollHeight = el.scrollHeight
 
+  handleGetMessagesPagination()
+
+  if (!loadingMessagesPagination.value && scrollTop > SCROLL_THRESHOLD) {
+    isStartIndex.value = false
+  } else if (!loadingMessagesPagination.value && scrollTop < SCROLL_THRESHOLD) {
+    isStartIndex.value = true
+  }
+
   const typingBubbleHeight = typingBubbleEl.value?.getBoundingClientRect()?.height
   if (typingBubbleHeight && typingBubbleHeight === scrollTop) {
     typingBubbleEl.value = null
     el.scrollTop = 0
   }
 
+  showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
+
   if (isUserInitiatedScroll.value) {
     showDateHeader.value = true
     nextTick(() => {
       onScroll()
     })
-    showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
   } else if (scrollTop === 0) {
     showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
   }
@@ -441,15 +566,40 @@ watch(typingStopSocketUpdate, (data) => {
   }
 })
 
+watch(loadingMessagesPagination, async (isLoading) => {
+  if (
+    !isLoading &&
+    !showScrollDownButton.value &&
+    isStartIndex.value &&
+    bufferNewMessages.value.length > 0
+  ) {
+
+    chatRoomMessages.value = markRaw(removeDuplicates([
+      ...bufferNewMessages.value,
+      ...chatRoomMessages.value
+    ], 'messageId').sort(sortByTimestamp))
+
+    await nextTick()
+
+    chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
+    bufferNewMessages.value = []
+  }
+})
+
 onUnmounted(() => {
   loadingMessages.value = false
   setChatRoomMessages([])
   window.removeEventListener('popstate', preventBackNavigation)
+  scroller.value = null
+  showScrollDownButton.value = false
+  handleStopGetChatRoomWorker()
+  handleStopStreamsChatRoomWorker()
+  resetAddNewMessageEventSource()
 })
 </script>
 
 <template>
-  <!-- <SpamMessage v-once /> -->
+  <SpamMessage v-once />
   <div class="flex flex-col flex-1 overflow-hidden relative bg-[#f9fafb] border-l border-[#f1f1f1]">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
@@ -468,8 +618,8 @@ onUnmounted(() => {
         <DynamicScrollerItem :item="item" :active="active" :size-dependencies="[
           item.textMessage,
         ]" :data-index="index" :key="item.messageId">
-          <div v-if="item?.isHeader">
-            <DateHeader :date="item.headerText" />
+          <div v-if="item?.isHeader" :id="`${item.id}-${item.latestMessageTimestamp}`">
+            <DateHeader :date="formatDate(Number(item?.latestMessageTimestamp))" />
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">
