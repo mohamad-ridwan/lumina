@@ -467,7 +467,7 @@ const handleGetMessagesPagination = async () => {
       el.scrollTop = previousScrollTop + scrollDiff
 
       chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
-    } else if (result?.meta?.direction === 'next') {
+    } else if (result?.meta?.direction === 'next' && chatRoomMessages.value.length >= ITEMS_PER_PAGE) {
       chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(20, chatRoomMessages.value.length))
     }
   }
