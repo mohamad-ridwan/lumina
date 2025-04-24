@@ -15,12 +15,16 @@ const removeDuplicates = (arr, field) => {
 }
 
 const sortByTimestamp = (a, b) => {
-  if (Number(a.latestMessageTimestamp) === Number(b.latestMessageTimestamp)) {
-    if (a.isHeader && !b.isHeader) return 1
-    if (!a.isHeader && b.isHeader) return -1
+  const aTime = Number(a.latestMessageTimestamp)
+  const bTime = Number(b.latestMessageTimestamp)
+
+  if (aTime === bTime) {
+    if (a.isHeader && !b.isHeader) return -1
+    if (!a.isHeader && b.isHeader) return 1
     return 0
   }
-  return Number(a.latestMessageTimestamp) + Number(b.latestMessageTimestamp)
+
+  return bTime - aTime // DESCENDING
 }
 
 const createNewMessages = (messages) => {

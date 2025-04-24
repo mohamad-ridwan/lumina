@@ -112,12 +112,7 @@ async function addStreamsMessageToChatRoom(data) {
 
     const newMessages = data.streams.filter((msg) => !existingIds.has(msg.messageId))
 
-    const combinedMessages = [...existingMessages, ...newMessages]
-
-    // Urutkan berdasarkan:
-    // 1. latestMessageTimestamp ascending
-    // 2. isHeader true berada di atas jika timestamp sama
-    combinedMessages.sort(sortByTimestamp)
+    const combinedMessages = [...existingMessages, ...newMessages].sort(sortByTimestamp)
 
     const updatedChat = {
       ...targetChat,
