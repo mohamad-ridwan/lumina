@@ -145,11 +145,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     mainMessagesEventSource.value.addEventListener('done', (event) => {
       const message = JSON.parse(event.data)
       if (message?.length === 0) {
+        resetMainMessagesWorker()
         resetMainMessagesEventSource()
       }
     })
     mainMessagesEventSource.value.addEventListener('error', (event) => {
       console.error('Streaming error:', e)
+      resetMainMessagesWorker()
       resetMainMessagesEventSource()
     })
   }
@@ -410,6 +412,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
     loadingMessages.value = true
     headerRefs.value = {}
+
+    resetMainMessagesEventSource()
+    resetMainMessagesWorkerOnScrollBottom()
+    resetMainMessagesWorker()
 
     handleStopGetChatRoomWorker()
     handleSetGetChatRoomWorker()
