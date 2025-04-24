@@ -173,15 +173,20 @@ const onScroll = () => {
   const containerRect = scroller.value?.$el?.getBoundingClientRect()
   if (!containerRect) return
 
-  const containerBottom = containerRect.bottom // karena rotate 180
+  const containerBottom = containerRect.top // karena rotate 180
   const itemElements = Object.values(headerRefs.value || {}) // semua item, bukan cuma header
 
   let closestItem = null
   let minDistance = Infinity
 
-  itemElements.forEach((el) => {
+  const newItemElements = itemElements.sort((a, b) => {
+    const aTime = Number(a.id.split('-')[1])
+    const bTime = Number(b.id.split('-')[1])
+    return bTime - aTime
+  })
+  newItemElements.forEach((el) => {
     const rect = el.getBoundingClientRect()
-    const visualBottom = rect.bottom
+    const visualBottom = rect.top
     const distance = Math.abs(visualBottom - containerBottom)
 
     const isAboveViewport = visualBottom <= containerBottom - 30
