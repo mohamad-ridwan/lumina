@@ -40,8 +40,20 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const totalMainMessagesEventSource = ref(0)
   const loadingMainMessagesEventSource = ref(false)
   const totalStreamsMainMessagesWorker = ref(0)
+  const paginationMessagesComparisonWorker = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates } = general
+
+  const resetPaginationMessagesComparisonWorker = () => {
+    if (paginationMessagesComparisonWorker.value) {
+      paginationMessagesComparisonWorker.value.terminate()
+      paginationMessagesComparisonWorker.value = null
+    }
+  }
+
+  const setPaginationMessagesComparisonWorker = () => {
+    paginationMessagesComparisonWorker.value = new StreamsChatRoomWorker()
+  }
 
   const resetMainMessagesEventSource = () => {
     if (mainMessagesEventSource.value) {
@@ -413,6 +425,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     loadingMessages.value = true
     headerRefs.value = {}
 
+    resetPaginationMessagesComparisonWorker()
+    setPaginationMessagesComparisonWorker()
+
     resetMainMessagesEventSource()
     resetMainMessagesWorkerOnScrollBottom()
     resetMainMessagesWorker()
@@ -577,6 +592,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     bufferNewMessagesOnScrollBottom,
     bufferMainMessagesEventSource,
     loadingMainMessagesEventSource,
+    paginationMessagesComparisonWorker,
+    resetPaginationMessagesComparisonWorker,
     resetMainMessagesWorker,
     resetMainMessagesEventSource,
     resetMainMessagesWorkerOnScrollBottom,

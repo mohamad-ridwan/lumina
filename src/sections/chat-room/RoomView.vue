@@ -36,7 +36,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker } = chatRoomStore
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker } = chatRoomStore
 const {
   chatRoom,
   chatRoomMessages,
@@ -53,7 +53,8 @@ const {
   loadingMainMessagesOnScrollBottom,
   bufferNewMessagesOnScrollBottom,
   bufferMainMessagesEventSource,
-  loadingMainMessagesEventSource
+  loadingMainMessagesEventSource,
+  paginationMessagesComparisonWorker
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -443,6 +444,15 @@ const handleGetMessagesPagination = async () => {
     })))
   }
 
+  if (newData.length > 0) {
+    // save to indexedDB if is not already in indexedDB
+    paginationMessagesComparisonWorker.value.postMessage({
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      streams: newData
+    })
+  }
+
   if (result?.meta?.direction === 'prev' && result?.data?.length > 0) {
     newChatRoomMessages = removeDuplicates([
       ...newData,
@@ -605,6 +615,7 @@ onUnmounted(() => {
   resetMainMessagesWorkerOnScrollBottom()
   resetMainMessagesEventSource()
   resetMainMessagesWorker()
+  resetPaginationMessagesComparisonWorker()
   loadingMainMessagesOnScrollBottom.value = false
   bufferNewMessagesOnScrollBottom.value = []
   bufferMainMessagesEventSource.value = []
