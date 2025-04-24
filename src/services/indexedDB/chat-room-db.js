@@ -1,3 +1,7 @@
+import { general } from '@/helpers/general'
+
+const { sortByTimestamp } = general
+
 async function openChatRoomDB() {
   return await new Promise((resolve, reject) => {
     const request = indexedDB.open('ChatDB', 1)
@@ -33,14 +37,7 @@ const chatRoomDBCurrently = async (chatRoomId) => {
   if (targetChat) {
     const currentMessages = targetChat.messages
       .filter((item) => item?.messageId)
-      .sort((a, b) => {
-        if (Number(a.latestMessageTimestamp) === Number(b.latestMessageTimestamp)) {
-          if (a.isHeader && !b.isHeader) return 1
-          if (!a.isHeader && b.isHeader) return -1
-          return 0
-        }
-        return Number(a.latestMessageTimestamp) + Number(b.latestMessageTimestamp)
-      })
+      .sort(sortByTimestamp)
 
     return currentMessages.slice(0, 150)
   }
@@ -120,14 +117,7 @@ async function addStreamsMessageToChatRoom(data) {
     // Urutkan berdasarkan:
     // 1. latestMessageTimestamp ascending
     // 2. isHeader true berada di atas jika timestamp sama
-    combinedMessages.sort((a, b) => {
-      if (Number(a.latestMessageTimestamp) === Number(b.latestMessageTimestamp)) {
-        if (a.isHeader && !b.isHeader) return 1
-        if (!a.isHeader && b.isHeader) return -1
-        return 0
-      }
-      return Number(a.latestMessageTimestamp) + Number(b.latestMessageTimestamp)
-    })
+    combinedMessages.sort(sortByTimestamp)
 
     const updatedChat = {
       ...targetChat,

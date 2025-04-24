@@ -1,4 +1,5 @@
 import { fetchChatRoom } from '@/services/api/chat-room'
+import { general } from '@/helpers/general'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
@@ -6,12 +7,10 @@ import { markRaw, nextTick, ref, shallowRef, toRaw } from 'vue'
 import AddNewMessageWorker from '@/services/workers/add-new-message-worker.js?worker'
 import GetChatRoomWorker from '@/services/workers/get-chat-room-worker.js?worker'
 import StreamsChatRoomWorker from '@/services/workers/streams-chat-room-worker.js?worker'
-import { general } from '@/helpers/general'
+import MainMessagesWorker from '@/services/workers/main-message-workers.js?worker'
 
 export const ITEMS_PER_PAGE = 150
 export const SCROLL_THRESHOLD = 200
-
-const { createNewMessages, sortByTimestamp, removeDuplicates } = general
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -32,6 +31,128 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const addNewMessageEventSource = ref(null)
   const loadingAddNewMessageEventSource = ref(false)
   const keyAddNewMessageEventSource = ref(0)
+  const getMainMessagesWorkerOnScrollBottom = ref(null)
+  const loadingMainMessagesOnScrollBottom = ref(false)
+  const bufferNewMessagesOnScrollBottom = ref([])
+  const mainMessagesEventSource = ref(null)
+  const bufferMainMessagesEventSource = ref([])
+  const mainMessagesWorker = ref(null)
+  const totalMainMessagesEventSource = ref(0)
+  const loadingMainMessagesEventSource = ref(false)
+  const totalStreamsMainMessagesWorker = ref(0)
+
+  const { createNewMessages, sortByTimestamp, removeDuplicates } = general
+
+  const resetMainMessagesEventSource = () => {
+    if (mainMessagesEventSource.value) {
+      mainMessagesEventSource.value.close()
+      mainMessagesEventSource.value = null
+    }
+  }
+
+  const setMainMessagesEventSource = () => {
+    mainMessagesEventSource.value = new EventSource(
+      `${clientUrl}/chat-room/stream?chatId=${chatRoom.value?.chatId}&chatRoomId=${chatRoom.value?.chatRoomId}`,
+    )
+  }
+
+  const setMainMessagesWorkerOnScrollBottom = () => {
+    getMainMessagesWorkerOnScrollBottom.value = new GetChatRoomWorker()
+  }
+
+  const resetMainMessagesWorkerOnScrollBottom = () => {
+    if (getMainMessagesWorkerOnScrollBottom.value) {
+      getMainMessagesWorkerOnScrollBottom.value.terminate()
+      getMainMessagesWorkerOnScrollBottom.value = null
+    }
+  }
+
+  const setMainMessagesWorker = () => {
+    mainMessagesWorker.value = new MainMessagesWorker()
+  }
+
+  const resetMainMessagesWorker = () => {
+    if (mainMessagesWorker.value) {
+      mainMessagesWorker.value.terminate()
+      mainMessagesWorker.value = null
+      totalMainMessagesEventSource.value = 0
+      loadingMainMessagesEventSource.value = false
+    }
+  }
+
+  const handleGetMainMessagesOnScrollBottom = () => {
+    resetMainMessagesEventSource()
+    resetMainMessagesWorkerOnScrollBottom()
+    resetMainMessagesWorker()
+    loadingMainMessagesOnScrollBottom.value = true
+    loadingMainMessagesEventSource.value = true
+    setMainMessagesWorkerOnScrollBottom()
+    setMainMessagesWorker()
+
+    getMainMessagesWorkerOnScrollBottom.value.postMessage(chatRoom.value?.chatRoomId)
+
+    getMainMessagesWorkerOnScrollBottom.value.onmessage = (event) => {
+      if (event.data.length > 0) {
+        chatRoomMessages.value = markRaw(
+          createNewMessages([...bufferNewMessagesOnScrollBottom.value, ...event.data]),
+        )
+      } else if (bufferNewMessagesOnScrollBottom.value.length > 0) {
+        chatRoomMessages.value = markRaw(
+          createNewMessages([...bufferNewMessagesOnScrollBottom.value, ...chatRoomMessages.value]),
+        )
+      }
+
+      scroller.value.scrollToItem(0)
+      loadingMainMessagesOnScrollBottom.value = false
+      showScrollDownButton.value = false
+      resetMainMessagesWorkerOnScrollBottom()
+    }
+
+    setMainMessagesEventSource()
+    mainMessagesEventSource.value.onmessage = (event) => {
+      const message = JSON.parse(event.data)
+      if (message?.length) {
+        mainMessagesWorker.value.postMessage({
+          streams: message.map((msg) => ({
+            id: msg.messageId,
+            chatRoomId: chatRoom.value?.chatRoomId,
+            chatId: chatRoom.value?.chatId,
+            ...msg,
+          })),
+          messages: toRaw(chatRoomMessages.value),
+        })
+
+        mainMessagesWorker.value.onmessage = (event) => {
+          const { messages, totalStreams } = event.data
+
+          if (messages?.length === 0 || totalStreamsMainMessagesWorker.value >= ITEMS_PER_PAGE) {
+            resetMainMessagesWorker()
+            resetMainMessagesEventSource()
+          } else if (totalStreams < ITEMS_PER_PAGE) {
+            chatRoomMessages.value = markRaw(
+              createNewMessages([...messages, ...chatRoomMessages.value]),
+            )
+          }
+
+          totalStreamsMainMessagesWorker.value += totalStreams
+        }
+        totalMainMessagesEventSource.value += message.length
+      } else {
+        resetMainMessagesWorker()
+        resetMainMessagesEventSource()
+      }
+    }
+    mainMessagesEventSource.value.addEventListener('done', (event) => {
+      const message = JSON.parse(event.data)
+      if (message?.length === 0) {
+        resetMainMessagesEventSource()
+      }
+    })
+    mainMessagesEventSource.value.addEventListener('error', (event) => {
+      console.error('Streaming error:', e)
+      resetMainMessagesEventSource()
+    })
+  }
 
   function setChatRoom(chatRoomData) {
     chatRoom.value = chatRoomData
@@ -137,15 +258,27 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       }
       delete newData.eventType
 
+      // save to indexedDB
       addNewMessageWorker.value.postMessage({
         chatRoomId: chatRoom.value?.chatRoomId,
         chatId: chatRoom.value?.chatId,
         item: newData,
       })
 
-      handleAddNewMessageOnEventSource(newData, profileId)
+      if (loadingMainMessagesOnScrollBottom.value) {
+        bufferNewMessagesOnScrollBottom.value.unshift(newData)
+      }
 
-      if (!showScrollDownButton.value && !loadingMessagesPagination.value && isStartIndex.value) {
+      if (!loadingMainMessagesOnScrollBottom.value) {
+        handleAddNewMessageOnEventSource(newData, profileId)
+      }
+
+      if (
+        !loadingMainMessagesOnScrollBottom.value &&
+        !showScrollDownButton.value &&
+        !loadingMessagesPagination.value &&
+        isStartIndex.value
+      ) {
         chatRoomMessages.value = markRaw(
           removeDuplicates([newData, ...chatRoomMessages.value], 'messageId').sort(sortByTimestamp),
         )
@@ -156,7 +289,11 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         }
       }
 
-      if (!showScrollDownButton.value && loadingMessagesPagination.value) {
+      if (
+        !loadingMainMessagesOnScrollBottom.value &&
+        !showScrollDownButton.value &&
+        loadingMessagesPagination.value
+      ) {
         bufferNewMessages.value.unshift(newData)
       }
 
@@ -170,15 +307,27 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       chatId: chatRoom.value?.chatId,
     }
 
+    // save to indexedDB
     addNewMessageWorker.value.postMessage({
       chatRoomId: chatRoom.value?.chatRoomId,
       chatId: chatRoom.value?.chatId,
       item: newData,
     })
 
-    handleAddNewMessageOnEventSource(newData, profileId)
+    if (loadingMainMessagesOnScrollBottom.value) {
+      bufferNewMessagesOnScrollBottom.value.unshift(newData)
+    }
 
-    if (!showScrollDownButton.value && !loadingMessagesPagination.value && isStartIndex.value) {
+    if (!loadingMainMessagesOnScrollBottom.value) {
+      handleAddNewMessageOnEventSource(newData, profileId)
+    }
+
+    if (
+      !loadingMainMessagesOnScrollBottom.value &&
+      !showScrollDownButton.value &&
+      !loadingMessagesPagination.value &&
+      isStartIndex.value
+    ) {
       chatRoomMessages.value = markRaw(
         removeDuplicates(
           [
@@ -197,7 +346,11 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       }
     }
 
-    if (!showScrollDownButton.value && loadingMessagesPagination.value) {
+    if (
+      !loadingMainMessagesOnScrollBottom.value &&
+      !showScrollDownButton.value &&
+      loadingMessagesPagination.value
+    ) {
       bufferNewMessages.value.unshift(newData)
     }
   }
@@ -414,6 +567,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     loadingMessagesPagination,
     isStartIndex,
     bufferNewMessages,
+    loadingMainMessagesOnScrollBottom,
+    bufferNewMessagesOnScrollBottom,
+    bufferMainMessagesEventSource,
+    loadingMainMessagesEventSource,
+    resetMainMessagesWorker,
+    resetMainMessagesEventSource,
+    resetMainMessagesWorkerOnScrollBottom,
+    handleGetMainMessagesOnScrollBottom,
     resetAddNewMessageEventSource,
     handleStopStreamsChatRoomWorker,
     setChatRoomMessages,

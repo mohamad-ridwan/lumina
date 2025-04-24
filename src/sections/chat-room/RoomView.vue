@@ -36,7 +36,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, } = chatRoomStore
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker } = chatRoomStore
 const {
   chatRoom,
   chatRoomMessages,
@@ -50,6 +50,10 @@ const {
   isStartIndex,
   bufferNewMessages,
   loadingAddNewMessageEventSource,
+  loadingMainMessagesOnScrollBottom,
+  bufferNewMessagesOnScrollBottom,
+  bufferMainMessagesEventSource,
+  loadingMainMessagesEventSource
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -135,9 +139,7 @@ const handleGetFooterHeight = (height) => {
 
 const scrollToBottom = () => {
   if (scroller.value) {
-    // Karena tampilan dibalik, scroll ke 0 akan membawa ke bagian "bawah" (pesan terbaru)
-    scroller.value.scrollToItem(0);
-    showScrollDownButton.value = false;
+    handleGetMainMessagesOnScrollBottom()
   }
 };
 function handleBeforeUnload() {
@@ -399,6 +401,7 @@ const handleGetMessagesPagination = async () => {
     el.scrollTop + el.clientHeight >= el.scrollHeight - SCROLL_THRESHOLD
 
   if (
+    loadingMainMessagesOnScrollBottom.value ||
     loadingMessagesPagination.value ||
     (
       (el.scrollTop > SCROLL_THRESHOLD && !nearBottom) ||
@@ -407,16 +410,20 @@ const handleGetMessagesPagination = async () => {
     loadingAddNewMessageEventSource.value
   ) return
 
-  bufferNewMessages.value = []
-  loadingMessagesPagination.value = true
-
   let direction = null
 
   if (el.scrollTop < SCROLL_THRESHOLD && !nearBottom) {
     direction = 'prev'
   } else if (nearBottom) {
     direction = 'next'
+    if (loadingMainMessagesEventSource.value) {
+      return
+    }
   }
+
+  bufferNewMessages.value = []
+  loadingMessagesPagination.value = true
+
   const result = await fetchMessagesPagination({
     chatRoomId: memoizedChatRoomId.value,
     chatId: memoizedChatId.value,
@@ -595,6 +602,12 @@ onUnmounted(() => {
   handleStopGetChatRoomWorker()
   handleStopStreamsChatRoomWorker()
   resetAddNewMessageEventSource()
+  resetMainMessagesWorkerOnScrollBottom()
+  resetMainMessagesEventSource()
+  resetMainMessagesWorker()
+  loadingMainMessagesOnScrollBottom.value = false
+  bufferNewMessagesOnScrollBottom.value = []
+  bufferMainMessagesEventSource.value = []
 })
 </script>
 
