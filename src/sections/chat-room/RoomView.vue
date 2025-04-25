@@ -482,11 +482,11 @@ const handleGetMessagesPagination = async () => {
 
       el.scrollTop = previousScrollTop + scrollDiff
 
-      chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
+      chatRoomMessages.value = markRaw(toRaw(chatRoomMessages.value).slice(0, ITEMS_PER_PAGE))
     } else if (result?.meta?.direction === 'next' && toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
       await nextTick()
 
-      chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(result?.data?.length))
+      chatRoomMessages.value = markRaw(toRaw(chatRoomMessages.value).slice(result?.data?.length))
 
       nextTick(() => {
         const newScrollHeight = el.scrollHeight

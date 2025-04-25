@@ -524,10 +524,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE
         ) {
           chatRoomMessages.value = markRaw(
-            [
+            removeDuplicates([
               ...chatRoomMessages.value,
               ...createNewMessages([...chatRoomMessages.value, ...bufferMessages]),
-            ].slice(0, ITEMS_PER_PAGE),
+            ]).slice(0, ITEMS_PER_PAGE),
           )
           if (chatRoomMessages.value.length >= ITEMS_PER_PAGE) {
             isEmptyChatRoomDB = false
