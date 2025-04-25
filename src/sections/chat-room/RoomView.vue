@@ -6,7 +6,7 @@ import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
 import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
-import SpamMessage from '@/spam-message/SpamMessage.vue';
+// import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { ITEMS_PER_PAGE, SCROLL_THRESHOLD, useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
@@ -628,7 +628,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <SpamMessage v-once />
+  <!-- <SpamMessage v-once /> -->
   <div class="flex flex-col flex-1 overflow-hidden relative bg-[#f9fafb] border-l border-[#f1f1f1]">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
