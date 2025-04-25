@@ -1,6 +1,6 @@
 import { general } from '@/helpers/general'
 
-const { sortByTimestamp } = general
+const { sortByTimestamp, removeDuplicates } = general
 
 async function openChatRoomDB() {
   return await new Promise((resolve, reject) => {
@@ -35,36 +35,13 @@ const chatRoomDBCurrently = async (chatRoomId) => {
   })
 
   if (targetChat) {
-    const currentMessages = targetChat.messages
+    const currentMessages = removeDuplicates(targetChat.messages, 'messageId')
       .filter((item) => item?.messageId)
       .sort(sortByTimestamp)
 
     return currentMessages.slice(0, 150)
   }
   return []
-}
-
-const fetchPaginatedFromIndexedDB = async (chatRoomId, start, end) => {
-  const db = await openChatRoomDB()
-  const tx = db.transaction('chat-room', 'readonly')
-  const store = tx.objectStore('chat-room')
-
-  const getRequest = store.get(chatRoomId)
-  const targetChat = await new Promise((resolve, reject) => {
-    getRequest.onsuccess = () => resolve(getRequest.result)
-    getRequest.onerror = () => reject(getRequest.error)
-  })
-
-  if (!targetChat || !Array.isArray(targetChat.messages)) {
-    return []
-  }
-
-  // Urutkan pesan terbaru ke terlama (jika diperlukan)
-  const sorted = [...targetChat.messages].sort(
-    (a, b) => Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp),
-  )
-
-  return sorted.slice(start, end)
 }
 
 async function addMessageToChatRoom(data) {
@@ -80,6 +57,7 @@ async function addMessageToChatRoom(data) {
 
   if (targetChat) {
     targetChat.messages.unshift(data.item)
+    targetChat.messages = removeDuplicates(targetChat.messages, 'messageId')
     store.put(targetChat)
   } else {
     store.add({
@@ -112,7 +90,10 @@ async function addStreamsMessageToChatRoom(data) {
 
     const newMessages = data.streams.filter((msg) => !existingIds.has(msg.messageId))
 
-    const combinedMessages = [...existingMessages, ...newMessages].sort(sortByTimestamp)
+    const combinedMessages = removeDuplicates(
+      [...existingMessages, ...newMessages],
+      'messageId',
+    ).sort(sortByTimestamp)
 
     const updatedChat = {
       ...targetChat,
@@ -134,7 +115,6 @@ async function addStreamsMessageToChatRoom(data) {
 export const chatRoomDB = {
   openChatRoomDB,
   chatRoomDBCurrently,
-  fetchPaginatedFromIndexedDB,
   addMessageToChatRoom,
   addStreamsMessageToChatRoom,
 }
