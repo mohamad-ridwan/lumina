@@ -1,4 +1,4 @@
-import { ITEMS_PER_PAGE } from '@/stores/chat-room'
+import { ITEMS_PER_PAGE } from '@/utils/pagination'
 
 const removeDuplicates = (arr, field) => {
   const seenValues = new Set()

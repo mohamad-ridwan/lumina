@@ -8,9 +8,7 @@ import AddNewMessageWorker from '@/services/workers/add-new-message-worker.js?wo
 import GetChatRoomWorker from '@/services/workers/get-chat-room-worker.js?worker'
 import StreamsChatRoomWorker from '@/services/workers/streams-chat-room-worker.js?worker'
 import MainMessagesWorker from '@/services/workers/main-message-workers.js?worker'
-
-export const ITEMS_PER_PAGE = 150
-export const SCROLL_THRESHOLD = 200
+import { ITEMS_PER_PAGE } from '@/utils/pagination'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
