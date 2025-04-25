@@ -634,7 +634,7 @@ onUnmounted(() => {
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
     <div v-if="currentStickyHeader.text"
-      :class="`absolute top-22 z-10 rotate-180 flex justify-center items-center w-full ${showDateHeader ? 'opacity-100' : 'opacity-0'} transition-all`">
+      :class="`absolute top-22 z-10 rotate-180 flex justify-center items-center left-2 right-[1.4rem] ${showDateHeader ? 'opacity-100' : 'opacity-0'} transition-all`">
       <DateHeader :date="currentStickyHeader.text" />
     </div>
 
