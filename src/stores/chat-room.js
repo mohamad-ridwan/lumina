@@ -370,7 +370,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   }
 
   function handleReadMessage(messageId) {
-    // let chatDataCurrently = chatRoomMessages.value
     const currentMessageIndex = toRaw(chatRoomMessages.value)?.findIndex(
       (msg) => msg.messageId === messageId,
     )
@@ -378,8 +377,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       return
     }
     chatRoomMessages.value[currentMessageIndex].status = 'READ'
-    // triggerRef(chatRoomMessages)
-    // chatRoomMessages.value = chatDataCurrently
   }
 
   function handleSetAddNewMessageWorker() {
