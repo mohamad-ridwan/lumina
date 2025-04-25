@@ -23,6 +23,28 @@ async function openChatRoomDB() {
   })
 }
 
+const updateReadMessageDB = async (chatRoomId, messageId) => {
+  const db = await openChatRoomDB()
+  const tx = db.transaction('chat-room', 'readwrite')
+  const store = tx.objectStore('chat-room')
+
+  const getRequest = store.get(chatRoomId)
+  const targetChat = await new Promise((resolve, reject) => {
+    getRequest.onsuccess = () => resolve(getRequest.result)
+    getRequest.onerror = () => reject(getRequest.error)
+  })
+
+  if (targetChat) {
+    const indexMessage = targetChat.messages.findIndex((message) => message.messageId === messageId)
+    if (indexMessage !== -1) {
+      targetChat.messages[indexMessage].status = 'READ'
+    }
+    store.put(targetChat)
+  }
+
+  await tx.done
+}
+
 const chatRoomDBCurrently = async (chatRoomId) => {
   const db = await openChatRoomDB()
   const tx = db.transaction('chat-room', 'readwrite')
@@ -113,6 +135,7 @@ async function addStreamsMessageToChatRoom(data) {
 }
 
 export const chatRoomDB = {
+  updateReadMessageDB,
   openChatRoomDB,
   chatRoomDBCurrently,
   addMessageToChatRoom,

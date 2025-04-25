@@ -3,7 +3,7 @@ import { general } from '@/helpers/general'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { markRaw, nextTick, ref, shallowRef, toRaw } from 'vue'
+import { markRaw, nextTick, ref, shallowRef, toRaw, triggerRef } from 'vue'
 import AddNewMessageWorker from '@/services/workers/add-new-message-worker.js?worker'
 import GetChatRoomWorker from '@/services/workers/get-chat-room-worker.js?worker'
 import StreamsChatRoomWorker from '@/services/workers/streams-chat-room-worker.js?worker'
@@ -377,6 +377,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       return
     }
     chatRoomMessages.value[currentMessageIndex].status = 'READ'
+    triggerRef(chatRoomMessages.value)
+
+    // save to indexedDB
+    paginationMessagesComparisonWorker.value.postMessage({
+      chatRoomId: chatRoom.value?.chatRoomId,
+      messageId: messageId,
+      type: 'read-message',
+    })
   }
 
   function handleSetAddNewMessageWorker() {
