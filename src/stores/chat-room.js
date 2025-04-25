@@ -103,13 +103,15 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
     getMainMessagesWorkerOnScrollBottom.value.onmessage = (event) => {
       if (event.data.length > 0) {
-        chatRoomMessages.value = markRaw(
-          createNewMessages([...bufferNewMessagesOnScrollBottom.value, ...event.data]),
-        )
+        chatRoomMessages.value = createNewMessages([
+          ...bufferNewMessagesOnScrollBottom.value,
+          ...event.data,
+        ])
       } else if (bufferNewMessagesOnScrollBottom.value.length > 0) {
-        chatRoomMessages.value = markRaw(
-          createNewMessages([...bufferNewMessagesOnScrollBottom.value, ...chatRoomMessages.value]),
-        )
+        chatRoomMessages.value = createNewMessages([
+          ...bufferNewMessagesOnScrollBottom.value,
+          ...chatRoomMessages.value,
+        ])
       }
 
       scroller.value.scrollToItem(0)
@@ -139,9 +141,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             resetMainMessagesWorker()
             resetMainMessagesEventSource()
           } else if (totalStreams < ITEMS_PER_PAGE) {
-            chatRoomMessages.value = markRaw(
-              createNewMessages([...messages, ...chatRoomMessages.value]),
-            )
+            chatRoomMessages.value = createNewMessages([...messages, ...chatRoomMessages.value])
           }
 
           totalStreamsMainMessagesWorker.value += totalStreams
@@ -171,7 +171,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   }
 
   function setChatRoomMessages(value) {
-    chatRoomMessages.value = markRaw(value)
+    chatRoomMessages.value = value
   }
 
   function resetAddNewMessageEventSource() {
@@ -218,7 +218,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             newMessages.push(...bufferAddNewMessageEventSource.value)
           }
 
-          chatRoomMessages.value = markRaw(createNewMessages(newMessages))
+          chatRoomMessages.value = createNewMessages(newMessages)
 
           if (scroller.value.$el.scrollTop !== 0 && keyAddNewMessageEventSource.value === 0) {
             scroller.value.$el.scrollTop = 0
@@ -291,13 +291,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         !loadingMessagesPagination.value &&
         isStartIndex.value
       ) {
-        chatRoomMessages.value = markRaw(
-          removeDuplicates([newData, ...chatRoomMessages.value], 'messageId').sort(sortByTimestamp),
-        )
+        chatRoomMessages.value = removeDuplicates(
+          [newData, ...chatRoomMessages.value],
+          'messageId',
+        ).sort(sortByTimestamp)
 
         if (toRaw(chatRoomMessages.value).length > ITEMS_PER_PAGE) {
           await nextTick()
-          chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, -1))
+          chatRoomMessages.value = chatRoomMessages.value.slice(0, -1)
         }
       }
 
@@ -340,21 +341,19 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       !loadingMessagesPagination.value &&
       isStartIndex.value
     ) {
-      chatRoomMessages.value = markRaw(
-        removeDuplicates(
-          [
-            {
-              ...newData,
-            },
-            ...chatRoomMessages.value,
-          ],
-          'messageId',
-        ).sort(sortByTimestamp),
-      )
+      chatRoomMessages.value = removeDuplicates(
+        [
+          {
+            ...newData,
+          },
+          ...chatRoomMessages.value,
+        ],
+        'messageId',
+      ).sort(sortByTimestamp)
 
       if (toRaw(chatRoomMessages.value).length > ITEMS_PER_PAGE) {
         await nextTick()
-        chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, -1))
+        chatRoomMessages.value = chatRoomMessages.value.slice(0, -1)
       }
     }
 
@@ -501,9 +500,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             if (event.data.length === 0) {
               isEmptyChatRoomDB = true
             } else {
-              chatRoomMessages.value = markRaw(
-                removeDuplicates([...chatRoomMessages.value, ...event.data], 'messageId'),
-              )
+              chatRoomMessages.value = removeDuplicates(
+                [...chatRoomMessages.value, ...event.data],
+                'messageId',
+              ).sort(sortByTimestamp)
             }
             loadingGetChatRoom = false
             nextTick(() => {
@@ -523,20 +523,19 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           isEmptyChatRoomDB &&
           toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE
         ) {
-          chatRoomMessages.value = markRaw(
-            removeDuplicates([
-              ...chatRoomMessages.value,
-              ...createNewMessages([...chatRoomMessages.value, ...bufferMessages]),
-            ]).slice(0, ITEMS_PER_PAGE),
-          )
+          chatRoomMessages.value = removeDuplicates([
+            ...chatRoomMessages.value,
+            ...createNewMessages([...chatRoomMessages.value, ...bufferMessages]),
+          ])
+            .sort(sortByTimestamp)
+            .slice(0, ITEMS_PER_PAGE)
+
           if (chatRoomMessages.value.length >= ITEMS_PER_PAGE) {
             isEmptyChatRoomDB = false
           }
         } else if (!loadingGetChatRoom) {
           if (toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE) {
-            chatRoomMessages.value = markRaw(
-              createNewMessages([...chatRoomMessages.value, ...message]),
-            )
+            chatRoomMessages.value = createNewMessages([...chatRoomMessages.value, ...message])
           }
           bufferMessages = []
         }

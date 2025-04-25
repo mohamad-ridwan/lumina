@@ -472,7 +472,7 @@ const handleGetMessagesPagination = async () => {
   }
 
   if (newData.length > 0) {
-    chatRoomMessages.value = markRaw(newChatRoomMessages)
+    chatRoomMessages.value = newChatRoomMessages
 
     if (result?.meta?.direction === 'prev') {
       await nextTick()
@@ -482,11 +482,11 @@ const handleGetMessagesPagination = async () => {
 
       el.scrollTop = previousScrollTop + scrollDiff
 
-      chatRoomMessages.value = markRaw(toRaw(chatRoomMessages.value).slice(0, ITEMS_PER_PAGE))
+      chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
     } else if (result?.meta?.direction === 'next' && toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
       await nextTick()
 
-      chatRoomMessages.value = markRaw(toRaw(chatRoomMessages.value).slice(result?.data?.length))
+      chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(result?.data?.length)
 
       nextTick(() => {
         const newScrollHeight = el.scrollHeight
@@ -605,14 +605,14 @@ watch(loadingMessagesPagination, async (isLoading) => {
     isStartIndex.value &&
     bufferNewMessages.value.length > 0
   ) {
-    chatRoomMessages.value = markRaw(removeDuplicates([
+    chatRoomMessages.value = removeDuplicates([
       ...bufferNewMessages.value,
       ...chatRoomMessages.value
-    ], 'messageId').sort(sortByTimestamp))
+    ], 'messageId').sort(sortByTimestamp)
 
     await nextTick()
 
-    chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
+    chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
     bufferNewMessages.value = []
   }
 })
@@ -651,11 +651,11 @@ onUnmounted(() => {
 
     <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages"
       :min-item-size="54" class="flex-1 space-y-2 bg-[#f9fafb] !p-4"
-      style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl;">
+      style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">
-        <DynamicScrollerItem :item="item" :active="active" :size-dependencies="[
+        <DynamicScrollerItem :data-index="index" :item="item" :active="active" :size-dependencies="[
           item.textMessage,
-        ]" :data-index="index" :key="item.messageId">
+        ]" :key="item.messageId">
           <div v-if="item?.isHeader" :id="`${item.id}-${item.latestMessageTimestamp}`">
             <DateHeader :date="formatDate(Number(item?.latestMessageTimestamp))" />
           </div>
