@@ -518,10 +518,20 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           if (bufferMessages.length < ITEMS_PER_PAGE) {
             bufferMessages.push(...message)
           }
-        } else if (!loadingGetChatRoom && isEmptyChatRoomDB) {
+        } else if (
+          !loadingGetChatRoom &&
+          isEmptyChatRoomDB &&
+          toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE
+        ) {
           chatRoomMessages.value = markRaw(
-            createNewMessages([...chatRoomMessages.value, ...bufferMessages]),
+            [
+              ...chatRoomMessages.value,
+              ...createNewMessages([...chatRoomMessages.value, ...bufferMessages]),
+            ].slice(0, ITEMS_PER_PAGE),
           )
+          if (chatRoomMessages.value.length >= ITEMS_PER_PAGE) {
+            isEmptyChatRoomDB = false
+          }
         } else if (!loadingGetChatRoom) {
           if (toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE) {
             chatRoomMessages.value = markRaw(

@@ -407,6 +407,10 @@ const handleGetMessagesPagination = async () => {
   const nearBottom =
     el.scrollTop + el.clientHeight >= el.scrollHeight - SCROLL_THRESHOLD
 
+  if (el.scrollTop === 0) {
+    chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
+  }
+
   if (
     loadingMainMessagesOnScrollBottom.value ||
     loadingMessagesPagination.value ||
@@ -483,8 +487,6 @@ const handleGetMessagesPagination = async () => {
       el.scrollTop = previousScrollTop + scrollDiff
 
       chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
-    } else if (result?.meta?.direction === 'next' && chatRoomMessages.value.length >= ITEMS_PER_PAGE) {
-      chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(20, chatRoomMessages.value.length))
     }
   }
 
@@ -596,7 +598,6 @@ watch(loadingMessagesPagination, async (isLoading) => {
     isStartIndex.value &&
     bufferNewMessages.value.length > 0
   ) {
-
     chatRoomMessages.value = markRaw(removeDuplicates([
       ...bufferNewMessages.value,
       ...chatRoomMessages.value
