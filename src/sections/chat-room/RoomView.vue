@@ -4,7 +4,7 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -407,10 +407,6 @@ const handleGetMessagesPagination = async () => {
   const nearBottom =
     el.scrollTop + el.clientHeight >= el.scrollHeight - SCROLL_THRESHOLD
 
-  if (el.scrollTop === 0) {
-    chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
-  }
-
   if (
     loadingMainMessagesOnScrollBottom.value ||
     loadingMessagesPagination.value ||
@@ -478,15 +474,26 @@ const handleGetMessagesPagination = async () => {
   if (newData.length > 0) {
     chatRoomMessages.value = markRaw(newChatRoomMessages)
 
-    await nextTick()
-
     if (result?.meta?.direction === 'prev') {
+      await nextTick()
+
       const newScrollHeight = el.scrollHeight
       const scrollDiff = newScrollHeight - previousScrollHeight
 
       el.scrollTop = previousScrollTop + scrollDiff
 
       chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(0, ITEMS_PER_PAGE))
+    } else if (result?.meta?.direction === 'next' && toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
+      await nextTick()
+
+      chatRoomMessages.value = markRaw(chatRoomMessages.value.slice(result?.data?.length))
+
+      nextTick(() => {
+        const newScrollHeight = el.scrollHeight
+        const scrollDiff = newScrollHeight - previousScrollHeight
+
+        el.scrollTop = previousScrollTop + scrollDiff
+      })
     }
   }
 
@@ -636,7 +643,7 @@ onUnmounted(() => {
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
     <div v-if="currentStickyHeader.text"
-      :class="`absolute top-22 z-10 rotate-180 flex justify-center items-center left-2 right-[1.4rem] ${showDateHeader ? 'opacity-100' : 'opacity-0'} transition-all`">
+      :class="`absolute top-22 z-10 rotate-180 flex justify-center items-center left-2 right-[0.8rem] ${showDateHeader ? 'opacity-100' : 'opacity-0'} transition-all`">
       <DateHeader :date="currentStickyHeader.text" />
     </div>
 
