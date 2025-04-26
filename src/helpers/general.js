@@ -19,8 +19,8 @@ const sortByTimestamp = (a, b) => {
   const bTime = Number(b.latestMessageTimestamp)
 
   if (aTime === bTime) {
-    if (a.isHeader && !b.isHeader) return -1
-    if (!a.isHeader && b.isHeader) return 1
+    if (a.isHeader && !b.isHeader) return 1
+    if (!a.isHeader && b.isHeader) return -1
     return 0
   }
 
