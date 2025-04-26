@@ -9,6 +9,7 @@ import GetChatRoomWorker from '@/services/workers/get-chat-room-worker.js?worker
 import StreamsChatRoomWorker from '@/services/workers/streams-chat-room-worker.js?worker'
 import MainMessagesWorker from '@/services/workers/main-message-workers.js?worker'
 import { ITEMS_PER_PAGE } from '@/utils/pagination'
+import { chatRoomDB } from '@/services/indexedDB/chat-room-db'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -41,6 +42,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const paginationMessagesComparisonWorker = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates } = general
+  const { deleteChatRoomById } = chatRoomDB
 
   const resetPaginationMessagesComparisonWorker = () => {
     if (paginationMessagesComparisonWorker.value) {
@@ -566,7 +568,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
     chatRoomEventSource.value.addEventListener('done', (event) => {
       const message = JSON.parse(event.data)
-      if (message?.length === 0) {
+      if (message?.length === 0 || message?.totalMessages === 0) {
+        deleteChatRoomById(itemCurrently.chatRoomId)
         handleStopStreamsChatRoomWorker()
       }
       resetChatRoomEventSource()

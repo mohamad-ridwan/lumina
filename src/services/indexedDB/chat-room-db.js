@@ -134,10 +134,31 @@ async function addStreamsMessageToChatRoom(data) {
   await tx.done
 }
 
+async function deleteChatRoomById(chatRoomId) {
+  const db = await openChatRoomDB()
+  const transaction = db.transaction(['chat-room'], 'readwrite')
+  const objectStore = transaction.objectStore('chat-room')
+
+  return new Promise((resolve, reject) => {
+    const deleteRequest = objectStore.delete(chatRoomId)
+
+    deleteRequest.onsuccess = function () {
+      console.log(`Chat room dengan ID "${chatRoomId}" berhasil dihapus.`)
+      resolve()
+    }
+
+    deleteRequest.onerror = function (event) {
+      console.error('Gagal menghapus chat room:', event.target.error)
+      reject(event.target.error)
+    }
+  })
+}
+
 export const chatRoomDB = {
   updateReadMessageDB,
   openChatRoomDB,
   chatRoomDBCurrently,
   addMessageToChatRoom,
   addStreamsMessageToChatRoom,
+  deleteChatRoomById,
 }
