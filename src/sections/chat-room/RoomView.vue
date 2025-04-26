@@ -6,7 +6,7 @@ import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
 import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
-import SpamMessage from '@/spam-message/SpamMessage.vue';
+// import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
 import { ITEMS_PER_PAGE, SCROLL_THRESHOLD, } from '@/utils/pagination';
 import { storeToRefs } from 'pinia';
@@ -491,16 +491,18 @@ const handleGetMessagesPagination = async () => {
 
       chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
     } else if (result?.meta?.direction === 'next' && toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
-      await nextTick()
+      // await nextTick()
 
-      chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(result.data.length)
+      // chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(result.data.length)
 
-      nextTick(() => {
-        const newScrollHeight = el.scrollHeight
-        const scrollDiff = newScrollHeight - previousScrollHeight
+      // if (chatRoomMessages.value[0]?.senderUserId === profile.value?.data.id) {
+      //   nextTick(() => {
+      //     const newScrollHeight = el.scrollHeight
+      //     const scrollDiff = newScrollHeight - previousScrollHeight
 
-        el.scrollTop = previousScrollTop + scrollDiff
-      })
+      //     el.scrollTop = previousScrollTop + scrollDiff
+      //   })
+      // }
     }
   }
 
@@ -641,10 +643,30 @@ onUnmounted(() => {
   bufferNewMessagesOnScrollBottom.value = []
   bufferMainMessagesEventSource.value = []
 })
+
+function findDuplicateKeys(arr, key = 'messageId') {
+  const seen = new Set()
+  const duplicates = new Set()
+
+  for (const item of arr) {
+    const value = item[key]
+    if (seen.has(value)) {
+      duplicates.add(value)
+    } else {
+      seen.add(value)
+    }
+  }
+
+  return Array.from(duplicates)
+}
+
+// watch(memoizedMessages, (data) => {
+//   console.log('data', findDuplicateKeys(data))
+// }, { immediate: true })
 </script>
 
 <template>
-  <SpamMessage v-once />
+  <!-- <SpamMessage v-once /> -->
   <div class="flex flex-col flex-1 overflow-hidden relative bg-[#f9fafb] border-l border-[#f1f1f1]">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
