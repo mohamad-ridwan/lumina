@@ -6,7 +6,7 @@ import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
 import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
-// import SpamMessage from '@/spam-message/SpamMessage.vue';
+import SpamMessage from '@/spam-message/SpamMessage.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { ITEMS_PER_PAGE, SCROLL_THRESHOLD, } from '@/utils/pagination';
 import { storeToRefs } from 'pinia';
@@ -120,13 +120,20 @@ const memoizedMessages = computed(() => {
       isTyping: true
     }, ...chatRoomMessages.value?.map(chat => {
       if (chat?.isHeader) {
-        return { ...chat, headerText: formatDate(Number(chat?.latestMessageTimestamp)) }
+        const itemDate = dayjs(Number(chat?.latestMessageTimestamp)).startOf('day')
+        return { ...chat, headerText: formatDate(itemDate) }
       }
       return chat
     })].sort(sortByTimestamp)
   }
 
-  return chatRoomMessages.value.sort(sortByTimestamp)
+  return chatRoomMessages.value.map(chat => {
+    if (chat?.isHeader) {
+      const itemDate = dayjs(Number(chat?.latestMessageTimestamp)).startOf('day')
+      return { ...chat, headerText: formatDate(itemDate) }
+    }
+    return chat
+  }).sort(sortByTimestamp)
 })
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
@@ -612,7 +619,7 @@ watch(loadingMessagesPagination, async (isLoading) => {
 
     await nextTick()
 
-    chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
+    chatRoomMessages.value = chatRoomMessages.value.slice(0, ITEMS_PER_PAGE).sort(sortByTimestamp)
     bufferNewMessages.value = []
   }
 })
@@ -637,7 +644,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- <SpamMessage v-once /> -->
+  <SpamMessage v-once />
   <div class="flex flex-col flex-1 overflow-hidden relative bg-[#f9fafb] border-l border-[#f1f1f1]">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
