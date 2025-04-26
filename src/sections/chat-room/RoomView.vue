@@ -123,10 +123,10 @@ const memoizedMessages = computed(() => {
         return { ...chat, headerText: formatDate(Number(chat?.latestMessageTimestamp)) }
       }
       return chat
-    })]
+    })].sort(sortByTimestamp)
   }
 
-  return chatRoomMessages.value
+  return chatRoomMessages.value.sort(sortByTimestamp)
 })
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
@@ -460,19 +460,19 @@ const handleGetMessagesPagination = async () => {
   }
 
   if (result?.meta?.direction === 'prev' && result?.data?.length > 0) {
-    newChatRoomMessages = removeDuplicates([
+    newChatRoomMessages = [
       ...newData,
       ...chatRoomMessages.value
-    ], 'messageId').sort(sortByTimestamp)
+    ]
   } else if (result?.meta?.direction === 'next' && result?.data?.length > 0) {
-    newChatRoomMessages = removeDuplicates([
+    newChatRoomMessages = [
       ...chatRoomMessages.value,
       ...newData,
-    ], 'messageId').sort(sortByTimestamp)
+    ]
   }
 
   if (newData.length > 0) {
-    chatRoomMessages.value = newChatRoomMessages
+    chatRoomMessages.value = removeDuplicates(newChatRoomMessages, 'messageId').sort(sortByTimestamp)
 
     if (result?.meta?.direction === 'prev') {
       await nextTick()
@@ -482,11 +482,11 @@ const handleGetMessagesPagination = async () => {
 
       el.scrollTop = previousScrollTop + scrollDiff
 
-      chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
+      chatRoomMessages.value = chatRoomMessages.value.slice(0, ITEMS_PER_PAGE).sort(sortByTimestamp)
     } else if (result?.meta?.direction === 'next' && toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
       await nextTick()
 
-      chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(result?.data?.length)
+      chatRoomMessages.value = chatRoomMessages.value.slice(result.data.length).sort(sortByTimestamp)
 
       nextTick(() => {
         const newScrollHeight = el.scrollHeight
@@ -649,7 +649,7 @@ onUnmounted(() => {
 
     <SkeletonMessages v-if="loadingMessages" />
 
-    <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages"
+    <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages" :buffer="400"
       :min-item-size="54" class="flex-1 space-y-2 bg-[#f9fafb] !p-4"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">
