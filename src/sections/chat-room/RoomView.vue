@@ -489,11 +489,11 @@ const handleGetMessagesPagination = async () => {
 
       el.scrollTop = previousScrollTop + scrollDiff
 
-      chatRoomMessages.value = chatRoomMessages.value.slice(0, ITEMS_PER_PAGE).sort(sortByTimestamp)
+      chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
     } else if (result?.meta?.direction === 'next' && toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
       await nextTick()
 
-      chatRoomMessages.value = chatRoomMessages.value.slice(result.data.length).sort(sortByTimestamp)
+      chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(result.data.length)
 
       nextTick(() => {
         const newScrollHeight = el.scrollHeight
@@ -619,7 +619,7 @@ watch(loadingMessagesPagination, async (isLoading) => {
 
     await nextTick()
 
-    chatRoomMessages.value = chatRoomMessages.value.slice(0, ITEMS_PER_PAGE).sort(sortByTimestamp)
+    chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
     bufferNewMessages.value = []
   }
 })
