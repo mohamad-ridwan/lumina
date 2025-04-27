@@ -85,22 +85,60 @@ const stayScrollCurrently = shallowRef(null)
 const typingBubbleEl = ref(null)
 
 // logic
+// const formatDate = (date) => {
+//   const today = dayjs().startOf('day');
+//   const yesterday = dayjs().subtract(1, 'day').startOf('day');
+//   const now = dayjs();
+//   const dateToCheck = dayjs(date);
+
+//   if (dateToCheck.isSame(today, 'day')) {
+//     return 'Today';
+//   } else if (dateToCheck.isSame(yesterday, 'day')) {
+//     return 'Yesterday';
+//   } else if (dateToCheck.isSame(now, 'week') && !dateToCheck.isSame(today, 'day') && !dateToCheck.isSame(yesterday, 'day')) {
+//     return dateToCheck.format('dddd');
+//   } else {
+//     return dateToCheck.format('DD MMMM YYYY');
+//   }
+// };
+
 const formatDate = (date) => {
   const today = dayjs().startOf('day');
   const yesterday = dayjs().subtract(1, 'day').startOf('day');
-  const now = dayjs();
+  // const now = dayjs();
   const dateToCheck = dayjs(date);
+  const oneWeekAgo = today.subtract(7, 'day');
 
   if (dateToCheck.isSame(today, 'day')) {
     return 'Today';
   } else if (dateToCheck.isSame(yesterday, 'day')) {
     return 'Yesterday';
-  } else if (dateToCheck.isSame(now, 'week') && !dateToCheck.isSame(today, 'day') && !dateToCheck.isSame(yesterday, 'day')) {
+  } else if (dateToCheck.isAfter(oneWeekAgo)) {
     return dateToCheck.format('dddd');
   } else {
     return dateToCheck.format('DD MMMM YYYY');
   }
 };
+
+// const formatDate = (time) => {
+//   const timestampInMilliseconds = time
+
+//   const date = dayjs(timestampInMilliseconds);
+
+//   const today = dayjs();
+
+//   const oneWeekAgo = today.subtract(7, 'day');
+
+//   if (date.isToday()) {
+//     return date.format('HH.mm')
+//   } else if (date.isYesterday()) {
+//     return 'Yesterday'
+//   } else if (date.isAfter(oneWeekAgo)) {
+//     return date.format('dddd')
+//   } else {
+//     return date.format('DD MMMM YYYY')
+//   }
+// };
 
 const memoizedChatRoomId = computed(() => {
   return chatRoom.value?.chatRoomId
@@ -523,14 +561,14 @@ const handleGetMessagesPagination = async () => {
       triggerRef(chatRoomMessages)
       scroller.value.$refs.scroller.$forceUpdate(true)
 
-      if (chatRoomMessages.value[0]?.senderUserId === profile.value?.data.id) {
-        nextTick(() => {
-          const newScrollHeight = el.scrollHeight
-          const scrollDiff = newScrollHeight - previousScrollHeight
+      // if (chatRoomMessages.value[0]?.senderUserId === profile.value?.data.id) {
+      //   nextTick(() => {
+      //     const newScrollHeight = el.scrollHeight
+      //     const scrollDiff = newScrollHeight - previousScrollHeight
 
-          el.scrollTop = previousScrollTop + scrollDiff
-        })
-      }
+      //     el.scrollTop = previousScrollTop + scrollDiff
+      //   })
+      // }
     }
   }
 

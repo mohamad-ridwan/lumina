@@ -510,7 +510,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
               triggerRef(chatRoomMessages)
             }
             loadingGetChatRoom = false
-            nextTick(() => {
+            nextTick(async () => {
+              await nextTick()
               handleStopGetChatRoomWorker()
             })
             loadingMessages.value = false
@@ -527,14 +528,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           isEmptyChatRoomDB &&
           toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE
         ) {
-          chatRoomMessages.value = removeDuplicates([
+          chatRoomMessages.value = createNewMessages([
             ...chatRoomMessages.value,
-            ...createNewMessages([...chatRoomMessages.value, ...bufferMessages]),
+            ...bufferMessages,
+            ...message,
           ])
-            .sort(sortByTimestamp)
-            .slice(0, ITEMS_PER_PAGE)
           triggerRef(chatRoomMessages)
-          if (chatRoomMessages.value.length >= ITEMS_PER_PAGE) {
+          if (toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
             isEmptyChatRoomDB = false
           }
         } else if (!loadingGetChatRoom) {
