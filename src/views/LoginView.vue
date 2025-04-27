@@ -10,6 +10,7 @@ import AuthLayout from '@/layout/auth/AuthLayout.vue';
 import { fetchLogin } from '@/services/api/users';
 import { useRouter } from 'vue-router';
 import { updateSessionLogin } from '@/storage-management/local-storage/session-login';
+import AuthNavigation from '@/sections/auth/AuthNavigation.vue';
 
 const toast = useToast();
 const initialValues = ref({
@@ -80,6 +81,7 @@ watch(() => {
                 $form.password.error?.message || loginFailedMessage }}</Message>
           </div>
           <Button type="submit" label="Log in" :disabled="loadingLogin" :loading="loadingLogin" />
+          <AuthNavigation btn-name="Create an account" />
         </Form>
       </div>
     </template>
