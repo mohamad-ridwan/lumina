@@ -13,9 +13,9 @@ import { chatRoomDB } from '@/services/indexedDB/chat-room-db'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
-  const chatRoomMessages = shallowRef([])
+  const chatRoomMessages = ref([])
   const loadingMessages = shallowRef(true)
-  const headerRefs = ref({})
+  const headerRefs = shallowRef({})
   const scroller = ref(null)
   const showScrollDownButton = ref(false)
   const getChatRoomWorker = ref(null)
@@ -376,7 +376,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       return
     }
     chatRoomMessages.value[currentMessageIndex].status = 'READ'
-    triggerRef(chatRoomMessages.value)
+    triggerRef(chatRoomMessages)
 
     // save to indexedDB
     paginationMessagesComparisonWorker.value.postMessage({
@@ -506,6 +506,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
                 [...chatRoomMessages.value, ...event.data],
                 'messageId',
               ).sort(sortByTimestamp)
+              triggerRef(chatRoomMessages)
             }
             loadingGetChatRoom = false
             nextTick(() => {
@@ -531,13 +532,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           ])
             .sort(sortByTimestamp)
             .slice(0, ITEMS_PER_PAGE)
-
+          triggerRef(chatRoomMessages)
           if (chatRoomMessages.value.length >= ITEMS_PER_PAGE) {
             isEmptyChatRoomDB = false
           }
         } else if (!loadingGetChatRoom) {
           if (toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE) {
             chatRoomMessages.value = createNewMessages([...chatRoomMessages.value, ...message])
+            triggerRef(chatRoomMessages)
           }
           bufferMessages = []
         }

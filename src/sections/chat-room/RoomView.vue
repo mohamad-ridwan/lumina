@@ -4,7 +4,7 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, watch } from 'vue';
+import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, onUpdated, ref, shallowRef, stop, toRaw, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -414,6 +414,12 @@ const handleGetMessagesPagination = async () => {
   const nearBottom =
     el.scrollTop + el.clientHeight >= el.scrollHeight - SCROLL_THRESHOLD
 
+  // if (el.scrollTop === 0 && toRaw(chatRoomMessages.value).length > 150) {
+  //   chatRoomMessages.value = [...chatRoomMessages.value.slice(0, ITEMS_PER_PAGE)]
+  //   triggerRef(chatRoomMessages)
+  //   scroller.value.$refs.scroller.$forceUpdate(true)
+  // }
+
   if (
     loadingMainMessagesOnScrollBottom.value ||
     loadingMessagesPagination.value ||
@@ -478,10 +484,18 @@ const handleGetMessagesPagination = async () => {
     ]
   }
 
+  let newMessagesCurrently = []
+
   if (newData.length > 0) {
-    chatRoomMessages.value = removeDuplicates(newChatRoomMessages, 'messageId').sort(sortByTimestamp)
+    newMessagesCurrently = removeDuplicates(newChatRoomMessages, 'messageId').sort(sortByTimestamp)
+    chatRoomMessages.value = [...newMessagesCurrently]
+    await nextTick()
+    await nextTick()
+    triggerRef(chatRoomMessages)
+    scroller.value.$refs.scroller.$forceUpdate(true)
 
     if (result?.meta?.direction === 'prev') {
+      await nextTick()
       await nextTick()
 
       const newScrollHeight = el.scrollHeight
@@ -489,20 +503,31 @@ const handleGetMessagesPagination = async () => {
 
       el.scrollTop = previousScrollTop + scrollDiff
 
-      chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
+      newMessagesCurrently = toRaw(chatRoomMessages.value).sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
+      chatRoomMessages.value = [...newMessagesCurrently]
+      await nextTick()
+      await nextTick()
+      triggerRef(chatRoomMessages)
+      scroller.value.$refs.scroller.$forceUpdate(true)
     } else if (result?.meta?.direction === 'next' && toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
-      // await nextTick()
+      await nextTick()
+      await nextTick()
 
-      // chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(result.data.length)
+      newMessagesCurrently = toRaw(chatRoomMessages.value).sort(sortByTimestamp).slice(result.data.length)
+      chatRoomMessages.value = [...newMessagesCurrently]
+      await nextTick()
+      await nextTick()
+      triggerRef(chatRoomMessages)
+      scroller.value.$refs.scroller.$forceUpdate(true)
 
-      // if (chatRoomMessages.value[0]?.senderUserId === profile.value?.data.id) {
-      //   nextTick(() => {
-      //     const newScrollHeight = el.scrollHeight
-      //     const scrollDiff = newScrollHeight - previousScrollHeight
+      if (chatRoomMessages.value[0]?.senderUserId === profile.value?.data.id) {
+        nextTick(() => {
+          const newScrollHeight = el.scrollHeight
+          const scrollDiff = newScrollHeight - previousScrollHeight
 
-      //     el.scrollTop = previousScrollTop + scrollDiff
-      //   })
-      // }
+          el.scrollTop = previousScrollTop + scrollDiff
+        })
+      }
     }
   }
 
@@ -618,10 +643,16 @@ watch(loadingMessagesPagination, async (isLoading) => {
       ...bufferNewMessages.value,
       ...chatRoomMessages.value
     ], 'messageId').sort(sortByTimestamp)
-
     await nextTick()
+    await nextTick()
+    triggerRef(chatRoomMessages)
+    scroller.value.$refs.scroller.$forceUpdate(true)
 
     chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
+    await nextTick()
+    await nextTick()
+    triggerRef(chatRoomMessages)
+    scroller.value.$refs.scroller.$forceUpdate(true)
     bufferNewMessages.value = []
   }
 })
@@ -643,26 +674,6 @@ onUnmounted(() => {
   bufferNewMessagesOnScrollBottom.value = []
   bufferMainMessagesEventSource.value = []
 })
-
-function findDuplicateKeys(arr, key = 'messageId') {
-  const seen = new Set()
-  const duplicates = new Set()
-
-  for (const item of arr) {
-    const value = item[key]
-    if (seen.has(value)) {
-      duplicates.add(value)
-    } else {
-      seen.add(value)
-    }
-  }
-
-  return Array.from(duplicates)
-}
-
-// watch(memoizedMessages, (data) => {
-//   console.log('data', findDuplicateKeys(data))
-// }, { immediate: true })
 </script>
 
 <template>
@@ -678,7 +689,7 @@ function findDuplicateKeys(arr, key = 'messageId') {
 
     <SkeletonMessages v-if="loadingMessages" />
 
-    <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages" :buffer="400"
+    <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages"
       :min-item-size="54" class="flex-1 space-y-2 bg-[#f9fafb] !p-4"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">
