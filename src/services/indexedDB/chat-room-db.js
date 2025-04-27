@@ -1,4 +1,5 @@
 import { general } from '@/helpers/general'
+import { ITEMS_PER_PAGE } from '@/utils/pagination'
 
 const { sortByTimestamp, removeDuplicates } = general
 
@@ -61,7 +62,7 @@ const chatRoomDBCurrently = async (chatRoomId) => {
       .filter((item) => item?.messageId)
       .sort(sortByTimestamp)
 
-    return currentMessages.slice(0, 150)
+    return currentMessages.slice(0, ITEMS_PER_PAGE)
   }
   return []
 }

@@ -410,15 +410,18 @@ watch(anyUserTyping, async (newVal, oldVal) => {
 
 const handleGetMessagesPagination = async () => {
   const el = scroller.value?.$el
+  if (!el) return
 
   const nearBottom =
     el.scrollTop + el.clientHeight >= el.scrollHeight - SCROLL_THRESHOLD
 
-  // if (el.scrollTop === 0 && toRaw(chatRoomMessages.value).length > 150) {
-  //   chatRoomMessages.value = [...chatRoomMessages.value.slice(0, ITEMS_PER_PAGE)]
-  //   triggerRef(chatRoomMessages)
-  //   scroller.value.$refs.scroller.$forceUpdate(true)
-  // }
+  if (el.scrollTop === 0 && toRaw(chatRoomMessages.value).length > ITEMS_PER_PAGE) {
+    chatRoomMessages.value = [...chatRoomMessages.value.slice(0, ITEMS_PER_PAGE)]
+    await nextTick()
+    await nextTick()
+    triggerRef(chatRoomMessages)
+    scroller.value.$refs.scroller.$forceUpdate(true)
+  }
 
   if (
     loadingMainMessagesOnScrollBottom.value ||
@@ -503,18 +506,18 @@ const handleGetMessagesPagination = async () => {
 
       el.scrollTop = previousScrollTop + scrollDiff
 
-      newMessagesCurrently = toRaw(chatRoomMessages.value).sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
-      chatRoomMessages.value = [...newMessagesCurrently]
-      await nextTick()
-      await nextTick()
-      triggerRef(chatRoomMessages)
-      scroller.value.$refs.scroller.$forceUpdate(true)
+      // newMessagesCurrently = toRaw(chatRoomMessages.value).sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
+      // chatRoomMessages.value = [...newMessagesCurrently]
+      // await nextTick()
+      // await nextTick()
+      // triggerRef(chatRoomMessages)
+      // scroller.value.$refs.scroller.$forceUpdate(true)
     } else if (result?.meta?.direction === 'next' && toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
-      await nextTick()
-      await nextTick()
+      // await nextTick()
+      // await nextTick()
 
-      newMessagesCurrently = toRaw(chatRoomMessages.value).sort(sortByTimestamp).slice(result.data.length)
-      chatRoomMessages.value = [...newMessagesCurrently]
+      // newMessagesCurrently = toRaw(chatRoomMessages.value).sort(sortByTimestamp).slice(result.data.length)
+      // chatRoomMessages.value = [...newMessagesCurrently]
       await nextTick()
       await nextTick()
       triggerRef(chatRoomMessages)
@@ -540,9 +543,10 @@ const handleGetMessagesPagination = async () => {
 }
 
 const handleScroll = () => {
-  const scrollTop = scroller.value?.$el?.scrollTop ?? 0
-
   const el = scroller.value?.$el
+  if (!el) return
+
+  const scrollTop = scroller.value?.$el?.scrollTop ?? 0
   previousScrollTop = scrollTop
   previousScrollHeight = el.scrollHeight
 

@@ -13,7 +13,7 @@ import { chatRoomDB } from '@/services/indexedDB/chat-room-db'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
-  const chatRoomMessages = ref([])
+  const chatRoomMessages = shallowRef([])
   const loadingMessages = shallowRef(true)
   const headerRefs = shallowRef({})
   const scroller = ref(null)
@@ -428,6 +428,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
     loadingMessages.value = true
     headerRefs.value = {}
+    triggerRef(headerRefs)
 
     resetPaginationMessagesComparisonWorker()
     setPaginationMessagesComparisonWorker()
