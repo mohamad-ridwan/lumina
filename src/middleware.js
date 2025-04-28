@@ -21,7 +21,7 @@ export const middleware = async (path) => {
     if (profile?.errJwt) {
       setProfile(null)
       // reset token in local storage
-      if (path !== '/login') {
+      if (path !== '/login' && path !== '/register') {
         redirectPage = '/login'
         message = 'Your session has expired, please log back in.'
       }
@@ -29,11 +29,11 @@ export const middleware = async (path) => {
     } else if (profile?.data?._id) {
       setProfile(profile)
       isValidAuth = true
-      if (path === '/login') {
+      if (path === '/login' || path === '/register') {
         redirectPage = '/'
       }
     }
-  } else if (path !== '/login') {
+  } else if (path !== '/login' && path !== '/register') {
     setProfile(null)
     redirectPage = '/login'
   }

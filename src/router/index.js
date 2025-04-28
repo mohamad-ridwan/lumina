@@ -3,6 +3,8 @@ import ChatView from '../views/ChatView.vue'
 import LoginView from '@/views/LoginView.vue'
 import { middleware } from '@/middleware'
 import { useToast } from 'primevue'
+import RegisterView from '@/views/RegisterView.vue'
+import RegisterVerificationView from '@/views/RegisterVerificationView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,13 +21,27 @@ const router = createRouter({
       component: LoginView,
       meta: { requiresAuth: true },
     },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/register/verification/:token',
+      name: 'verification',
+      component: RegisterVerificationView,
+    },
   ],
 })
 
 // handle auth
 router.beforeEach(async (to, from, next) => {
+  if (!to.meta?.requiresAuth) {
+    next()
+  }
   const isValidAuth = await middleware(to.path)
-  if (to.meta.requiresAuth && !isValidAuth?.isValidAuth && isValidAuth?.redirectPage) {
+  if (!isValidAuth?.isValidAuth && isValidAuth?.redirectPage) {
     if (isValidAuth.message) {
       router.options.showToast = isValidAuth.message
     }
