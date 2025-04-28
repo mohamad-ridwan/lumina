@@ -4,7 +4,7 @@ import FooterChatRoom from './FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, onUpdated, ref, shallowRef, stop, toRaw, triggerRef, watch } from 'vue';
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -119,26 +119,6 @@ const formatDate = (date) => {
     return dateToCheck.format('DD MMMM YYYY');
   }
 };
-
-// const formatDate = (time) => {
-//   const timestampInMilliseconds = time
-
-//   const date = dayjs(timestampInMilliseconds);
-
-//   const today = dayjs();
-
-//   const oneWeekAgo = today.subtract(7, 'day');
-
-//   if (date.isToday()) {
-//     return date.format('HH.mm')
-//   } else if (date.isYesterday()) {
-//     return 'Yesterday'
-//   } else if (date.isAfter(oneWeekAgo)) {
-//     return date.format('dddd')
-//   } else {
-//     return date.format('DD MMMM YYYY')
-//   }
-// };
 
 const memoizedChatRoomId = computed(() => {
   return chatRoom.value?.chatRoomId
