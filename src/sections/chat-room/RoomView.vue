@@ -254,6 +254,10 @@ const maintainScrollAfterInsert = async () => {
   el.scrollTop = previousScrollTop + scrollDiff
 }
 
+const handleReply = (msg) => {
+  console.log(msg)
+}
+
 watch(chatRoomMessages, async (data, oldData) => {
   if (data.length === 0) {
     currentStickyHeader.value = {
@@ -725,7 +729,7 @@ onUnmounted(() => {
             :data-timestamp="item.latestMessageTimestamp">
             <SenderMessage v-if="item?.textMessage && item.senderUserId === profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
-              :status="item.status" :message-id="item.messageId" />
+              :status="item.status" :message-id="item.messageId" @reply="handleReply(item)" />
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">

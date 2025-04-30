@@ -40,9 +40,33 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const loadingMainMessagesEventSource = ref(false)
   const totalStreamsMainMessagesWorker = ref(0)
   const paginationMessagesComparisonWorker = ref(null)
+  const replyMessageData = ref(null)
+  const activeMessageMenu = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates } = general
   const { deleteChatRoomById } = chatRoomDB
+
+  const resetActiveMessageMenu = () => {
+    activeMessageMenu.value = null
+  }
+
+  const handleActiveMessageMenu = (messageId) => {
+    activeMessageMenu.value = messageId
+  }
+
+  const resetReplyMessageData = () => {
+    replyMessageData.value = null
+  }
+
+  const handleSetReplyMessageData = ({ messageId, textMessage, messageType }) => {
+    if (messageId) {
+      replyMessageData.value = {
+        messageId,
+        textMessage,
+        messageType,
+      }
+    }
+  }
 
   const resetPaginationMessagesComparisonWorker = () => {
     if (paginationMessagesComparisonWorker.value) {
@@ -611,6 +635,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     bufferMainMessagesEventSource,
     loadingMainMessagesEventSource,
     paginationMessagesComparisonWorker,
+    replyMessageData,
+    activeMessageMenu,
+    resetActiveMessageMenu,
+    handleActiveMessageMenu,
+    handleSetReplyMessageData,
+    resetReplyMessageData,
     resetPaginationMessagesComparisonWorker,
     resetMainMessagesWorker,
     resetMainMessagesEventSource,
