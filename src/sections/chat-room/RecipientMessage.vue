@@ -6,16 +6,25 @@ import { useChatRoomStore } from '@/stores/chat-room'
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { storeToRefs } from 'pinia'
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 
 dayjs.extend(localizedFormat)
 
-const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView'])
+const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView, profileId } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId'])
 
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { activeMessageMenu } = storeToRefs(chatRoomStore)
+const { activeMessageMenu, chatRoomUsername } = storeToRefs(chatRoomStore)
+
+const fromMessageUsername = computed(() => {
+  if (!replyView) return
+  if (replyView.senderUserId === profileId) {
+    return 'You'
+  } else {
+    return chatRoomUsername.value
+  }
+})
 
 onMounted(() => {
   if (status === 'UNREAD') {
@@ -41,7 +50,7 @@ onMounted(() => {
       <p class="text-sm text-start rotate-180" style="direction: ltr;" v-html="textMessage"></p>
       <!-- Reply view -->
       <div v-if="replyView" class="pt-1.5 flex !text-black">
-        <ReplyViewCard :from-message-username="'You'" :text-message="replyView?.textMessage"
+        <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
           wrapper-style="direction: ltr; rotate: 180deg;" wrapper-class="border-l-1 py-0.5"
           text-message-class="!text-[#6b7280]" username-class="text-xs text-start" />
       </div>

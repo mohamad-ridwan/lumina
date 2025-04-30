@@ -1,7 +1,6 @@
 <script setup>
 import ReplyViewCard from '@/components/ReplyViewCard.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
-import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
@@ -14,10 +13,7 @@ const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { resetReplyMessageData } = chatRoomStore
-const { replyMessageData, chatRoom } = storeToRefs(chatRoomStore)
-// chats store
-const chatStore = chatsStore()
-const { chats } = storeToRefs(chatStore)
+const { replyMessageData, chatRoomUsername } = storeToRefs(chatRoomStore)
 
 // state
 const showReplyView = ref(false)
@@ -28,7 +24,7 @@ const fromMessageUsername = computed(() => {
   if (replyMessageData.value.senderUserId === profileId.value) {
     return 'You'
   } else {
-    return chats.value.find(chat => chat?.chatRoomId === chatRoom.value?.chatRoomId)?.username ?? 'Username not available'
+    return chatRoomUsername.value
   }
 })
 

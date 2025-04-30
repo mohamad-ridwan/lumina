@@ -4,7 +4,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
-import { computed, onBeforeMount, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import calendar from 'dayjs/plugin/calendar'
@@ -20,15 +20,14 @@ const { recipientId, profileId, profileIdConnection } = defineProps(['recipientI
 // chat room store
 const chatRoomStore = useChatRoomStore()
 const { setChatRoom, resetChatRoomEventSource } = chatRoomStore
-const { chatRoom, chatRoomEventSource } = storeToRefs(chatRoomStore)
+const { chatRoom, chatRoomEventSource, chatRoomUsername } = storeToRefs(chatRoomStore)
 // chats store
 const chatStore = chatsStore()
 const { chats } = storeToRefs(chatStore)
 
 // state
-const username = shallowRef(null)
 const image = shallowRef(null)
-const userProfileSocketUpdate = ref(null)
+// const userProfileSocketUpdate = ref(null)
 const now = ref(Date.now())
 
 // logic
@@ -107,41 +106,47 @@ onUnmounted(() => {
   }
 })
 
+// watch(profileInfo, (data) => {
+//   if (data?.key) {
+//     socket.emit('user-profile', {
+//       profileId: recipientId,
+//       senderId: profileId,
+//       profileIdConnection,
+//       actionType: 'chat-room'
+//     })
+//   }
+// }, { immediate: true })
+
+// onBeforeMount(() => {
+//   socket.on('user-profile', (data) => {
+//     if (
+//       data?.actionType === 'chat-room' &&
+//       data?.senderId === profileId &&
+//       data?.profileIdConnection === profileIdConnection &&
+//       data?.profile?.id === recipientId
+//     ) {
+//       userProfileSocketUpdate.value = data
+//     }
+//   })
+// })
+
+// watch(userProfileSocketUpdate, (data) => {
+//   if (
+//     data?.actionType === 'chat-room' &&
+//     data?.senderId === profileId &&
+//     data?.profileIdConnection === profileIdConnection &&
+//     data?.profile?.id === recipientId
+//   ) {
+//     chatRoomUsername.value = data.profile.username
+//     image.value = data.profile.image
+//   }
+// })
+
 watch(profileInfo, (data) => {
-  if (data?.key) {
-    socket.emit('user-profile', {
-      profileId: recipientId,
-      senderId: profileId,
-      profileIdConnection,
-      actionType: 'chat-room'
-    })
+  if (data?.username) {
+    chatRoomUsername.value = data.username
   }
 }, { immediate: true })
-
-onBeforeMount(() => {
-  socket.on('user-profile', (data) => {
-    if (
-      data?.actionType === 'chat-room' &&
-      data?.senderId === profileId &&
-      data?.profileIdConnection === profileIdConnection &&
-      data?.profile?.id === recipientId
-    ) {
-      userProfileSocketUpdate.value = data
-    }
-  })
-})
-
-watch(userProfileSocketUpdate, (data) => {
-  if (
-    data?.actionType === 'chat-room' &&
-    data?.senderId === profileId &&
-    data?.profileIdConnection === profileIdConnection &&
-    data?.profile?.id === recipientId
-  ) {
-    username.value = data.profile.username
-    image.value = data.profile.image
-  }
-})
 </script>
 
 <template>
@@ -159,7 +164,8 @@ watch(userProfileSocketUpdate, (data) => {
         </div>
       </div>
       <div class="flex flex-col">
-        <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? username : profileInfo.username }}</h2>
+        <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? chatRoomUsername : profileInfo.username
+        }}</h2>
         <span v-if="memoizedStatusUserOnline && memoizedStatusUserOnline !== 'online'"
           class="text-[11px] text-[#6b7280]">
           Last seen {{ lastSeenText }}

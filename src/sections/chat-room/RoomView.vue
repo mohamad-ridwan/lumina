@@ -56,6 +56,7 @@ const {
   bufferMainMessagesEventSource,
   loadingMainMessagesEventSource,
   paginationMessagesComparisonWorker,
+  chatRoomUsername
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -158,6 +159,7 @@ const memoizedUserIds = computed(() => {
 const memoizedUserIdCurrently = computed(() => {
   return memoizedUserIds.value?.find(id => id !== profile.value?.data.id)
 })
+const profileId = computed(() => profile.value?.data?.id ?? null)
 
 const scrollToBottom = () => {
   if (scroller.value) {
@@ -693,6 +695,7 @@ onUnmounted(() => {
   resetPaginationMessagesComparisonWorker()
   resetReplyMessageData()
   resetActiveMessageMenu()
+  chatRoomUsername.value = null
   loadingMainMessagesOnScrollBottom.value = false
   bufferNewMessagesOnScrollBottom.value = []
   bufferMainMessagesEventSource.value = []
@@ -727,7 +730,7 @@ onUnmounted(() => {
             <SenderMessage v-if="item?.textMessage && item.senderUserId === profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
-              :sender-user-id="item.senderUserId" :reply-view="item?.replyView" />
+              :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId" />
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">
@@ -735,7 +738,7 @@ onUnmounted(() => {
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
               :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
-              :reply-view="item?.replyView" />
+              :reply-view="item?.replyView" :profile-id="profileId" />
           </div>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />

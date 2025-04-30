@@ -6,21 +6,30 @@ import { useChatRoomStore } from '@/stores/chat-room'
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 dayjs.extend(localizedFormat)
 
 // props
-const { textMessage, latestMessageTimestamp, status, messageId, messageType, senderUserId, replyView } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'messageType', 'senderUserId', 'replyView'])
+const { textMessage, latestMessageTimestamp, status, messageId, messageType, senderUserId, replyView, profileId } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId'])
 
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleReadMessage } = chatRoomStore
-const { activeMessageMenu } = storeToRefs(chatRoomStore)
+const { activeMessageMenu, chatRoomUsername } = storeToRefs(chatRoomStore)
 
 // state
 const markMessageAsReadSocketUpdate = ref(null)
+
+const fromMessageUsername = computed(() => {
+  if (!replyView) return
+  if (replyView.senderUserId === profileId) {
+    return 'You'
+  } else {
+    return chatRoomUsername.value
+  }
+})
 
 onMounted(() => {
   socket.on('markMessageAsRead', (data) => {
@@ -47,7 +56,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
       <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
       <!-- Reply view -->
       <div v-if="replyView" class="pt-1.5 flex !text-white">
-        <ReplyViewCard :from-message-username="'You'" :text-message="replyView?.textMessage"
+        <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
           wrapper-style="direction: ltr; rotate: 180deg;" wrapper-class="border-l-1 py-0.5"
           text-message-class="!text-[#EEE]" username-class="text-xs" />
       </div>

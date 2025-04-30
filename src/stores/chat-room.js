@@ -42,6 +42,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const paginationMessagesComparisonWorker = ref(null)
   const replyMessageData = ref(null)
   const activeMessageMenu = ref(null)
+  const chatRoomUsername = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates } = general
   const { deleteChatRoomById } = chatRoomDB
@@ -643,6 +644,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     paginationMessagesComparisonWorker,
     replyMessageData,
     activeMessageMenu,
+    chatRoomUsername,
     resetActiveMessageMenu,
     handleActiveMessageMenu,
     handleSetReplyMessageData,
