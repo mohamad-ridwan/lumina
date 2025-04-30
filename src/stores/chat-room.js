@@ -301,7 +301,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       addNewMessageWorker.value.postMessage({
         chatRoomId: chatRoom.value?.chatRoomId,
         chatId: chatRoom.value?.chatId,
-        item: newData,
+        item: toRaw(newData),
       })
 
       if (loadingMainMessagesOnScrollBottom.value) {
@@ -346,12 +346,15 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       chatRoomId: chatRoom.value?.chatRoomId,
       chatId: chatRoom.value?.chatId,
     }
+    if (newData?.replyView) {
+      newData.replyView = toRaw(newData.replyView)
+    }
 
     // save to indexedDB
     addNewMessageWorker.value.postMessage({
       chatRoomId: chatRoom.value?.chatRoomId,
       chatId: chatRoom.value?.chatId,
-      item: newData,
+      item: toRaw(newData),
     })
 
     if (loadingMainMessagesOnScrollBottom.value) {

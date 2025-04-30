@@ -6,7 +6,7 @@ import { usersStore } from '@/stores/users';
 import { Form } from '@primevue/forms';
 import { storeToRefs } from 'pinia';
 import { Button, Textarea } from 'primevue';
-import { computed, onBeforeUnmount, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, onBeforeUnmount, onUnmounted, ref, shallowRef, toRaw, watch } from 'vue';
 import ReplyView from './ReplyView.vue';
 
 const emit = defineEmits(['triggerSendMessage'])
@@ -17,7 +17,8 @@ const userStore = usersStore()
 const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { chatRoom } = storeToRefs(chatRoomStore)
+const { resetReplyMessageData } = chatRoomStore
+const { chatRoom, replyMessageData } = storeToRefs(chatRoomStore)
 
 // state
 const initialValues = ref({
@@ -37,20 +38,26 @@ const formattedText = computed(() => {
 
 const onFormSubmit = async () => {
   if (initialValues.value.textMessage.trim()) {
+    let latestMessage = {
+      messageId: generateRandomId(15),
+      senderUserId: profile.value.data.id,
+      messageType: 'text',
+      textMessage: formattedText.value,
+      latestMessageTimestamp: Date.now(),
+      status: "UNREAD"
+    }
+
+    if (toRaw(replyMessageData.value)) {
+      latestMessage.replyView = toRaw(replyMessageData.value)
+    }
     socket.emit('sendMessage', {
       chatRoomId: memoizedChatRoomId.value,
       chatId: memoizedChatId.value,
-      latestMessage: {
-        messageId: generateRandomId(15),
-        senderUserId: profile.value.data.id,
-        messageType: 'text',
-        textMessage: formattedText.value,
-        latestMessageTimestamp: Date.now(),
-        status: "UNREAD"
-      },
+      latestMessage,
       eventType: 'send-message'
     })
     initialValues.value.textMessage = ''
+    resetReplyMessageData()
     emit('triggerSendMessage')
   }
 };
