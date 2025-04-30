@@ -65,7 +65,7 @@ watch(replyMessageData, (data) => {
         </div>
       </div>
       <div class="flex justify-center h-[35px] w-[35px]">
-        <Button icon="pi pi-times" class="!p-1 !bg-gray-300 !rounded-full !text-gray-500 hover:!bg-gray-200"
+        <Button icon="pi pi-times" class="!p-1 !bg-[#F1F1F1] !rounded-full !text-gray-500 hover:!bg-gray-200"
           style="height: 25px; width: 25px; font-size: 9px !important; border:none;" @click="handleCloseReply"
           aria-label="Close Reply" />
       </div>
