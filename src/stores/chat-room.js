@@ -43,9 +43,28 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const replyMessageData = ref(null)
   const activeMessageMenu = ref(null)
   const chatRoomUsername = ref(null)
+  const goingScrollToMessageId = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates } = general
   const { deleteChatRoomById } = chatRoomDB
+
+  const handleResetGoingScrollToMessageId = () => {
+    setTimeout(() => {
+      goingScrollToMessageId.value = null
+    }, 500)
+  }
+
+  const handleScrollToGoMessage = (messageId) => {
+    const messageIndex = toRaw(chatRoomMessages.value).findIndex(
+      (msg) => msg?.messageId === messageId,
+    )
+    if (messageIndex !== -1) {
+      scroller.value.scrollToItem(messageIndex)
+      clearTimeout(handleResetGoingScrollToMessageId)
+      goingScrollToMessageId.value = messageId
+      handleResetGoingScrollToMessageId()
+    }
+  }
 
   const resetActiveMessageMenu = () => {
     activeMessageMenu.value = null
@@ -455,6 +474,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
+    goingScrollToMessageId.value = null
     resetReplyMessageData()
     resetActiveMessageMenu()
     loadingMessages.value = true
@@ -645,6 +665,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     replyMessageData,
     activeMessageMenu,
     chatRoomUsername,
+    goingScrollToMessageId,
+    handleScrollToGoMessage,
     resetActiveMessageMenu,
     handleActiveMessageMenu,
     handleSetReplyMessageData,

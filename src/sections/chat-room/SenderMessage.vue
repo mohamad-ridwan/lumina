@@ -1,5 +1,6 @@
 <script setup>
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
+import MessageHighlightOverlay from '@/components/overlay/MessageHighlightOverlay.vue'
 import ReplyViewCard from '@/components/ReplyViewCard.vue'
 import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
@@ -16,8 +17,8 @@ const { textMessage, latestMessageTimestamp, status, messageId, messageType, sen
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { handleReadMessage } = chatRoomStore
-const { activeMessageMenu, chatRoomUsername } = storeToRefs(chatRoomStore)
+const { handleReadMessage, handleScrollToGoMessage } = chatRoomStore
+const { activeMessageMenu, chatRoomUsername, goingScrollToMessageId } = storeToRefs(chatRoomStore)
 
 // state
 const markMessageAsReadSocketUpdate = ref(null)
@@ -48,6 +49,9 @@ watch(markMessageAsReadSocketUpdate, (data) => {
   <div class="flex flex-col-reverse items-end gap-1 pb-2">
     <div class="group bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-xs self-end relative"
       style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+      <!-- ⬇️ Tambahkan di sini overlay -->
+      <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
+
       <!-- Button muncul saat hover -->
       <div
         :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
@@ -57,8 +61,8 @@ watch(markMessageAsReadSocketUpdate, (data) => {
       <!-- Reply view -->
       <div v-if="replyView" class="pt-1.5 flex !text-white">
         <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
-          wrapper-style="direction: ltr; rotate: 180deg;" wrapper-class="border-l-1 py-0.5"
-          text-message-class="!text-[#EEE]" username-class="text-xs" />
+          @on-click="handleScrollToGoMessage(replyView?.messageId)" wrapper-style="direction: ltr; rotate: 180deg;"
+          wrapper-class="border-l-1 py-0.5" text-message-class="!text-[#EEE]" username-class="text-xs" />
       </div>
     </div>
     <!-- Status dan waktu -->

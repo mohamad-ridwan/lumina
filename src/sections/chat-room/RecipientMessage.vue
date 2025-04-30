@@ -1,5 +1,6 @@
 <script setup>
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
+import MessageHighlightOverlay from '@/components/overlay/MessageHighlightOverlay.vue'
 import ReplyViewCard from '@/components/ReplyViewCard.vue'
 import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
@@ -15,7 +16,8 @@ const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, message
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { activeMessageMenu, chatRoomUsername } = storeToRefs(chatRoomStore)
+const { handleScrollToGoMessage } = chatRoomStore
+const { activeMessageMenu, chatRoomUsername, goingScrollToMessageId } = storeToRefs(chatRoomStore)
 
 const fromMessageUsername = computed(() => {
   if (!replyView) return
@@ -42,6 +44,9 @@ onMounted(() => {
   <div class="flex flex-col-reverse gap-1 pb-2">
     <div class="group bg-[#f1f1f1] rounded-tl-md rounded-bl-md rounded-br-lg p-2 max-w-xs self-start relative"
       style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+      <!-- ⬇️ Tambahkan di sini overlay -->
+      <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
+
       <!-- Menu reply -->
       <div
         :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
@@ -51,8 +56,8 @@ onMounted(() => {
       <!-- Reply view -->
       <div v-if="replyView" class="pt-1.5 flex !text-black">
         <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
-          wrapper-style="direction: ltr; rotate: 180deg;" wrapper-class="border-l-1 py-0.5"
-          text-message-class="!text-[#6b7280]" username-class="text-xs text-start" />
+          @on-click="handleScrollToGoMessage(replyView?.messageId)" wrapper-style="direction: ltr; rotate: 180deg;"
+          wrapper-class="border-l-1 py-0.5" text-message-class="!text-[#6b7280]" username-class="text-xs text-start" />
       </div>
     </div>
     <span class="text-xs text-[#111827] self-start rotate-180">

@@ -56,7 +56,8 @@ const {
   bufferMainMessagesEventSource,
   loadingMainMessagesEventSource,
   paginationMessagesComparisonWorker,
-  chatRoomUsername
+  chatRoomUsername,
+  goingScrollToMessageId
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -695,6 +696,7 @@ onUnmounted(() => {
   resetPaginationMessagesComparisonWorker()
   resetReplyMessageData()
   resetActiveMessageMenu()
+  goingScrollToMessageId.value = null
   chatRoomUsername.value = null
   loadingMainMessagesOnScrollBottom.value = false
   bufferNewMessagesOnScrollBottom.value = []
@@ -716,7 +718,7 @@ onUnmounted(() => {
     <SkeletonMessages v-if="loadingMessages" />
 
     <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages"
-      :min-item-size="54" class="flex-1 space-y-2 bg-[#f9fafb] !p-4"
+      :key-field="'messageId'" :min-item-size="54" class="flex-1 space-y-2 bg-[#f9fafb] !p-4"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">
         <DynamicScrollerItem :data-index="index" :item="item" :active="active" :size-dependencies="[

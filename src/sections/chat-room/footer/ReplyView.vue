@@ -12,7 +12,7 @@ const userStore = usersStore()
 const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { resetReplyMessageData } = chatRoomStore
+const { resetReplyMessageData, handleScrollToGoMessage } = chatRoomStore
 const { replyMessageData, chatRoomUsername } = storeToRefs(chatRoomStore)
 
 // state
@@ -55,7 +55,7 @@ watch(replyMessageData, (data) => {
       <ReplyViewCard :username-class="`${fromMessageUsername === 'You' ? 'text-[#2e74e8]' : 'text-black'} text-sm`"
         :wrapper-class="`${fromMessageUsername === 'You' ? 'border-l-[#2e74e8]' : 'border-l-black'} bg-[#F1F1F1] border-l-3 rounded-md py-1`"
         :text-message="replyMessageData?.textMessage" text-message-class="text-[#6b7280]"
-        :from-message-username="fromMessageUsername" />
+        :from-message-username="fromMessageUsername" @on-click="handleScrollToGoMessage(replyMessageData?.messageId)" />
       <div class="flex justify-center h-[35px] w-[35px]">
         <Button icon="pi pi-times" class="!p-1 !bg-[#F1F1F1] !rounded-full !text-gray-500 hover:!bg-gray-200"
           style="height: 25px; width: 25px; font-size: 9px !important; border:none;" @click="handleCloseReply"
