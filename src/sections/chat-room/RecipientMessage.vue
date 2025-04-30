@@ -2,12 +2,13 @@
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
 import MessageHighlightOverlay from '@/components/overlay/MessageHighlightOverlay.vue'
 import ReplyViewCard from '@/components/ReplyViewCard.vue'
+import { useClickOutside } from '@/composables/useClickOutside'
 import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 dayjs.extend(localizedFormat)
 
@@ -19,6 +20,8 @@ const chatRoomStore = useChatRoomStore()
 const { handleScrollToGoMessage } = chatRoomStore
 const { activeMessageMenu, chatRoomUsername, goingScrollToMessageId } = storeToRefs(chatRoomStore)
 
+const boxRef = ref(null)
+
 const fromMessageUsername = computed(() => {
   if (!replyView) return
   if (replyView.senderUserId === profileId) {
@@ -27,6 +30,20 @@ const fromMessageUsername = computed(() => {
     return chatRoomUsername.value
   }
 })
+
+const toggleBoxMessage = (e) => {
+  if (activeMessageMenu.value === messageId) {
+    activeMessageMenu.value = null
+  } else {
+    activeMessageMenu.value = messageId
+  }
+
+  e.stopPropagation()
+}
+
+const closeMenu = () => {
+  activeMessageMenu.value = null
+}
 
 onMounted(() => {
   if (status === 'UNREAD') {
@@ -38,12 +55,15 @@ onMounted(() => {
     })
   }
 })
+
+useClickOutside(boxRef, closeMenu);
 </script>
 
 <template>
   <div class="flex flex-col-reverse gap-1 pb-2">
-    <div class="group bg-[#f1f1f1] rounded-tl-md rounded-bl-md rounded-br-lg p-2 max-w-xs self-start relative"
-      style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+    <div ref="boxRef"
+      class="group bg-[#f1f1f1] rounded-tl-md rounded-bl-md rounded-br-lg p-2 max-w-xs self-start relative"
+      style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click="toggleBoxMessage">
       <!-- ⬇️ Tambahkan di sini overlay -->
       <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
 

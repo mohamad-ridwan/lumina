@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref, defineProps } from 'vue'
 import { Button, Menu } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
@@ -32,10 +32,22 @@ const toggle = (event) => {
   } else {
     handleActiveMessageMenu(props.message.messageId)
   }
+  event.stopPropagation()
+}
+
+const handleResetMenu = () => {
+  setTimeout(() => {
+    resetActiveMessageMenu()
+  }, 0);
 }
 
 const onHide = () => {
-  resetActiveMessageMenu()
+  clearTimeout(handleResetMenu)
+  handleResetMenu()
+}
+
+const onShow = () => {
+  handleActiveMessageMenu(props.message.messageId)
 }
 </script>
 
@@ -43,6 +55,6 @@ const onHide = () => {
   <div class="relative">
     <Button icon="pi pi-angle-up" rounded severity="secondary" aria-label="More" @click="toggle" size="small"
       class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]" />
-    <Menu ref="menu" :model="items" popup @hide="onHide" class="!text-xs" />
+    <Menu ref="menu" :model="items" popup @show="onShow" @hide="onHide" class="!text-xs" />
   </div>
 </template>
