@@ -454,6 +454,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
+    resetReplyMessageData()
+    resetActiveMessageMenu()
     loadingMessages.value = true
     headerRefs.value = {}
     triggerRef(headerRefs)
