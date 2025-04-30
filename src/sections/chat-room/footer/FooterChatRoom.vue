@@ -17,7 +17,7 @@ const userStore = usersStore()
 const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { chatRoom } = storeToRefs(chatRoomStore)
+const { chatRoom, replyMessageData } = storeToRefs(chatRoomStore)
 
 // state
 const initialValues = ref({
@@ -106,6 +106,11 @@ watch([chatRoom.value, footerRef.value], async () => {
   await nextTick()
   emit('handleGetFooterHeight', footerRef.value?.getBoundingClientRect()?.height)
 }, { immediate: true })
+
+watch(replyMessageData, async (data) => {
+  await nextTick()
+  emit('handleGetFooterHeight', data ? 135 : footerRef.value?.getBoundingClientRect()?.height)
+})
 
 onBeforeUnmount(() => {
   emitTypingStop()

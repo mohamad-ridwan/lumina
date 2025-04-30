@@ -54,7 +54,7 @@ watch(replyMessageData, (data) => {
 
 <template>
   <transition name="reply-fade-slide">
-    <div v-show="showReplyView" class="flex pb-3 w-full justify-between gap-2 items-end overflow-hidden">
+    <div v-show="showReplyView" class="flex pb-1 w-full justify-between gap-2 items-end overflow-hidden">
       <div
         :class="`w-full rounded-md flex items-start justify-between border-l-3 ${fromMessageUsername === 'You' ? 'border-l-[#2e74e8]' : 'border-l-black'} gap-2 pl-2 py-1 bg-[#F1F1F1]`">
         <div class="flex flex-col w-full pr-2">

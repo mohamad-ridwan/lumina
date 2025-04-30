@@ -55,7 +55,7 @@ const {
   bufferNewMessagesOnScrollBottom,
   bufferMainMessagesEventSource,
   loadingMainMessagesEventSource,
-  paginationMessagesComparisonWorker
+  paginationMessagesComparisonWorker,
 } = storeToRefs(chatRoomStore)
 
 // state
