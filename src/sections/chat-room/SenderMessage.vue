@@ -2,7 +2,6 @@
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
 import MessageHighlightOverlay from '@/components/overlay/MessageHighlightOverlay.vue'
 import ReplyViewCard from '@/components/ReplyViewCard.vue'
-import { useClickOutside } from '@/composables/useClickOutside'
 import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
 import dayjs from 'dayjs'
@@ -59,15 +58,13 @@ onMounted(() => {
 watch(markMessageAsReadSocketUpdate, (data) => {
   handleReadMessage(data?.messageId)
 })
-
-useClickOutside(boxRef, closeMenu);
 </script>
 
 <template>
-  <div class="flex flex-col-reverse items-end gap-1 pb-2">
+  <div class="flex flex-col-reverse items-end gap-1 pb-2" @click.stop="closeMenu">
     <div ref="boxRef"
-      class="group bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-xs self-end relative"
-      style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click="toggleBoxMessage">
+      class="group bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-xs self-end !relative"
+      style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
       <!-- ⬇️ Tambahkan di sini overlay -->
       <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
 
