@@ -80,7 +80,6 @@ const anyUserTyping = shallowRef(false)
 const isUserInitiatedScroll = shallowRef(false)
 const scrollTimeout = shallowRef(null)
 const scrollTimeOutDateHeader = shallowRef(null)
-const footerHeight = shallowRef(null)
 const stayScrollCurrently = shallowRef(null)
 const typingBubbleEl = ref(null)
 
@@ -159,10 +158,6 @@ const memoizedUserIds = computed(() => {
 const memoizedUserIdCurrently = computed(() => {
   return memoizedUserIds.value?.find(id => id !== profile.value?.data.id)
 })
-
-const handleGetFooterHeight = (height) => {
-  footerHeight.value = height + 20
-}
 
 const scrollToBottom = () => {
   if (scroller.value) {
@@ -746,13 +741,12 @@ onUnmounted(() => {
       </template>
     </DynamicScroller>
 
-    <Button @click="scrollToBottom"
-      class="!absolute !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !duration-300 !ease-in-out !border-none !transition-all"
-      :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
-      :style="`bottom: ${footerHeight}px;`" aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm"
-      iconPos="only" />
-
-    <FooterChatRoom v-on:handle-get-footer-height="handleGetFooterHeight"
-      v-on:triggerSendMessage="triggerSendMessage" />
+    <FooterChatRoom v-on:triggerSendMessage="triggerSendMessage">
+      <Button @click="scrollToBottom"
+        class="!absolute !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !duration-300 !ease-in-out !border-none !transition-all"
+        :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
+        :style="`bottom: 20px;`" aria-label="Scroll to bottom" icon="pi pi-arrow-down !text-black !text-sm"
+        iconPos="only" />
+    </FooterChatRoom>
   </div>
 </template>

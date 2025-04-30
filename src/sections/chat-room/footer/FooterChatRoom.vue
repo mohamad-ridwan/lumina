@@ -6,10 +6,10 @@ import { usersStore } from '@/stores/users';
 import { Form } from '@primevue/forms';
 import { storeToRefs } from 'pinia';
 import { Button, Textarea } from 'primevue';
-import { computed, nextTick, onBeforeUnmount, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, onBeforeUnmount, onUnmounted, ref, shallowRef, watch } from 'vue';
 import ReplyView from './ReplyView.vue';
 
-const emit = defineEmits(['handleGetFooterHeight', 'triggerSendMessage'])
+const emit = defineEmits(['triggerSendMessage'])
 
 // store
 // profile store
@@ -17,7 +17,7 @@ const userStore = usersStore()
 const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { chatRoom, replyMessageData } = storeToRefs(chatRoomStore)
+const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 const initialValues = ref({
@@ -52,8 +52,6 @@ const onFormSubmit = async () => {
     })
     initialValues.value.textMessage = ''
     emit('triggerSendMessage')
-    await nextTick()
-    emit('handleGetFooterHeight', footerRef.value?.getBoundingClientRect()?.height)
   }
 };
 
@@ -81,9 +79,6 @@ const emitTypingStop = () => {
 };
 
 const handleInputChange = (event) => {
-  nextTick(() => {
-    emit('handleGetFooterHeight', footerRef.value?.getBoundingClientRect()?.height)
-  })
   clearTimeout(typingTimeout.value);
 
   if (!isTyping.value && event.target.value.length > 0) {
@@ -100,18 +95,6 @@ onUnmounted(() => {
   clearTimeout(typingTimeout.value);
 });
 
-watch([chatRoom.value, footerRef.value], async () => {
-  // pass height footer to RoomView
-  // for resonsive button to bottom chat
-  await nextTick()
-  emit('handleGetFooterHeight', footerRef.value?.getBoundingClientRect()?.height)
-}, { immediate: true })
-
-watch(replyMessageData, async (data) => {
-  await nextTick()
-  emit('handleGetFooterHeight', data ? 135 : footerRef.value?.getBoundingClientRect()?.height)
-})
-
 onBeforeUnmount(() => {
   emitTypingStop()
 })
@@ -126,6 +109,9 @@ watch(chatRoom, (data) => {
 
 <template>
   <footer ref="footerRef" class="sticky bottom-0 z-10 w-full transition-all">
+    <div class="relative">
+      <slot />
+    </div>
     <div class="bg-white p-4 border-t-[#f1f1f1] border-t-[1px] w-full flex flex-col gap-2">
       <ReplyView />
       <Form :initialValues="initialValues" @submit="onFormSubmit" class="flex items-end w-full gap-2">
