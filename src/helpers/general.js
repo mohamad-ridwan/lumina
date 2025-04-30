@@ -1,15 +1,26 @@
 import { ITEMS_PER_PAGE } from '@/utils/pagination'
 
 const removeDuplicates = (arr, field) => {
-  const seenValues = new Set()
+  const seenFieldValues = new Set()
+  const seenHeaderTimestamps = new Set()
 
   return arr.filter((obj) => {
-    const value = obj[field]
-    if (seenValues.has(value)) {
-      return false
+    if (obj.isHeader === true) {
+      const timestamp = Number(obj.latestMessageTimestamp)
+      if (seenHeaderTimestamps.has(timestamp)) {
+        return false
+      } else {
+        seenHeaderTimestamps.add(timestamp)
+        return true
+      }
     } else {
-      seenValues.add(value)
-      return true
+      const value = obj[field]
+      if (seenFieldValues.has(value)) {
+        return false
+      } else {
+        seenFieldValues.add(value)
+        return true
+      }
     }
   })
 }
