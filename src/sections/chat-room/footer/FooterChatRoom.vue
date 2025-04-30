@@ -7,6 +7,7 @@ import { Form } from '@primevue/forms';
 import { storeToRefs } from 'pinia';
 import { Button, Textarea } from 'primevue';
 import { computed, nextTick, onBeforeUnmount, onUnmounted, ref, shallowRef, watch } from 'vue';
+import ReplyView from './ReplyView.vue';
 
 const emit = defineEmits(['handleGetFooterHeight', 'triggerSendMessage'])
 
@@ -119,8 +120,9 @@ watch(chatRoom, (data) => {
 </script>
 
 <template>
-  <footer ref="footerRef" class="sticky bottom-0 z-10 w-full">
-    <div class="bg-white p-4 border-t-[#f1f1f1] border-t-[1px] w-full">
+  <footer ref="footerRef" class="sticky bottom-0 z-10 w-full transition-all">
+    <div class="bg-white p-4 border-t-[#f1f1f1] border-t-[1px] w-full flex flex-col gap-2">
+      <ReplyView />
       <Form :initialValues="initialValues" @submit="onFormSubmit" class="flex items-end w-full gap-2">
         <Textarea v-model="initialValues.textMessage" rows="1" cols="20"
           class="!text-sm flex-1 rounded-l-md p-2 bg-[#f1f1f1] min-h-[38px] max-h-[150px] w-full !overflow-y-auto"

@@ -10,7 +10,7 @@ import { onMounted, ref, watch } from 'vue'
 dayjs.extend(localizedFormat)
 
 // props
-const { textMessage, latestMessageTimestamp, status, messageId, onReply } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'onReply'])
+const { textMessage, latestMessageTimestamp, status, messageId, messageType, senderUserId } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'messageType', 'senderUserId'])
 
 // store
 // chat-room store
@@ -41,7 +41,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
       <!-- Button muncul saat hover -->
       <div
         :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
-        <MessageActionMenu :message="{ textMessage, messageId }" @reply="onReply" />
+        <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" />
       </div>
       <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
     </div>

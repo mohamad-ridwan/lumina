@@ -58,12 +58,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     replyMessageData.value = null
   }
 
-  const handleSetReplyMessageData = ({ messageId, textMessage, messageType }) => {
+  const handleSetReplyMessageData = ({ messageId, textMessage, messageType, senderUserId }) => {
     if (messageId) {
       replyMessageData.value = {
         messageId,
         textMessage,
         messageType,
+        senderUserId,
       }
     }
   }

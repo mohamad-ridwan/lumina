@@ -1,6 +1,6 @@
 <script setup>
 import { usersStore } from '@/stores/users';
-import FooterChatRoom from './FooterChatRoom.vue';
+import FooterChatRoom from './footer/FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
@@ -729,14 +729,15 @@ onUnmounted(() => {
             :data-timestamp="item.latestMessageTimestamp">
             <SenderMessage v-if="item?.textMessage && item.senderUserId === profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
-              :status="item.status" :message-id="item.messageId" @reply="handleReply(item)" />
+              :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
+              :sender-user-id="item.senderUserId" />
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">
             <RecipientMessage v-if="item?.textMessage && item.senderUserId !== profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
-              :message-id="item.messageId" />
+              :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId" />
           </div>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />
