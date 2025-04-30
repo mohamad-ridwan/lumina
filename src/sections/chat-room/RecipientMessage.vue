@@ -34,7 +34,7 @@ onMounted(() => {
       style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
       <!-- Menu reply -->
       <div
-        :class="`absolute right-0 bottom-0 p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
+        :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
         <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" />
       </div>
       <p class="text-sm text-start rotate-180" style="direction: ltr;" v-html="textMessage"></p>
