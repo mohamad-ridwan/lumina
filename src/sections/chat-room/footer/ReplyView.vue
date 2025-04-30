@@ -1,4 +1,5 @@
 <script setup>
+import ReplyViewCard from '@/components/ReplyViewCard.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
@@ -55,15 +56,10 @@ watch(replyMessageData, (data) => {
 <template>
   <transition name="reply-fade-slide">
     <div v-show="showReplyView" class="flex pb-1 w-full justify-between gap-2 items-end overflow-hidden">
-      <div
-        :class="`w-full rounded-md flex items-start justify-between border-l-3 ${fromMessageUsername === 'You' ? 'border-l-[#2e74e8]' : 'border-l-black'} gap-2 pl-2 py-1 bg-[#F1F1F1]`">
-        <div class="flex flex-col w-full pr-2">
-          <h1 :class="`${fromMessageUsername === 'You' ? 'text-[#2e74e8]' : 'text-black'} font-semibold text-sm`">
-            {{ fromMessageUsername }}
-          </h1>
-          <span class="text-xs text-[#6b7280] line-clamp-2">{{ replyMessageData?.textMessage }}</span>
-        </div>
-      </div>
+      <ReplyViewCard :username-class="`${fromMessageUsername === 'You' ? 'text-[#2e74e8]' : 'text-black'} text-sm`"
+        :wrapper-class="`${fromMessageUsername === 'You' ? 'border-l-[#2e74e8]' : 'border-l-black'} bg-[#F1F1F1] border-l-3 rounded-md py-1`"
+        :text-message="replyMessageData?.textMessage" text-message-class="text-[#6b7280]"
+        :from-message-username="fromMessageUsername" />
       <div class="flex justify-center h-[35px] w-[35px]">
         <Button icon="pi pi-times" class="!p-1 !bg-[#F1F1F1] !rounded-full !text-gray-500 hover:!bg-gray-200"
           style="height: 25px; width: 25px; font-size: 9px !important; border:none;" @click="handleCloseReply"

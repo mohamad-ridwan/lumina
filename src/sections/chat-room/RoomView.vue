@@ -727,14 +727,15 @@ onUnmounted(() => {
             <SenderMessage v-if="item?.textMessage && item.senderUserId === profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
-              :sender-user-id="item.senderUserId" />
+              :sender-user-id="item.senderUserId" :reply-view="item?.replyView" />
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">
             <RecipientMessage v-if="item?.textMessage && item.senderUserId !== profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
-              :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId" />
+              :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
+              :reply-view="item?.replyView" />
           </div>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />

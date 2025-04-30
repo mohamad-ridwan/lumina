@@ -1,5 +1,6 @@
 <script setup>
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
+import ReplyViewCard from '@/components/ReplyViewCard.vue'
 import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
 import dayjs from 'dayjs'
@@ -9,7 +10,7 @@ import { onMounted } from 'vue'
 
 dayjs.extend(localizedFormat)
 
-const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId'])
+const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView'])
 
 // store
 // chat-room store
@@ -38,6 +39,12 @@ onMounted(() => {
         <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" />
       </div>
       <p class="text-sm text-start rotate-180" style="direction: ltr;" v-html="textMessage"></p>
+      <!-- Reply view -->
+      <div v-if="replyView" class="pt-1.5 flex !text-black">
+        <ReplyViewCard :from-message-username="'You'" :text-message="replyView?.textMessage"
+          wrapper-style="direction: ltr; rotate: 180deg;" wrapper-class="border-l-1 py-0.5"
+          text-message-class="!text-[#6b7280]" username-class="text-xs text-start" />
+      </div>
     </div>
     <span class="text-xs text-[#111827] self-start rotate-180">
       {{ dayjs(Number(latestMessageTimestamp)).format('HH.mm') }}

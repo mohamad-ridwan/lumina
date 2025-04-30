@@ -1,5 +1,6 @@
 <script setup>
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
+import ReplyViewCard from '@/components/ReplyViewCard.vue'
 import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
 import dayjs from 'dayjs'
@@ -10,7 +11,7 @@ import { onMounted, ref, watch } from 'vue'
 dayjs.extend(localizedFormat)
 
 // props
-const { textMessage, latestMessageTimestamp, status, messageId, messageType, senderUserId } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'messageType', 'senderUserId'])
+const { textMessage, latestMessageTimestamp, status, messageId, messageType, senderUserId, replyView } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'messageType', 'senderUserId', 'replyView'])
 
 // store
 // chat-room store
@@ -44,6 +45,12 @@ watch(markMessageAsReadSocketUpdate, (data) => {
         <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" />
       </div>
       <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
+      <!-- Reply view -->
+      <div v-if="replyView" class="pt-1.5 flex !text-white">
+        <ReplyViewCard :from-message-username="'You'" :text-message="replyView?.textMessage"
+          wrapper-style="direction: ltr; rotate: 180deg;" wrapper-class="border-l-1 py-0.5"
+          text-message-class="!text-[#EEE]" username-class="text-xs" />
+      </div>
     </div>
     <!-- Status dan waktu -->
     <div class="flex flex-row-reverse items-center gap-1 pl-1" style="direction: ltr;">
