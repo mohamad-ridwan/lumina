@@ -318,6 +318,7 @@ onBeforeUnmount(() => {
 })
 
 const preventBackNavigation = () => {
+  setChatRoom({})
   if (chatRoomEventSource.value) {
     resetChatRoomEventSource()
   }
@@ -328,7 +329,6 @@ const preventBackNavigation = () => {
       userId: profile.value?.data.id
     })
   }
-  setChatRoom({})
   setTimeout(() => {
     history.pushState(null, "", window.location.href)
   }, 100)
