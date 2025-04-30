@@ -1,6 +1,20 @@
 import { clientUrl } from '../apiBaseUrl'
 import { fetchData } from '../fetchData'
 
+export const fetchMessagesAround = async (chatRoomId, messageId) => {
+  const result = await fetchData(
+    `${clientUrl}/chat-room/messages/${chatRoomId}/message/${messageId}/around`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+
+  return result
+}
+
 export const fetchChatRoom = async (req) => {
   const result = await fetchData(`${clientUrl}/chat-room`, {
     method: 'POST',

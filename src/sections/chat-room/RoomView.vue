@@ -57,7 +57,8 @@ const {
   loadingMainMessagesEventSource,
   paginationMessagesComparisonWorker,
   chatRoomUsername,
-  goingScrollToMessageId
+  goingScrollToMessageId,
+  loadingScrollToGoMessageId
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -250,10 +251,6 @@ const maintainScrollAfterInsert = async () => {
   const scrollDiff = newScrollHeight - previousScrollHeight
 
   el.scrollTop = previousScrollTop + scrollDiff
-}
-
-const handleReply = (msg) => {
-  console.log(msg)
 }
 
 watch(chatRoomMessages, async (data, oldData) => {
@@ -520,6 +517,8 @@ const handleGetMessagesPagination = async () => {
     if (result?.meta?.direction === 'prev') {
       await nextTick()
       await nextTick()
+      triggerRef(chatRoomMessages)
+      scroller.value.$refs.scroller.$forceUpdate(true)
 
       const newScrollHeight = el.scrollHeight
       const scrollDiff = newScrollHeight - previousScrollHeight
@@ -697,6 +696,7 @@ onUnmounted(() => {
   resetReplyMessageData()
   resetActiveMessageMenu()
   goingScrollToMessageId.value = null
+  loadingScrollToGoMessageId.value = false
   chatRoomUsername.value = null
   loadingMainMessagesOnScrollBottom.value = false
   bufferNewMessagesOnScrollBottom.value = []

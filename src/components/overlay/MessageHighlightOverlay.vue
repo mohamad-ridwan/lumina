@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   trigger: {
@@ -23,7 +23,8 @@ watch(
         show.value = false
       }, props.duration)
     }
-  }
+  },
+  { immediate: true }
 )
 </script>
 

@@ -1,4 +1,4 @@
-import { fetchChatRoom } from '@/services/api/chat-room'
+import { fetchChatRoom, fetchMessagesAround } from '@/services/api/chat-room'
 import { general } from '@/helpers/general'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
@@ -10,6 +10,8 @@ import StreamsChatRoomWorker from '@/services/workers/streams-chat-room-worker.j
 import MainMessagesWorker from '@/services/workers/main-message-workers.js?worker'
 import { ITEMS_PER_PAGE } from '@/utils/pagination'
 import { chatRoomDB } from '@/services/indexedDB/chat-room-db'
+import { useToast } from 'primevue'
+import { constant } from '@/utils/constant'
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -44,9 +46,15 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const activeMessageMenu = ref(null)
   const chatRoomUsername = ref(null)
   const goingScrollToMessageId = ref(null)
+  const loadingScrollToGoMessageId = ref(false)
+  const triggerScrollToMessageIdIsDone = ref(false)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates } = general
   const { deleteChatRoomById } = chatRoomDB
+
+  const toast = useToast()
+
+  const { globalErrMessageAPI } = constant
 
   const handleResetGoingScrollToMessageId = () => {
     setTimeout(() => {
@@ -54,15 +62,63 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }, 500)
   }
 
-  const handleScrollToGoMessage = (messageId) => {
+  const resetTriggerScrollToMessageIdIsDone = () => {
+    setTimeout(() => {
+      triggerScrollToMessageIdIsDone.value = false
+    }, 500)
+  }
+
+  const handleScrollToGoMessage = async (messageId) => {
     const messageIndex = toRaw(chatRoomMessages.value).findIndex(
       (msg) => msg?.messageId === messageId,
     )
     if (messageIndex !== -1) {
+      await nextTick()
+      await nextTick()
+      triggerRef(chatRoomMessages)
+      scroller.value.$refs.scroller.$forceUpdate(true)
       scroller.value.scrollToItem(messageIndex)
       clearTimeout(handleResetGoingScrollToMessageId)
       goingScrollToMessageId.value = messageId
       handleResetGoingScrollToMessageId()
+    } else {
+      loadingScrollToGoMessageId.value = true
+      const resultMessageAround = await fetchMessagesAround(chatRoom.value?.chatRoomId, messageId)
+      if (resultMessageAround?.isErr || resultMessageAround?.total === 0) {
+        toast.add({ severity: 'error', summary: globalErrMessageAPI, life: 3000 })
+      } else {
+        clearTimeout(resetTriggerScrollToMessageIdIsDone)
+        triggerScrollToMessageIdIsDone.value = true
+        chatRoomMessages.value = resultMessageAround.messages.map((newMsg) => ({
+          id: newMsg.messageId,
+          chatRoomId: chatRoom.value?.chatRoomId,
+          chatId: chatRoom.value?.chatId,
+          ...newMsg,
+        }))
+        // biarkan button to bottom message active
+        // supaya pesan baru otomatis tidak update ke state
+        await nextTick()
+        scroller.value.scrollToItem(5)
+        await nextTick()
+        await nextTick()
+        triggerRef(chatRoomMessages)
+        scroller.value.$refs.scroller.$forceUpdate(true)
+        const messageIndex = toRaw(chatRoomMessages.value).findIndex(
+          (msg) => msg?.messageId === messageId,
+        )
+        if (messageIndex !== -1) {
+          scroller.value.scrollToItem(messageIndex - 1)
+          await nextTick()
+          await nextTick()
+          triggerRef(chatRoomMessages)
+          scroller.value.$refs.scroller.$forceUpdate(true)
+          clearTimeout(handleResetGoingScrollToMessageId)
+          goingScrollToMessageId.value = messageId
+          handleResetGoingScrollToMessageId()
+        }
+      }
+      loadingScrollToGoMessageId.value = false
+      resetTriggerScrollToMessageIdIsDone()
     }
   }
 
@@ -181,7 +237,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           messages: toRaw(chatRoomMessages.value),
         })
 
-        mainMessagesWorker.value.onmessage = (event) => {
+        mainMessagesWorker.value.onmessage = async (event) => {
           const { messages, totalStreams } = event.data
 
           if (messages?.length === 0 || totalStreamsMainMessagesWorker.value >= ITEMS_PER_PAGE) {
@@ -189,6 +245,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             resetMainMessagesEventSource()
           } else if (totalStreams < ITEMS_PER_PAGE) {
             chatRoomMessages.value = createNewMessages([...messages, ...chatRoomMessages.value])
+            await nextTick()
+            await nextTick()
+            triggerRef(chatRoomMessages)
+            scroller.value.$refs.scroller.$forceUpdate(true)
           }
 
           totalStreamsMainMessagesWorker.value += totalStreams
@@ -333,6 +393,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       }
 
       if (
+        !triggerScrollToMessageIdIsDone.value &&
         !loadingMainMessagesOnScrollBottom.value &&
         !showScrollDownButton.value &&
         !loadingMessagesPagination.value &&
@@ -386,6 +447,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
 
     if (
+      !triggerScrollToMessageIdIsDone.value &&
       !loadingMainMessagesOnScrollBottom.value &&
       !showScrollDownButton.value &&
       !loadingMessagesPagination.value &&
@@ -666,6 +728,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     activeMessageMenu,
     chatRoomUsername,
     goingScrollToMessageId,
+    loadingScrollToGoMessageId,
     handleScrollToGoMessage,
     resetActiveMessageMenu,
     handleActiveMessageMenu,
