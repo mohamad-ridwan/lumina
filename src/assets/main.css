@@ -45,3 +45,15 @@
 .border-app {
   @apply border-[var(--border-color)];
 }
+
+.p-menu {
+  width: 100% !important;
+}
+
+.p-menu .p-menu-list {
+  width: 100% !important;
+}
+
+.p-menu .p-menuitem-link {
+  width: 100% !important;
+}

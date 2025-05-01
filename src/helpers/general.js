@@ -44,8 +44,21 @@ const createNewMessages = (messages) => {
   return removeDuplicates(newMessages, 'messageId').sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
 }
 
+const deviceDetector = () => {
+  const isMobile = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent)
+
+  if (isMobile) {
+    // Code for mobile devices
+    return 'mobile'
+  } else {
+    // Code for desktop devices
+    return 'desktop'
+  }
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
   sortByTimestamp,
+  deviceDetector,
 }
