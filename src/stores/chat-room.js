@@ -88,6 +88,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   }
 
   const handleScrollToGoMessage = async (messageId) => {
+    handleResetActiveSelectReactions()
+    resetActiveMessageMenu()
     const messageIndex = toRaw(chatRoomMessages.value).findIndex(
       (msg) => msg?.messageId === messageId,
     )
