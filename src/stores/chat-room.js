@@ -68,6 +68,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }, 500)
   }
 
+  const resetTriggerGoToMessageIndex = (messageIndex) => {
+    setTimeout(() => {
+      scroller.value.scrollToItem(messageIndex)
+    }, 0)
+  }
+
   const handleScrollToGoMessage = async (messageId) => {
     const messageIndex = toRaw(chatRoomMessages.value).findIndex(
       (msg) => msg?.messageId === messageId,
@@ -103,11 +109,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         await nextTick()
         triggerRef(chatRoomMessages)
         scroller.value.$refs.scroller.$forceUpdate(true)
-        const messageIndex = toRaw(chatRoomMessages.value).findIndex(
-          (msg) => msg?.messageId === messageId,
-        )
+        const messageIndex = toRaw(chatRoomMessages.value)
+          .reverse()
+          .findIndex((msg) => msg?.messageId === messageId)
         if (messageIndex !== -1) {
-          scroller.value.scrollToItem(messageIndex - 1)
+          clearTimeout(resetTriggerGoToMessageIndex)
+          scroller.value.scrollToItem(messageIndex)
+          resetTriggerGoToMessageIndex(messageIndex)
           await nextTick()
           await nextTick()
           triggerRef(chatRoomMessages)
