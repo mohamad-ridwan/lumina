@@ -59,7 +59,7 @@ onMounted(() => {
 <template>
   <div class="flex flex-col-reverse gap-1 pb-2" @click.stop="closeMenu">
     <div ref="boxRef"
-      class="group bg-[#f1f1f1] rounded-tl-md rounded-bl-md rounded-br-lg p-2 max-w-xs self-start relative"
+      class="group bg-[#f1f1f1] rounded-tl-md rounded-bl-md rounded-br-lg p-2 max-w-[65%] self-start relative"
       style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
       <!-- ⬇️ Tambahkan di sini overlay -->
       <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
@@ -67,7 +67,7 @@ onMounted(() => {
       <!-- Menu reply -->
       <div
         :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
-        <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" />
+        <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId" />
       </div>
       <p class="text-sm text-start rotate-180" style="direction: ltr;" v-html="textMessage"></p>
       <!-- Reply view -->

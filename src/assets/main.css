@@ -46,9 +46,13 @@
   @apply border-[var(--border-color)];
 }
 
-.p-menu {
-  width: 100% !important;
+/* .p-menu {
+  width: 60px !important;
 }
+
+.p-menu .p-menu-overlay {
+  width: 60px !important;
+} */
 
 .p-menu .p-menu-list {
   width: 100% !important;

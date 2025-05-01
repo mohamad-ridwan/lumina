@@ -63,7 +63,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2" @click.stop="closeMenu">
     <div ref="boxRef"
-      class="group bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-xs self-end flex flex-col relative"
+      class="group bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-[65%] self-end flex flex-col relative"
       style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
       <!-- ⬇️ Tambahkan di sini overlay -->
       <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
@@ -71,7 +71,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
       <!-- Button muncul saat hover -->
       <div
         :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
-        <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" />
+        <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId" />
       </div>
       <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
       <!-- Reply view -->
