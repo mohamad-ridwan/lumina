@@ -1,4 +1,5 @@
 <script setup>
+import MessageReaction from '@/components/emoji/MessageReaction.vue'
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
 import MessageHighlightOverlay from '@/components/overlay/MessageHighlightOverlay.vue'
 import ReplyViewCard from '@/components/ReplyViewCard.vue'
@@ -62,25 +63,27 @@ watch(markMessageAsReadSocketUpdate, (data) => {
 
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2" @click.stop="closeMenu">
-    <div ref="boxRef"
-      class="group bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-[65%] self-end flex flex-col relative"
-      style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
-      <!-- ⬇️ Tambahkan di sini overlay -->
-      <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
+    <MessageReaction wrapper-class="justify-end">
+      <div ref="boxRef"
+        class="group bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-[65%] self-end flex flex-col relative"
+        style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
+        <!-- ⬇️ Tambahkan di sini overlay -->
+        <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
 
-      <!-- Button muncul saat hover -->
-      <div
-        :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
-        <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId" />
+        <!-- Button muncul saat hover -->
+        <div
+          :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
+          <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId" />
+        </div>
+        <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
+        <!-- Reply view -->
+        <div v-if="replyView" class="pt-1.5 flex !text-white">
+          <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
+            @on-click="handleScrollToGoMessage(replyView?.messageId)" wrapper-style="direction: ltr; rotate: 180deg;"
+            wrapper-class="border-l-1 py-0.5" text-message-class="!text-[#EEE]" username-class="text-xs" />
+        </div>
       </div>
-      <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
-      <!-- Reply view -->
-      <div v-if="replyView" class="pt-1.5 flex !text-white">
-        <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
-          @on-click="handleScrollToGoMessage(replyView?.messageId)" wrapper-style="direction: ltr; rotate: 180deg;"
-          wrapper-class="border-l-1 py-0.5" text-message-class="!text-[#EEE]" username-class="text-xs" />
-      </div>
-    </div>
+    </MessageReaction>
     <!-- Status dan waktu -->
     <div class="flex flex-row-reverse items-center gap-1 pl-1" style="direction: ltr;">
       <span class="text-xs text-[#111827] self-end rotate-180">
