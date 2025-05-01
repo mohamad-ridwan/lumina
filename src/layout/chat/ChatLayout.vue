@@ -108,11 +108,11 @@ onBeforeUnmount(() => {
   document.body.style.overflowY = 'auto'
 })
 
-watch(newMessateSocketUpdate, (data) => {
+const handleNewMessage = () => {
   const chatCurrently = markRaw(memoizedChats.value)?.find(chat => chat?.chatId === data?.chatId)
   // jika data ada di chats store
   // tinggal ubah datanya
-  if (chatCurrently && data.eventType === 'send-message' && !data?.isHeader) {
+  if (chatCurrently && !data?.isHeader) {
     const newChatUserCurrently = {
       ...chatCurrently,
       latestMessage: data.latestMessage,
@@ -127,8 +127,7 @@ watch(newMessateSocketUpdate, (data) => {
       ...removeChatUserCurrently
     ], true)
   } else if (
-    !chatCurrently && data.eventType === 'send-message' &&
-    data?.unreadCount?.[profile.value?.data.id] !== undefined &&
+    !chatCurrently && data?.unreadCount?.[profile.value?.data.id] !== undefined &&
     !data?.isHeader
   ) {
     // jika belum ada di chats store
@@ -142,6 +141,12 @@ watch(newMessateSocketUpdate, (data) => {
     chats.value.unshift(newUserChat)
     chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data
     triggerRef(chats)
+  }
+}
+
+watch(newMessateSocketUpdate, (data) => {
+  if (data.eventType === 'send-message') {
+    handleNewMessage()
   }
 })
 
