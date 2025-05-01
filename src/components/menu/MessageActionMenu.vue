@@ -84,7 +84,7 @@ onUnmounted(() => {
       size="small" aria-haspopup="true" :aria-controls="`overlay_menu_${props.message?.messageId}`"
       class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]" />
     <Menu ref="menu" :id="`overlay_menu_${props.message?.messageId}`" :model="items" :popup="true" @show="onShow"
-      @hide="onHide" class="!text-xs absolute z-50 top-6 !min-w-[100px] !flex"
+      @hide="onHide" class="!text-xs absolute top-6 !min-w-[100px] !flex"
       :appendTo="deviceCurrently === 'desktop' ? 'body' : 'self'" :style="memoizedMenuStyle" />
   </div>
 </template>
