@@ -37,7 +37,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu } = chatRoomStore
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, } = chatRoomStore
 const {
   chatRoom,
   chatRoomMessages,
@@ -58,7 +58,7 @@ const {
   paginationMessagesComparisonWorker,
   chatRoomUsername,
   goingScrollToMessageId,
-  loadingScrollToGoMessageId
+  loadingScrollToGoMessageId,
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -586,6 +586,8 @@ const handleScroll = () => {
   showScrollDownButton.value = scrollTop > SCROLL_THRESHOLD
 
   if (isUserInitiatedScroll.value) {
+    handleResetActiveSelectReactions()
+    resetActiveMessageMenu()
     showDateHeader.value = true
     nextTick(() => {
       onScroll()
@@ -695,6 +697,7 @@ onUnmounted(() => {
   resetPaginationMessagesComparisonWorker()
   resetReplyMessageData()
   resetActiveMessageMenu()
+  handleResetActiveSelectReactions()
   goingScrollToMessageId.value = null
   loadingScrollToGoMessageId.value = false
   chatRoomUsername.value = null

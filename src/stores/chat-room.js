@@ -44,6 +44,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const paginationMessagesComparisonWorker = ref(null)
   const replyMessageData = ref(null)
   const activeMessageMenu = ref(null)
+  const activeSelectReactions = ref(null)
   const chatRoomUsername = ref(null)
   const goingScrollToMessageId = ref(null)
   const loadingScrollToGoMessageId = ref(false)
@@ -55,6 +56,18 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const toast = useToast()
 
   const { globalErrMessageAPI } = constant
+
+  const handleResetActiveSelectReactions = () => {
+    activeSelectReactions.value = null
+  }
+
+  const handleSetActiveSelectReactions = (type, messageId, profileId) => {
+    activeSelectReactions.value = {
+      type,
+      messageId,
+      profileId,
+    }
+  }
 
   const handleResetGoingScrollToMessageId = () => {
     setTimeout(() => {
@@ -544,6 +557,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
+    handleResetActiveSelectReactions()
     goingScrollToMessageId.value = null
     resetReplyMessageData()
     resetActiveMessageMenu()
@@ -737,6 +751,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     chatRoomUsername,
     goingScrollToMessageId,
     loadingScrollToGoMessageId,
+    activeSelectReactions,
+    handleSetActiveSelectReactions,
+    handleResetActiveSelectReactions,
     handleScrollToGoMessage,
     resetActiveMessageMenu,
     handleActiveMessageMenu,

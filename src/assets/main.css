@@ -56,6 +56,7 @@
 
 .p-menu .p-menu-list {
   width: 100% !important;
+  padding: 0 !important;
 }
 
 .p-menu .p-menuitem-link {

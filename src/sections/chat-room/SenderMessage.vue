@@ -63,7 +63,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
 
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2" @click.stop="closeMenu">
-    <MessageReaction wrapper-class="justify-end">
+    <MessageReaction wrapper-class="justify-end" :message-id="messageId" :profile-id="profileId">
       <div ref="boxRef"
         class="group bg-[#2e74e8] rounded-tr-md rounded-br-md rounded-bl-lg p-2 max-w-[65%] self-end flex flex-col relative"
         style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">

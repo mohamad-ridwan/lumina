@@ -59,7 +59,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col-reverse gap-1 pb-2" @click.stop="closeMenu">
-    <MessageReaction wrapper-class="justify-end flex-row-reverse">
+    <MessageReaction wrapper-class="justify-end flex-row-reverse" :message-id="messageId" :profile-id="profileId">
       <div ref="boxRef"
         class="group bg-[#f1f1f1] rounded-tl-md rounded-bl-md rounded-br-lg p-2 max-w-[65%] self-start relative"
         style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
