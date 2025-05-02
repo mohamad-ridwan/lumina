@@ -4,7 +4,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import calendar from 'dayjs/plugin/calendar'
@@ -166,7 +166,7 @@ watch(profileInfo, (data) => {
       <div class="flex flex-col">
         <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? chatRoom.username :
           profileInfo.username
-        }}</h2>
+          }}</h2>
         <span v-if="memoizedStatusUserOnline && memoizedStatusUserOnline !== 'online'"
           class="text-[11px] text-[#6b7280]">
           Last seen {{ lastSeenText }}

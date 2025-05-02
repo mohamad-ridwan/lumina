@@ -23,6 +23,7 @@ import UserTypingIndicator from './UserTypingIndicator.vue';
 import SkeletonMessages from './SkeletonMessages.vue';
 import { fetchMessagesPagination } from '@/services/api/chat-room';
 import { general } from '@/helpers/general';
+import WrapperSetHeaderTimes from '@/components/WrapperSetHeaderTimes.vue';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -56,14 +57,13 @@ const {
   bufferMainMessagesEventSource,
   loadingMainMessagesEventSource,
   paginationMessagesComparisonWorker,
-  chatRoomUsername,
   goingScrollToMessageId,
   loadingScrollToGoMessageId,
 } = storeToRefs(chatRoomStore)
 
 // state
 const observer = ref(null)
-const currentStickyHeader = ref({
+const currentStickyHeader = shallowRef({
   latestMessageTimestamp: 0,
   text: ''
 })
@@ -317,10 +317,12 @@ const handleUpdateReactions = async (newData) => {
   const messageIndex = toRaw(chatRoomMessages.value).findIndex(message => message.messageId === data.messageId)
   let reactionIndex = toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)
   if (messageIndex !== -1 && reactionIndex && !data?.isDeleted) {
-    reactionIndex = reactionIndex.reactions.findIndex(react => react.senderUserId === data.reaction.senderUserId)
-    const newReactions = chatRoomMessages.value[messageIndex].reactions
-    if (reactionIndex === -1) {
+    reactionIndex = reactionIndex?.reactions?.findIndex(react => react.senderUserId === data.reaction.senderUserId)
+    let newReactions = chatRoomMessages.value[messageIndex].reactions
+    if (reactionIndex === -1 || newReactions?.length > 0 || newReactions?.length === 0) {
       newReactions.push(data.reaction)
+    } else if (reactionIndex === -1 || reactionIndex === undefined || newReactions === undefined) {
+      newReactions = [data.reaction]
     } else {
       newReactions[reactionIndex].emoji = data.reaction.emoji
       newReactions[reactionIndex].latestMessageTimestamp = data.reaction.latestMessageTimestamp
@@ -339,8 +341,8 @@ const handleUpdateReactions = async (newData) => {
     await nextTick()
     scroller.value.$refs.scroller.$forceUpdate(true)
   } else if (messageIndex !== -1 && reactionIndex && data?.isDeleted) {
-    reactionIndex = reactionIndex.reactions.findIndex(react => react.senderUserId === data.reaction.senderUserId)
-    if (reactionIndex === -1) {
+    reactionIndex = reactionIndex?.reactions?.findIndex(react => react.senderUserId === data.reaction.senderUserId)
+    if (reactionIndex === -1 || reactionIndex === undefined) {
       return
     }
     let newReactions = chatRoomMessages.value[messageIndex].reactions
@@ -773,15 +775,15 @@ onUnmounted(() => {
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
-    <div v-if="currentStickyHeader.text"
+    <div v-memo="[currentStickyHeader.text]" v-if="currentStickyHeader.text"
       :class="`absolute top-22 z-10 rotate-180 flex justify-center items-center left-2 right-[0.8rem] ${showDateHeader ? 'opacity-100' : 'opacity-0'} transition-all`">
       <DateHeader :date="currentStickyHeader.text" />
     </div>
 
     <SkeletonMessages v-if="loadingMessages" />
 
-    <DynamicScroller v-if="!loadingMessages" id="scrollChatRoom" ref="scroller" :items="memoizedMessages"
-      :key-field="'messageId'" :min-item-size="54" class="flex-1 space-y-2 bg-[#f9fafb] !p-4"
+    <DynamicScroller v-memo="[memoizedMessages]" v-if="!loadingMessages" id="scrollChatRoom" ref="scroller"
+      :items="memoizedMessages" :key-field="'messageId'" :min-item-size="54" class="flex-1 space-y-2 bg-[#f9fafb] !p-4"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">
         <DynamicScrollerItem :data-index="index" :item="item" :active="active" :size-dependencies="[
@@ -790,22 +792,20 @@ onUnmounted(() => {
           <div v-if="item?.isHeader" :id="`${item.id}-${item.latestMessageTimestamp}`">
             <DateHeader :date="formatDate(Number(item?.latestMessageTimestamp))" />
           </div>
-          <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
-            :data-timestamp="item.latestMessageTimestamp">
+          <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
             <SenderMessage v-if="item?.textMessage && item.senderUserId === profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
               :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId"
               :reactions="item?.reactions" />
-          </div>
-          <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
-            :data-timestamp="item.latestMessageTimestamp">
+          </WrapperSetHeaderTimes>
+          <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
             <RecipientMessage v-if="item?.textMessage && item.senderUserId !== profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
               :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
               :reply-view="item?.replyView" :profile-id="profileId" :reactions="item?.reactions" />
-          </div>
+          </WrapperSetHeaderTimes>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />
           </div>
@@ -813,7 +813,7 @@ onUnmounted(() => {
       </template>
     </DynamicScroller>
 
-    <FooterChatRoom v-on:triggerSendMessage="triggerSendMessage">
+    <FooterChatRoom v-memo="[showScrollDownButton]" v-on:triggerSendMessage="triggerSendMessage">
       <Button @click="scrollToBottom"
         class="!absolute !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !duration-300 !ease-in-out !border-none !transition-all"
         :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"
