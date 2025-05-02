@@ -7,7 +7,7 @@ import { computed, ref } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 
-const { wrapperClass, messageId, profileId } = defineProps(['wrapperClass', 'messageId', 'profileId'])
+const { wrapperClass, messageId, profileId, reactionCurrently } = defineProps(['wrapperClass', 'messageId', 'profileId', 'reactionCurrently'])
 
 // store
 const chatRoomStore = useChatRoomStore()
@@ -151,6 +151,7 @@ const onTouchStart = async () => {
         <div class="grid grid-cols-5 gap-1 !py-1 px-2 !h-fit">
           <button v-for="emoji in emojis" :key="emoji"
             class="flex items-center justify-center w-9 h-9 rounded-full hover:scale-110 transition-transform"
+            :class="emoji?.emoji && `${reactionCurrently?.emoji}` === `${emoji.emoji}` ? '!bg-black/10' : ''"
             @click="onEmojiSelected(emoji)">
             <template v-if="emoji.type === 'emoji'">
               <span class="text-[22px]">{{ emoji.emoji }}</span>

@@ -35,6 +35,13 @@ const fromMessageUsername = computed(() => {
   }
 })
 
+const reactionCurrently = computed(() => {
+  if (!reactions || reactions?.length === 0) {
+    return
+  }
+  return reactions.find(react => react?.senderUserId === profileId)
+})
+
 const toggleBoxMessage = (e) => {
   if (activeMessageMenu.value === messageId) {
     activeMessageMenu.value = null
@@ -64,7 +71,8 @@ watch(markMessageAsReadSocketUpdate, (data) => {
 
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2" @click.stop="closeMenu">
-    <MessageReaction wrapper-class="justify-end" :message-id="messageId" :profile-id="profileId">
+    <MessageReaction wrapper-class="justify-end" :message-id="messageId" :profile-id="profileId"
+      :reaction-currently="reactionCurrently">
       <div ref="boxRef"
         class="group bg-[#2e74e8] rounded-tr-2xl rounded-br-2xl rounded-bl-2xl p-2 max-w-[65%] self-end flex flex-col relative"
         style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
