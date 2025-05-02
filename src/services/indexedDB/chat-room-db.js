@@ -108,13 +108,24 @@ async function addStreamsMessageToChatRoom(data) {
   if (targetChat) {
     const existingMessages = Array.isArray(targetChat.messages) ? targetChat.messages : []
 
-    // Gabungkan dengan pesan baru, hindari duplikat berdasarkan id
-    const existingIds = new Set(existingMessages.map((msg) => msg.messageId))
+    // Buat Map dari stream → key: messageId, value: message object
+    const streamsMap = new Map(data.streams.map((msg) => [msg.messageId, msg]))
 
+    // Update atau pertahankan message yang ada
+    const mergedMessages = existingMessages.map((msg) => {
+      if (streamsMap.has(msg.messageId)) {
+        // Replace dengan versi dari stream
+        return streamsMap.get(msg.messageId)
+      }
+      return msg
+    })
+
+    // Tambahkan pesan baru (yang belum ada sama sekali)
+    const existingIds = new Set(existingMessages.map((msg) => msg.messageId))
     const newMessages = data.streams.filter((msg) => !existingIds.has(msg.messageId))
 
     const combinedMessages = removeDuplicates(
-      [...existingMessages, ...newMessages],
+      [...mergedMessages, ...newMessages],
       'messageId',
     ).sort(sortByTimestamp)
 
