@@ -328,6 +328,11 @@ const handleUpdateReactions = async (newData) => {
     // new reference of nested field
     // because it is would triggering render
     chatRoomMessages.value[messageIndex].reactions = [...newReactions]
+    paginationMessagesComparisonWorker.value.postMessage({
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
+    })
     triggerRef(chatRoomMessages)
     await nextTick()
     await nextTick()
@@ -736,7 +741,6 @@ onUnmounted(() => {
   handleResetActiveSelectReactions()
   goingScrollToMessageId.value = null
   loadingScrollToGoMessageId.value = false
-  chatRoomUsername.value = null
   loadingMainMessagesOnScrollBottom.value = false
   bufferNewMessagesOnScrollBottom.value = []
   bufferMainMessagesEventSource.value = []

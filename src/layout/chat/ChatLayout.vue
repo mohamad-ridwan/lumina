@@ -108,7 +108,7 @@ onBeforeUnmount(() => {
   document.body.style.overflowY = 'auto'
 })
 
-const handleNewMessage = () => {
+const handleNewMessage = (data) => {
   const chatCurrently = markRaw(memoizedChats.value)?.find(chat => chat?.chatId === data?.chatId)
   // jika data ada di chats store
   // tinggal ubah datanya
@@ -146,7 +146,7 @@ const handleNewMessage = () => {
 
 watch(newMessateSocketUpdate, (data) => {
   if (data.eventType === 'send-message') {
-    handleNewMessage()
+    handleNewMessage(data)
   }
 })
 
