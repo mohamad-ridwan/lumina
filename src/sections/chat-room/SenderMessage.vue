@@ -85,7 +85,8 @@ watch(markMessageAsReadSocketUpdate, (data) => {
           <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId" />
         </div>
         <!-- Reaction Info -->
-        <ReactionInfo v-if="reactions?.length > 0" :reactions="reactions" :profile-id="profileId" />
+        <ReactionInfo v-if="reactions?.length > 0" :reactions="reactions" :profile-id="profileId"
+          :reaction-currently="reactionCurrently" :message-id="messageId" />
         <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
         <!-- Reply view -->
         <div v-if="replyView" class="pt-1.5 flex !text-white">
