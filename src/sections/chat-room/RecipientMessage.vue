@@ -1,5 +1,6 @@
 <script setup>
 import MessageReaction from '@/components/emoji/MessageReaction.vue'
+import ReactionInfo from '@/components/emoji/ReactionInfo.vue'
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
 import MessageHighlightOverlay from '@/components/overlay/MessageHighlightOverlay.vue'
 import ReplyViewCard from '@/components/ReplyViewCard.vue'
@@ -12,13 +13,13 @@ import { computed, onMounted, ref } from 'vue'
 
 dayjs.extend(localizedFormat)
 
-const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView, profileId } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId'])
+const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView, profileId, reactions } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId', 'reactions'])
 
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleScrollToGoMessage } = chatRoomStore
-const { activeMessageMenu, chatRoomUsername, goingScrollToMessageId } = storeToRefs(chatRoomStore)
+const { activeMessageMenu, chatRoom, goingScrollToMessageId } = storeToRefs(chatRoomStore)
 
 const boxRef = ref(null)
 
@@ -27,7 +28,7 @@ const fromMessageUsername = computed(() => {
   if (replyView.senderUserId === profileId) {
     return 'You'
   } else {
-    return chatRoomUsername.value
+    return chatRoom.value.username
   }
 })
 
@@ -61,16 +62,18 @@ onMounted(() => {
   <div class="flex flex-col-reverse gap-1 pb-2" @click.stop="closeMenu">
     <MessageReaction wrapper-class="justify-end flex-row-reverse" :message-id="messageId" :profile-id="profileId">
       <div ref="boxRef"
-        class="group bg-[#f1f1f1] rounded-tl-md rounded-bl-md rounded-br-lg p-2 max-w-[65%] self-start relative"
+        class="group bg-[#f1f1f1] rounded-tl-2xl rounded-bl-2xl rounded-br-2xl p-2 max-w-[65%] self-start relative"
         style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
         <!-- ⬇️ Tambahkan di sini overlay -->
         <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
 
         <!-- Menu reply -->
         <div
-          :class="`absolute left-0 bottom-[-2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
+          :class="`absolute left-0 bottom-[2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
           <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId" />
         </div>
+        <!-- Reaction Info -->
+        <ReactionInfo v-if="reactions?.length > 0" :reactions="reactions" :profile-id="profileId" />
         <p class="text-sm text-start rotate-180" style="direction: ltr;" v-html="textMessage"></p>
         <!-- Reply view -->
         <div v-if="replyView" class="pt-1.5 flex !text-black">

@@ -4,7 +4,7 @@ import FooterChatRoom from './footer/FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, onUpdated, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -85,6 +85,7 @@ const scrollTimeout = shallowRef(null)
 const scrollTimeOutDateHeader = shallowRef(null)
 const stayScrollCurrently = shallowRef(null)
 const typingBubbleEl = ref(null)
+const newMessageUpdate = ref(null)
 
 // logic
 // const formatDate = (date) => {
@@ -304,6 +305,41 @@ watch(
   },
   { immediate: true }
 )
+
+onMounted(() => {
+  socket.on('newMessage', (data) => {
+    newMessageUpdate.value = data
+  })
+})
+
+const handleUpdateReactions = async (newData) => {
+  const data = toRaw(newData)
+  const messageIndex = toRaw(chatRoomMessages.value).findIndex(message => message.messageId === data.messageId)
+  let reactionIndex = toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)
+  if (messageIndex !== -1 && reactionIndex && !data?.isDeleted) {
+    reactionIndex = reactionIndex.reactions.findIndex(react => react.senderUserId === data.reaction.senderUserId)
+    if (reactionIndex === -1) {
+      return
+    }
+    const newReactions = chatRoomMessages.value[messageIndex].reactions
+    newReactions[reactionIndex].emoji = data.reaction.emoji
+    newReactions[reactionIndex].latestMessageTimestamp = data.reaction.latestMessageTimestamp
+    newReactions[reactionIndex].code = data.reaction.code
+    // new reference of nested field
+    // because it is would triggering render
+    chatRoomMessages.value[messageIndex].reactions = [...newReactions]
+    triggerRef(chatRoomMessages)
+    await nextTick()
+    await nextTick()
+    scroller.value.$refs.scroller.$forceUpdate(true)
+  }
+}
+
+watch(newMessageUpdate, (data) => {
+  if (data?.eventType === 'reaction-message' && data?.chatRoomId === memoizedChatRoomId.value) {
+    handleUpdateReactions(data)
+  }
+})
 
 onBeforeMount(() => {
   if (!addNewMessageWorker.value) {
@@ -735,7 +771,8 @@ onUnmounted(() => {
             <SenderMessage v-if="item?.textMessage && item.senderUserId === profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
-              :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId" />
+              :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId"
+              :reactions="item?.reactions" />
           </div>
           <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="(el) => setHeaderRef(el, item)"
             :data-timestamp="item.latestMessageTimestamp">
@@ -743,7 +780,7 @@ onUnmounted(() => {
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
               :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
-              :reply-view="item?.replyView" :profile-id="profileId" />
+              :reply-view="item?.replyView" :profile-id="profileId" :reactions="item?.reactions" />
           </div>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />

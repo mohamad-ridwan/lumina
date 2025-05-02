@@ -20,13 +20,12 @@ const { recipientId, profileId, profileIdConnection } = defineProps(['recipientI
 // chat room store
 const chatRoomStore = useChatRoomStore()
 const { setChatRoom, resetChatRoomEventSource } = chatRoomStore
-const { chatRoom, chatRoomEventSource, chatRoomUsername } = storeToRefs(chatRoomStore)
+const { chatRoom, chatRoomEventSource } = storeToRefs(chatRoomStore)
 // chats store
 const chatStore = chatsStore()
 const { chats } = storeToRefs(chatStore)
 
 // state
-const image = shallowRef(null)
 // const userProfileSocketUpdate = ref(null)
 const now = ref(Date.now())
 
@@ -144,7 +143,8 @@ onUnmounted(() => {
 
 watch(profileInfo, (data) => {
   if (data?.username) {
-    chatRoomUsername.value = data.username
+    chatRoom.value.username = data.username
+    chatRoom.value.image = data.image
   }
 }, { immediate: true })
 </script>
@@ -156,7 +156,7 @@ watch(profileInfo, (data) => {
       size="large" icon-class="!text-lg" @click="handleBack" />
     <div class="flex items-center gap-3">
       <div class="relative">
-        <img :src="!profileInfo?.image ? image : profileInfo.image" alt="profile"
+        <img :src="!profileInfo?.image ? chatRoom.image : profileInfo.image" alt="profile"
           :class="`object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11`">
         <div v-if="memoizedStatusUserOnline && memoizedStatusUserOnline === 'online'"
           class="absolute bottom-0.5 right-0">
@@ -164,8 +164,9 @@ watch(profileInfo, (data) => {
         </div>
       </div>
       <div class="flex flex-col">
-        <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? chatRoomUsername : profileInfo.username
-          }}</h2>
+        <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? chatRoom.username :
+          profileInfo.username
+        }}</h2>
         <span v-if="memoizedStatusUserOnline && memoizedStatusUserOnline !== 'online'"
           class="text-[11px] text-[#6b7280]">
           Last seen {{ lastSeenText }}

@@ -13,7 +13,7 @@ const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { resetReplyMessageData, handleScrollToGoMessage } = chatRoomStore
-const { replyMessageData, chatRoomUsername } = storeToRefs(chatRoomStore)
+const { replyMessageData, chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 const showReplyView = ref(false)
@@ -24,7 +24,7 @@ const fromMessageUsername = computed(() => {
   if (replyMessageData.value.senderUserId === profileId.value) {
     return 'You'
   } else {
-    return chatRoomUsername.value
+    return chatRoom.value.username
   }
 })
 

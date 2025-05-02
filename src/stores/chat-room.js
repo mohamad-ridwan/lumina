@@ -3,7 +3,7 @@ import { general } from '@/helpers/general'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { markRaw, nextTick, ref, shallowRef, toRaw, triggerRef } from 'vue'
+import { nextTick, ref, shallowRef, toRaw, triggerRef } from 'vue'
 import AddNewMessageWorker from '@/services/workers/add-new-message-worker.js?worker'
 import GetChatRoomWorker from '@/services/workers/get-chat-room-worker.js?worker'
 import StreamsChatRoomWorker from '@/services/workers/streams-chat-room-worker.js?worker'
@@ -45,7 +45,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const replyMessageData = ref(null)
   const activeMessageMenu = ref(null)
   const activeSelectReactions = ref(null)
-  const chatRoomUsername = ref(null)
   const goingScrollToMessageId = ref(null)
   const loadingScrollToGoMessageId = ref(false)
   const triggerScrollToMessageIdIsDone = ref(false)
@@ -750,7 +749,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     paginationMessagesComparisonWorker,
     replyMessageData,
     activeMessageMenu,
-    chatRoomUsername,
     goingScrollToMessageId,
     loadingScrollToGoMessageId,
     activeSelectReactions,
