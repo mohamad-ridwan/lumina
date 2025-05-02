@@ -318,13 +318,33 @@ const handleUpdateReactions = async (newData) => {
   let reactionIndex = toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)
   if (messageIndex !== -1 && reactionIndex && !data?.isDeleted) {
     reactionIndex = reactionIndex.reactions.findIndex(react => react.senderUserId === data.reaction.senderUserId)
+    const newReactions = chatRoomMessages.value[messageIndex].reactions
+    if (reactionIndex === -1) {
+      newReactions.push(data.reaction)
+    } else {
+      newReactions[reactionIndex].emoji = data.reaction.emoji
+      newReactions[reactionIndex].latestMessageTimestamp = data.reaction.latestMessageTimestamp
+      newReactions[reactionIndex].code = data.reaction.code
+    }
+    // new reference of nested field
+    // because it is would triggering render
+    chatRoomMessages.value[messageIndex].reactions = [...newReactions]
+    paginationMessagesComparisonWorker.value.postMessage({
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
+    })
+    triggerRef(chatRoomMessages)
+    await nextTick()
+    await nextTick()
+    scroller.value.$refs.scroller.$forceUpdate(true)
+  } else if (messageIndex !== -1 && reactionIndex && data?.isDeleted) {
+    reactionIndex = reactionIndex.reactions.findIndex(react => react.senderUserId === data.reaction.senderUserId)
     if (reactionIndex === -1) {
       return
     }
-    const newReactions = chatRoomMessages.value[messageIndex].reactions
-    newReactions[reactionIndex].emoji = data.reaction.emoji
-    newReactions[reactionIndex].latestMessageTimestamp = data.reaction.latestMessageTimestamp
-    newReactions[reactionIndex].code = data.reaction.code
+    let newReactions = chatRoomMessages.value[messageIndex].reactions
+    newReactions = newReactions.filter(react => react.senderUserId !== data.reaction.senderUserId)
     // new reference of nested field
     // because it is would triggering render
     chatRoomMessages.value[messageIndex].reactions = [...newReactions]
