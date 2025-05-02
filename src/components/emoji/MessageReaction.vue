@@ -1,8 +1,9 @@
 <script setup>
+import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { Button, Menu } from 'primevue'
-import { computed, nextTick, ref } from 'vue'
+import { computed, ref } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 
@@ -11,7 +12,7 @@ const { wrapperClass, messageId, profileId } = defineProps(['wrapperClass', 'mes
 // store
 const chatRoomStore = useChatRoomStore()
 const { handleResetActiveSelectReactions, handleSetActiveSelectReactions } = chatRoomStore
-const { activeSelectReactions } = storeToRefs(chatRoomStore)
+const { activeSelectReactions, chatRoom } = storeToRefs(chatRoomStore)
 
 const emojiButtonRef = ref(null)
 const emojiMenuRef = ref(null)
@@ -33,6 +34,29 @@ const isActiveMoreEmoji = computed(() => {
   if (activeSelectReactions.value?.type === 'default-reaction') return
   return activeSelectReactions.value?.messageId === messageId
 })
+const memoizedChatRoomId = computed(() => {
+  return chatRoom.value?.chatRoomId
+})
+const memoizedChatId = computed(() => {
+  return chatRoom.value?.chatId
+})
+
+const submitReactionMessage = (emoji, code) => {
+  const req = {
+    chatRoomId: memoizedChatRoomId.value,
+    chatId: memoizedChatId.value,
+    messageId,
+    reaction: {
+      emoji,
+      senderUserId: profileId,
+      code,
+      latestMessageTimestamp: `${Date.now()}`
+    },
+    eventType: "reaction-message"
+  }
+
+  socket.emit('sendMessage', req)
+}
 
 const toggleEmojiMenu = async (event) => {
   const customData = event?.customData
@@ -53,6 +77,7 @@ const onEmojiSelected = (emoji) => {
     handleSetActiveSelectReactions('add-more-reaction', messageId, profileId)
     return
   }
+  submitReactionMessage(emoji.emoji, '')
   emojiMenuRef.value.hide()
 }
 
@@ -81,7 +106,7 @@ const toggleMoreEmojiPanel = (event) => {
 }
 
 const onMoreSelectEmoji = (emoji) => {
-  console.log('More Emoji selected:', emoji)
+  submitReactionMessage(emoji.i, emoji.u)
   moreEmojiPanelRef.value.hide()
 }
 
