@@ -225,10 +225,9 @@ const onScroll = () => {
   })
 
   if (closestItem && closestItem.timestamp !== currentStickyHeader.value.latestMessageTimestamp) {
-    const itemDate = dayjs(closestItem.timestamp).startOf('day')
     currentStickyHeader.value = {
       latestMessageTimestamp: closestItem.timestamp,
-      text: formatDate(itemDate),
+      text: formatDate(closestItem.timestamp),
     }
   }
 }
@@ -319,7 +318,7 @@ const handleUpdateReactions = async (newData) => {
   if (messageIndex !== -1 && reactionIndex && !data?.isDeleted) {
     reactionIndex = reactionIndex?.reactions?.findIndex(react => react.senderUserId === data.reaction.senderUserId)
     let newReactions = chatRoomMessages.value[messageIndex].reactions
-    if (reactionIndex === -1 || newReactions?.length > 0 || newReactions?.length === 0) {
+    if (reactionIndex === -1 || (newReactions?.length > 0 && newReactions?.find(react => react.senderUserId === data.reaction.senderUserId) === undefined) || newReactions?.length === 0) {
       newReactions.push(data.reaction)
     } else if (reactionIndex === -1 || reactionIndex === undefined || newReactions === undefined) {
       newReactions = [data.reaction]
