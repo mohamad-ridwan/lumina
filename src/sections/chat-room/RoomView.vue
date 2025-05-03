@@ -361,9 +361,42 @@ const handleUpdateReactions = async (newData) => {
   }
 }
 
+const handleUpdateDeleteMessage = async (newData) => {
+  const data = toRaw(newData)
+  const messageIndex = toRaw(chatRoomMessages.value).findIndex(message => message.messageId === data.messageId)
+  if (messageIndex !== -1 && data?.isDeleted && data?.isDeleted?.length) {
+    paginationMessagesComparisonWorker.value.postMessage({
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
+    })
+    const messageData = chatRoomMessages.value[messageIndex]
+    // const isDeletedUserIdCurrently = data.isDeleted.find(msg => msg.senderUserId === profileId.value)
+    let isDeletedMessage = false
+    data.isDeleted.forEach(msg => {
+      if (messageData.senderUserId === profileId.value && msg.senderUserId === profileId.value && (msg.deletionType === 'me' || msg.deletionType === 'permanent')) {
+        isDeletedMessage = true
+      }
+    })
+    if (isDeletedMessage) {
+      chatRoomMessages.value = [...chatRoomMessages.value.filter(message => message.messageId !== data.messageId)]
+    } else {
+      // new reference of nested field
+      // because it is would triggering render
+      chatRoomMessages.value[messageIndex].isDeleted = [...data.isDeleted]
+    }
+    triggerRef(chatRoomMessages)
+    await nextTick()
+    await nextTick()
+    scroller.value.$refs.scroller.$forceUpdate(true)
+  }
+}
+
 watch(newMessageUpdate, (data) => {
   if (data?.eventType === 'reaction-message' && data?.chatRoomId === memoizedChatRoomId.value) {
     handleUpdateReactions(data)
+  } else if (data?.eventType === 'delete-message' && data?.chatRoomId === memoizedChatRoomId.value) {
+    handleUpdateDeleteMessage(data)
   }
 })
 
