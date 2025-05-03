@@ -5,7 +5,7 @@ import { usersStore } from '@/stores/users'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
-const { reactions, profileId, reactionCurrently, messageId } = defineProps(['reactions', 'profileId', 'reactionCurrently', 'messageId'])
+const { reactions, profileId, reactionCurrently, messageId, wrapperClass } = defineProps(['reactions', 'profileId', 'reactionCurrently', 'messageId', 'wrapperClass'])
 
 // store
 // chat room store
@@ -68,7 +68,7 @@ const submitReactionMessage = () => {
 </script>
 
 <template>
-  <div class="flex pb-1.5">
+  <div :class="`flex pb-1.5 ${wrapperClass}`">
     <button type="button" class="bg-white rounded-full pr-2 py-[2px] flex items-center gap-2 cursor-pointer"
       :class="reactions.length > 1 ? 'pl-0' : 'pl-1'" @click.prevent="submitReactionMessage">
       <div class="flex gap-1">

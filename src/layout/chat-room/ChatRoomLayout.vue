@@ -48,6 +48,7 @@ watch(newMessageUpdate, (data) => {
 </script>
 
 <template>
+  <!-- modal confirm delete message -->
   <div :class="`col-span-2 ${!memoizedChatId ? 'hidden md:block' : 'md:block'}`">
     <MainBackground :chat-id="!memoizedChatId" />
     <template v-if="memoizedChatId">

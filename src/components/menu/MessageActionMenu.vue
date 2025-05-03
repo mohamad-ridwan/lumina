@@ -34,7 +34,13 @@ const items = [
     command: () => {
       handleSetReplyMessageData(props.message)
     }
-  }
+  },
+  {
+    label: 'Delete',
+    command: () => {
+
+    }
+  },
 ]
 
 const toggle = (event) => {
