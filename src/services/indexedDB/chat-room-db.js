@@ -46,7 +46,7 @@ const updateReadMessageDB = async (chatRoomId, messageId) => {
   await tx.done
 }
 
-const chatRoomDBCurrently = async (chatRoomId) => {
+const chatRoomDBCurrently = async ({ chatRoomId, profileId }) => {
   const db = await openChatRoomDB()
   const tx = db.transaction('chat-room', 'readwrite')
   const store = tx.objectStore('chat-room')
@@ -58,9 +58,24 @@ const chatRoomDBCurrently = async (chatRoomId) => {
   })
 
   if (targetChat) {
-    const currentMessages = removeDuplicates(targetChat.messages, 'messageId')
-      .filter((item) => item?.messageId)
-      .sort(sortByTimestamp)
+    let newMessages = removeDuplicates(targetChat.messages, 'messageId')
+    newMessages = newMessages.filter((message) => {
+      const isDeleted = message?.isDeleted
+      if (!isDeleted) {
+        return true
+      } else if (
+        isDeleted?.find((data) => {
+          return (
+            (data?.senderUserId === profileId && data?.deletionType === 'me') ||
+            (data?.senderUserId === profileId && data?.deletionType === 'permanent')
+          )
+        })
+      ) {
+        return false
+      }
+      return true
+    })
+    const currentMessages = newMessages.filter((item) => item?.messageId).sort(sortByTimestamp)
 
     return currentMessages.slice(0, ITEMS_PER_PAGE)
   }

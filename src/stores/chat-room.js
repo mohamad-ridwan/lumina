@@ -641,7 +641,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       const message = JSON.parse(event.data)
       if (message?.length) {
         if (chatRoomMessages.value.length === 0 && getChatRoomWorker.value) {
-          getChatRoomWorker.value.postMessage(itemCurrently.chatRoomId)
+          getChatRoomWorker.value.postMessage({
+            chatRoomId: itemCurrently.chatRoomId,
+            profileId: userId,
+          })
         }
 
         if (getChatRoomWorker.value) {
