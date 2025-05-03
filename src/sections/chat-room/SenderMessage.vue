@@ -103,12 +103,12 @@ watch(markMessageAsReadSocketUpdate, (data) => {
             :is-deleted="isDeleted" />
         </div>
         <!-- Reaction Info -->
-        <ReactionInfo v-if="reactions?.length > 0" :reactions="reactions" :profile-id="profileId"
+        <ReactionInfo v-if="!messageDeleted && reactions?.length > 0" :reactions="reactions" :profile-id="profileId"
           :reaction-currently="reactionCurrently" :message-id="messageId" />
         <p class="rotate-180" style="direction: ltr;" :class="memoizedClassTextMessage" v-html="memoizedTextMessage">
         </p>
         <!-- Reply view -->
-        <div v-if="replyView" class="pt-1.5 flex !text-white">
+        <div v-if="!messageDeleted && replyView" class="pt-1.5 flex !text-white">
           <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
             @on-click="handleScrollToGoMessage(replyView?.messageId)" wrapper-style="direction: ltr; rotate: 180deg;"
             wrapper-class="border-l-1 py-0.5" text-message-class="!text-[#EEE]" username-class="text-xs" />
