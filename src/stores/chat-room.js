@@ -194,9 +194,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
   }
 
-  const setMainMessagesEventSource = () => {
+  const setMainMessagesEventSource = (profileId) => {
     mainMessagesEventSource.value = new EventSource(
-      `${clientUrl}/chat-room/stream?chatId=${chatRoom.value?.chatId}&chatRoomId=${chatRoom.value?.chatRoomId}`,
+      `${clientUrl}/chat-room/stream?chatId=${chatRoom.value?.chatId}&chatRoomId=${chatRoom.value?.chatRoomId}&profileId=${profileId}`,
     )
   }
 
@@ -257,7 +257,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       resetMainMessagesWorkerOnScrollBottom()
     }
 
-    setMainMessagesEventSource()
+    setMainMessagesEventSource(profileId)
     mainMessagesEventSource.value.onmessage = (event) => {
       const message = JSON.parse(event.data)
       if (message?.length) {
@@ -637,7 +637,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     })
 
     chatRoomEventSource.value = new EventSource(
-      `${clientUrl}/chat-room/stream?chatId=${itemCurrently?.chatId}&chatRoomId=${itemCurrently?.chatRoomId}`,
+      `${clientUrl}/chat-room/stream?chatId=${itemCurrently?.chatId}&chatRoomId=${itemCurrently?.chatRoomId}&profileId=${userId}`,
     )
 
     chatRoomEventSource.value.onmessage = async (event) => {
