@@ -48,6 +48,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const goingScrollToMessageId = ref(null)
   const loadingScrollToGoMessageId = ref(false)
   const triggerScrollToMessageIdIsDone = ref(false)
+  const confirmDeleteMessage = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates } = general
   const { deleteChatRoomById } = chatRoomDB
@@ -55,6 +56,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const toast = useToast()
 
   const { globalErrMessageAPI } = constant
+
+  const handleResetConfirmDeleteMessage = () => {
+    confirmDeleteMessage.value = null
+  }
+
+  const handleSetConfirmDeleteMessage = (value) => {
+    confirmDeleteMessage.value = value
+  }
 
   const handleResetActiveSelectReactions = () => {
     activeSelectReactions.value = null
@@ -558,6 +567,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
+    handleResetConfirmDeleteMessage()
     handleResetActiveSelectReactions()
     goingScrollToMessageId.value = null
     resetReplyMessageData()
@@ -752,6 +762,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     goingScrollToMessageId,
     loadingScrollToGoMessageId,
     activeSelectReactions,
+    confirmDeleteMessage,
+    handleResetConfirmDeleteMessage,
+    handleSetConfirmDeleteMessage,
     handleSetActiveSelectReactions,
     handleResetActiveSelectReactions,
     handleScrollToGoMessage,

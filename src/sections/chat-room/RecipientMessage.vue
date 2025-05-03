@@ -13,7 +13,7 @@ import { computed, onMounted, ref } from 'vue'
 
 dayjs.extend(localizedFormat)
 
-const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView, profileId, reactions } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId', 'reactions'])
+const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView, profileId, reactions, isDeleted } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId', 'reactions', 'isDeleted'])
 
 // store
 // chat-room store
@@ -78,7 +78,8 @@ onMounted(() => {
         <!-- Menu reply -->
         <div
           :class="`absolute left-0 bottom-[2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
-          <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId" />
+          <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId"
+            :is-deleted="isDeleted" />
         </div>
         <!-- Reaction Info -->
         <ReactionInfo v-if="reactions?.length > 0" :reactions="reactions" :profile-id="profileId"

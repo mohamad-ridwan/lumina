@@ -38,7 +38,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, } = chatRoomStore
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, handleResetConfirmDeleteMessage } = chatRoomStore
 const {
   chatRoom,
   chatRoomMessages,
@@ -380,6 +380,7 @@ onBeforeUnmount(() => {
 })
 
 const preventBackNavigation = () => {
+  handleResetConfirmDeleteMessage()
   setChatRoom({})
   if (chatRoomEventSource.value) {
     resetChatRoomEventSource()
@@ -757,6 +758,7 @@ onUnmounted(() => {
   resetMainMessagesEventSource()
   resetMainMessagesWorker()
   resetPaginationMessagesComparisonWorker()
+  handleResetConfirmDeleteMessage()
   resetReplyMessageData()
   resetActiveMessageMenu()
   handleResetActiveSelectReactions()
@@ -796,14 +798,15 @@ onUnmounted(() => {
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
               :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId"
-              :reactions="item?.reactions" />
+              :reactions="item?.reactions" :is-deleted="item?.isDeleted" />
           </WrapperSetHeaderTimes>
           <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
             <RecipientMessage v-if="item?.textMessage && item.senderUserId !== profile.data.id"
               :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
               :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
-              :reply-view="item?.replyView" :profile-id="profileId" :reactions="item?.reactions" />
+              :reply-view="item?.replyView" :profile-id="profileId" :reactions="item?.reactions"
+              :is-deleted="item?.isDeleted" />
           </WrapperSetHeaderTimes>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />

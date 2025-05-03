@@ -14,7 +14,7 @@ import { computed, onMounted, onUpdated, ref, watch } from 'vue'
 dayjs.extend(localizedFormat)
 
 // props
-const { textMessage, latestMessageTimestamp, status, messageId, messageType, senderUserId, replyView, profileId, reactions } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId', 'reactions'])
+const { textMessage, latestMessageTimestamp, status, messageId, messageType, senderUserId, replyView, profileId, reactions, isDeleted } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId', 'reactions', 'isDeleted'])
 
 // store
 // chat-room store
@@ -82,7 +82,8 @@ watch(markMessageAsReadSocketUpdate, (data) => {
         <!-- Button muncul saat hover -->
         <div
           :class="`absolute left-0 bottom-[2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
-          <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId" />
+          <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId"
+            :is-deleted="isDeleted" />
         </div>
         <!-- Reaction Info -->
         <ReactionInfo v-if="reactions?.length > 0" :reactions="reactions" :profile-id="profileId"

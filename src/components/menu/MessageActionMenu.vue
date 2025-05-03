@@ -8,14 +8,15 @@ import { general } from '@/helpers/general'
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { handleActiveMessageMenu, resetActiveMessageMenu, handleSetReplyMessageData } = chatRoomStore
-const { activeMessageMenu } = storeToRefs(chatRoomStore)
+const { handleActiveMessageMenu, resetActiveMessageMenu, handleSetReplyMessageData, handleSetConfirmDeleteMessage } = chatRoomStore
+const { activeMessageMenu, chatRoom } = storeToRefs(chatRoomStore)
 
 const { deviceDetector } = general
 
 const props = defineProps({
   message: Object,
-  profileId: String
+  profileId: String,
+  isDeleted: Array,
 })
 
 const menu = ref(null)
@@ -38,7 +39,14 @@ const items = [
   {
     label: 'Delete',
     command: () => {
-
+      handleSetConfirmDeleteMessage({
+        chatRoomId: chatRoom.value?.chatRoomId,
+        chatId: chatRoom.value?.chatId,
+        messageId: props.message?.messageId,
+        senderUserId: props.message?.senderUserId,
+        profileId: props.profileId,
+        isDeleted: props.isDeleted
+      })
     }
   },
 ]
@@ -90,7 +98,7 @@ onUnmounted(() => {
       size="small" aria-haspopup="true" :aria-controls="`overlay_menu_${props.message?.messageId}`"
       class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]" />
     <Menu ref="menu" :id="`overlay_menu_${props.message?.messageId}`" :model="items" :popup="true" @show="onShow"
-      @hide="onHide" class="!text-xs absolute top-6 !min-w-[100px] !flex"
+      @hide="onHide" class="!text-[13px] absolute top-6 !min-w-[100px] !flex"
       :appendTo="deviceCurrently === 'desktop' ? 'body' : 'self'" :style="memoizedMenuStyle" />
   </div>
 </template>

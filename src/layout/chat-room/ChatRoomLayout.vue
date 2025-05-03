@@ -1,4 +1,5 @@
 <script setup>
+import ConfirmDeleteMessageModal from '@/components/modals/ConfirmDeleteMessageModal.vue';
 import MainBackground from '@/sections/chat-room/MainBackground.vue';
 import RoomView from '@/sections/chat-room/RoomView.vue';
 import { socket } from '@/services/socket/socket';
@@ -49,6 +50,7 @@ watch(newMessageUpdate, (data) => {
 
 <template>
   <!-- modal confirm delete message -->
+  <ConfirmDeleteMessageModal />
   <div :class="`col-span-2 ${!memoizedChatId ? 'hidden md:block' : 'md:block'}`">
     <MainBackground :chat-id="!memoizedChatId" />
     <template v-if="memoizedChatId">
