@@ -166,7 +166,7 @@ const profileId = computed(() => profile.value?.data?.id ?? null)
 
 const scrollToBottom = () => {
   if (scroller.value) {
-    handleGetMainMessagesOnScrollBottom()
+    handleGetMainMessagesOnScrollBottom(profileId)
   }
 };
 function handleBeforeUnload() {

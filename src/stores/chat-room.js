@@ -224,7 +224,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
   }
 
-  const handleGetMainMessagesOnScrollBottom = () => {
+  const handleGetMainMessagesOnScrollBottom = (profileId) => {
     resetMainMessagesEventSource()
     resetMainMessagesWorkerOnScrollBottom()
     resetMainMessagesWorker()
@@ -233,7 +233,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     setMainMessagesWorkerOnScrollBottom()
     setMainMessagesWorker()
 
-    getMainMessagesWorkerOnScrollBottom.value.postMessage(chatRoom.value?.chatRoomId)
+    getMainMessagesWorkerOnScrollBottom.value.postMessage({
+      chatRoomId: chatRoom.value?.chatRoomId,
+      profileId,
+    })
 
     getMainMessagesWorkerOnScrollBottom.value.onmessage = (event) => {
       if (event.data.length > 0) {
