@@ -9,7 +9,7 @@ import { useChatRoomStore } from '@/stores/chat-room'
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, onUpdated, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 dayjs.extend(localizedFormat)
 
@@ -25,6 +25,23 @@ const { activeMessageMenu, chatRoom, goingScrollToMessageId } = storeToRefs(chat
 // state
 const markMessageAsReadSocketUpdate = ref(null)
 const boxRef = ref(null)
+
+const messageDeleted = computed(() => {
+  if (!isDeleted || isDeleted?.length === 0) {
+    return null
+  }
+  return isDeleted.find(msg => msg?.senderUserId === profileId)?.deletionType === 'everyone'
+})
+
+const memoizedTextMessage = computed(() => {
+  if (!messageDeleted.value) return textMessage
+  return 'You deleted this message.'
+})
+
+const memoizedClassTextMessage = computed(() => {
+  if (!messageDeleted.value) return 'text-white text-sm'
+  return 'text-[#DDD] italic text-xs'
+})
 
 const fromMessageUsername = computed(() => {
   if (!replyView) return
@@ -88,7 +105,8 @@ watch(markMessageAsReadSocketUpdate, (data) => {
         <!-- Reaction Info -->
         <ReactionInfo v-if="reactions?.length > 0" :reactions="reactions" :profile-id="profileId"
           :reaction-currently="reactionCurrently" :message-id="messageId" />
-        <p class="text-white text-sm rotate-180" style="direction: ltr;" v-html="textMessage"></p>
+        <p class="rotate-180" style="direction: ltr;" :class="memoizedClassTextMessage" v-html="memoizedTextMessage">
+        </p>
         <!-- Reply view -->
         <div v-if="replyView" class="pt-1.5 flex !text-white">
           <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
@@ -102,7 +120,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
       <span class="text-xs text-[#111827] self-end rotate-180">
         {{ dayjs(Number(latestMessageTimestamp)).format('HH.mm') }}
       </span>
-      <div class="relative flex items-center">
+      <div v-if="!messageDeleted" class="relative flex items-center">
         <i
           :class="`pi pi-check !text-[11px] ${status === 'UNREAD' ? 'text-gray-400' : 'text-[#2e74e8]'} rotate-180`"></i>
         <i

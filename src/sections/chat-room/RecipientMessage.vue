@@ -23,6 +23,27 @@ const { activeMessageMenu, chatRoom, goingScrollToMessageId } = storeToRefs(chat
 
 const boxRef = ref(null)
 
+const messageDeleted = computed(() => {
+  if (!isDeleted || isDeleted?.length === 0) {
+    return null
+  }
+  const dataCurrently = isDeleted.find(msg => msg?.senderUserId !== profileId)
+  if (!dataCurrently !== undefined) {
+    return dataCurrently
+  }
+  return dataCurrently.deletionType === 'everyone' || dataCurrently.deletionType === 'permanent'
+})
+
+const memoizedTextMessage = computed(() => {
+  if (!messageDeleted.value) return textMessage
+  return 'Message has been deleted.'
+})
+
+const memoizedClassTextMessage = computed(() => {
+  if (!messageDeleted.value) return 'text-sm'
+  return 'text-[#888] italic text-xs'
+})
+
 const fromMessageUsername = computed(() => {
   if (!replyView) return
   if (replyView.senderUserId === profileId) {
@@ -84,7 +105,8 @@ onMounted(() => {
         <!-- Reaction Info -->
         <ReactionInfo v-if="reactions?.length > 0" :reactions="reactions" :profile-id="profileId"
           :reaction-currently="reactionCurrently" :message-id="messageId" />
-        <p class="text-sm text-start rotate-180" style="direction: ltr;" v-html="textMessage"></p>
+        <p class="text-start rotate-180" style="direction: ltr;" :class="memoizedClassTextMessage"
+          v-html="memoizedTextMessage"></p>
         <!-- Reply view -->
         <div v-if="replyView" class="pt-1.5 flex !text-black">
           <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
