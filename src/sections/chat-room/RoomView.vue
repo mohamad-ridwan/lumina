@@ -783,7 +783,7 @@ onUnmounted(() => {
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
-    <div v-memo="[currentStickyHeader.text]" v-if="currentStickyHeader.text"
+    <div v-if="currentStickyHeader.text"
       :class="`absolute top-22 z-10 rotate-180 flex justify-center items-center left-2 right-[0.8rem] ${showDateHeader ? 'opacity-100' : 'opacity-0'} transition-all`">
       <DateHeader :date="currentStickyHeader.text" />
     </div>
