@@ -724,6 +724,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           if (toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
             isEmptyChatRoomDB = false
           }
+          loadingMessages.value = false
         } else if (!loadingGetChatRoom) {
           // jalankan jika sudah mengambil data dari indexedDB
           // dan check setiap streams di state
@@ -750,9 +751,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             triggerRef(chatRoomMessages)
           }
           bufferMessages = []
+          loadingMessages.value = false
         }
-
-        loadingMessages.value = false
 
         streamsChatRoomWorker.value.postMessage({
           chatRoomId: itemCurrently?.chatRoomId,
@@ -800,7 +800,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
     chatRoomEventSource.value.addEventListener('error', (e) => {
       // console.error('Streaming error:', e)
-      loadingMessages.value = false
+      // loadingMessages.value = false
       bufferMessages = []
       isStreamsDone = true
     })
