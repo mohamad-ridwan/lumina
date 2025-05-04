@@ -18,7 +18,7 @@ const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { resetReplyMessageData } = chatRoomStore
-const { chatRoom, replyMessageData } = storeToRefs(chatRoomStore)
+const { chatRoom, replyMessageData, chatRoomMessages } = storeToRefs(chatRoomStore)
 
 // state
 const initialValues = ref({
@@ -35,6 +35,11 @@ const memoizedChatId = computed(() => chatRoom.value.chatId);
 const formattedText = computed(() => {
   return initialValues.value.textMessage.replace(/\n/g, '<br>');
 });
+const isNeedHeaderDate = computed(() => {
+  if (chatRoomMessages.value.length === 0) {
+    return true
+  }
+})
 
 const onFormSubmit = async () => {
   if (initialValues.value.textMessage.trim()) {
