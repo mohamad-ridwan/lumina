@@ -301,7 +301,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       }
     })
     mainMessagesEventSource.value.addEventListener('error', (event) => {
-      console.error('Streaming error:', e)
+      console.error('Streaming error:', event)
       resetMainMessagesWorker()
       resetMainMessagesEventSource()
     })
