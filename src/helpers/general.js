@@ -56,9 +56,39 @@ const deviceDetector = () => {
   }
 }
 
+function messageMatching(streams, indexedDBData) {
+  const streamsMessageIdsSet = new Set(streams.map((stream) => stream.messageId))
+
+  // 1. Filter item yang messageId nya ada di streams
+  let finalMatchedMessages = indexedDBData.filter((dbItem) =>
+    streamsMessageIdsSet.has(dbItem.messageId),
+  )
+
+  // 2. Pisah header dan non-header dulu
+  const headers = finalMatchedMessages.filter((item) => item.isHeader)
+  const nonHeaders = finalMatchedMessages.filter((item) => !item.isHeader)
+
+  // 3. Filter header: hapus jika tidak ada 1 pun non-header yang memiliki timeId yang sama
+  const validHeaders = headers.filter((header) => {
+    const headerTimeId = header.timeId
+
+    const hasMatch = nonHeaders.some((item) => {
+      return item.timeId === headerTimeId
+    })
+
+    return hasMatch
+  })
+
+  // Gabung kembali non-header + header yang valid
+  const result = [...nonHeaders, ...validHeaders]
+
+  return result.sort(sortByTimestamp)
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
   sortByTimestamp,
   deviceDetector,
+  messageMatching,
 }

@@ -50,7 +50,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const triggerScrollToMessageIdIsDone = ref(false)
   const confirmDeleteMessage = ref(null)
 
-  const { createNewMessages, sortByTimestamp, removeDuplicates } = general
+  const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching } = general
   const { deleteChatRoomById } = chatRoomDB
 
   const toast = useToast()
@@ -540,8 +540,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   }
 
   function resetChatRoomEventSource() {
-    chatRoomEventSource.value.close()
-    chatRoomEventSource.value = null
+    if (chatRoomEventSource.value) {
+      chatRoomEventSource.value.close()
+      chatRoomEventSource.value = null
+    }
   }
 
   function handleSetGetChatRoomWorker() {
@@ -566,10 +568,38 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
   }
 
+  const timeOutDoneStreams = () => {
+    setTimeout(() => {
+      loadingMessages.value = false
+      handleStopStreamsChatRoomWorker()
+      resetChatRoomEventSource()
+      handleStopGetChatRoomWorker()
+    }, 30000)
+  }
+
+  const timeOutErrorStreams = () => {
+    setTimeout(() => {
+      loadingMessages.value = false
+      // resetChatRoomEventSource()
+      // handleStopGetChatRoomWorker()
+      // handleStopStreamsChatRoomWorker()
+    }, 30000)
+  }
+
+  const timeOutOnmessageStreamsChatRoomWorker = () => {
+    setTimeout(() => {
+      handleStopGetChatRoomWorker()
+      handleStopStreamsChatRoomWorker()
+      resetChatRoomEventSource()
+    }, 30000)
+  }
+
   async function handleClickUser(userId, item, isNewChatRoom) {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
+    clearTimeout(timeOutOnmessageStreamsChatRoomWorker)
+    clearTimeout(timeOutDoneStreams)
     handleResetConfirmDeleteMessage()
     handleResetActiveSelectReactions()
     goingScrollToMessageId.value = null
@@ -625,10 +655,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
     let loadingGetChatRoom = true
     let bufferMessages = []
+    let totalMessages = []
     let isEmptyChatRoomDB = null
     let totalMessagesLength = 0
     let totalStreamsIndexedDB = 0
     let isStreamsDone = false
+    let keyLoopStreams = 0
 
     Object.assign(chatRoom.value, {
       chatId: itemCurrently.chatId,
@@ -642,11 +674,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
     chatRoomEventSource.value.onmessage = async (event) => {
       const message = JSON.parse(event.data)
+      totalMessages.push(...message)
       if (message?.length) {
         if (chatRoomMessages.value.length === 0 && getChatRoomWorker.value) {
           getChatRoomWorker.value.postMessage({
             chatRoomId: itemCurrently.chatRoomId,
             profileId: userId,
+            streams: message,
           })
         }
 
@@ -691,7 +725,20 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           }
         } else if (!loadingGetChatRoom) {
           if (toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE) {
-            chatRoomMessages.value = createNewMessages([...chatRoomMessages.value, ...message])
+            // chatRoomMessages.value = createNewMessages([...chatRoomMessages.value, ...message])
+            chatRoomMessages.value = createNewMessages(
+              messageMatching([...totalMessages, toRaw(chatRoomMessages.value)], message),
+            )
+            triggerRef(chatRoomMessages)
+          } else {
+            // untuk memastikan kalau ada data yang baru di chatRoomMessages jadi tidak di remove
+            // untuk memastikan setiap streams masuk ke state
+            // dan jika ada item di indexedDB yang tidak ada di streams itu dapat dihapus
+            chatRoomMessages.value = messageMatching(
+              removeDuplicates([...totalMessages, ...toRaw(chatRoomMessages.value)], 'messageId'),
+              toRaw(chatRoomMessages.value),
+            )
+            chatRoomMessages.value = [...chatRoomMessages.value]
             triggerRef(chatRoomMessages)
           }
           bufferMessages = []
@@ -706,14 +753,20 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         streamsChatRoomWorker.value.onmessage = (event) => {
           totalStreamsIndexedDB += event.data
 
-          if (isStreamsDone && totalStreamsIndexedDB === totalMessagesLength) {
-            setTimeout(() => {
-              handleStopStreamsChatRoomWorker()
-            }, 1000)
+          if (totalStreamsIndexedDB >= ITEMS_PER_PAGE) {
+            totalMessages = []
+            isStreamsDone = true
+
+            timeOutOnmessageStreamsChatRoomWorker()
+          } else if (isStreamsDone && totalStreamsIndexedDB === totalMessagesLength) {
+            timeOutDoneStreams()
+            totalMessages = []
+            isStreamsDone = true
           }
         }
 
         totalMessagesLength += message.length
+        keyLoopStreams += 1
       } else {
         resetChatRoomEventSource()
         handleStopStreamsChatRoomWorker()
@@ -724,22 +777,19 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     chatRoomEventSource.value.addEventListener('done', (event) => {
       const message = JSON.parse(event.data)
       if (message?.length === 0 || message?.totalMessages === 0) {
+        loadingMessages.value = false
         deleteChatRoomById(itemCurrently.chatRoomId)
         handleStopStreamsChatRoomWorker()
+        resetChatRoomEventSource()
+        handleStopGetChatRoomWorker()
       }
-      resetChatRoomEventSource()
-      handleStopGetChatRoomWorker()
       // handleStopStreamsChatRoomWorker()
-      loadingMessages.value = false
       bufferMessages = []
       isStreamsDone = true
     })
 
     chatRoomEventSource.value.addEventListener('error', (e) => {
-      console.error('Streaming error:', e)
-      resetChatRoomEventSource()
-      handleStopGetChatRoomWorker()
-      handleStopStreamsChatRoomWorker()
+      // console.error('Streaming error:', e)
       loadingMessages.value = false
       bufferMessages = []
       isStreamsDone = true

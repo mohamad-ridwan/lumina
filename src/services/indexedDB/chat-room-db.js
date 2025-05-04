@@ -1,7 +1,7 @@
 import { general } from '@/helpers/general'
 import { ITEMS_PER_PAGE } from '@/utils/pagination'
 
-const { sortByTimestamp, removeDuplicates } = general
+const { sortByTimestamp, removeDuplicates, messageMatching } = general
 
 async function openChatRoomDB() {
   return await new Promise((resolve, reject) => {
@@ -46,7 +46,26 @@ const updateReadMessageDB = async (chatRoomId, messageId) => {
   await tx.done
 }
 
-const chatRoomDBCurrently = async ({ chatRoomId, profileId }) => {
+const handleDeleteMessageDB = async (chatRoomId, messageId) => {
+  const db = await openChatRoomDB()
+  const tx = db.transaction('chat-room', 'readwrite')
+  const store = tx.objectStore('chat-room')
+
+  const getRequest = store.get(chatRoomId)
+  const targetChat = await new Promise((resolve, reject) => {
+    getRequest.onsuccess = () => resolve(getRequest.result)
+    getRequest.onerror = () => reject(getRequest.error)
+  })
+
+  if (targetChat) {
+    targetChat.messages = targetChat.messages.filter((message) => message?.messageId !== messageId)
+    store.put(targetChat)
+  }
+
+  await tx.done
+}
+
+const chatRoomDBCurrently = async ({ chatRoomId, profileId, streams }) => {
   const db = await openChatRoomDB()
   const tx = db.transaction('chat-room', 'readwrite')
   const store = tx.objectStore('chat-room')
@@ -77,7 +96,14 @@ const chatRoomDBCurrently = async ({ chatRoomId, profileId }) => {
     })
     const currentMessages = newMessages.filter((item) => item?.messageId).sort(sortByTimestamp)
 
-    return currentMessages.slice(0, ITEMS_PER_PAGE)
+    let result = []
+    if (streams) {
+      result = messageMatching(streams, currentMessages)
+    } else {
+      result = currentMessages
+    }
+
+    return result.slice(0, ITEMS_PER_PAGE)
   }
   return []
 }
@@ -188,4 +214,5 @@ export const chatRoomDB = {
   addMessageToChatRoom,
   addStreamsMessageToChatRoom,
   deleteChatRoomById,
+  handleDeleteMessageDB,
 }

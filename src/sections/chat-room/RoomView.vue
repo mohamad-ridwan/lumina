@@ -30,7 +30,7 @@ dayjs.extend(isYesterday);
 dayjs.extend(weekOfYear);
 dayjs.extend(weekday);
 
-const { sortByTimestamp, removeDuplicates } = general
+const { sortByTimestamp, removeDuplicates, messageMatching } = general
 
 // store
 // profile store
@@ -166,7 +166,7 @@ const profileId = computed(() => profile.value?.data?.id ?? null)
 
 const scrollToBottom = () => {
   if (scroller.value) {
-    handleGetMainMessagesOnScrollBottom(profileId)
+    handleGetMainMessagesOnScrollBottom(profileId.value)
   }
 };
 function handleBeforeUnload() {
@@ -365,25 +365,34 @@ const handleUpdateDeleteMessage = async (newData) => {
   const data = toRaw(newData)
   const messageIndex = toRaw(chatRoomMessages.value).findIndex(message => message.messageId === data.messageId)
   if (messageIndex !== -1 && data?.isDeleted && data?.isDeleted?.length) {
-    paginationMessagesComparisonWorker.value.postMessage({
-      chatRoomId: memoizedChatRoomId.value,
-      chatId: memoizedChatId.value,
-      streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
-    })
-    const messageData = chatRoomMessages.value[messageIndex]
+    // const messageData = chatRoomMessages.value[messageIndex]
     // const isDeletedUserIdCurrently = data.isDeleted.find(msg => msg.senderUserId === profileId.value)
     let isDeletedMessage = false
     data.isDeleted.forEach(msg => {
-      if (messageData.senderUserId === profileId.value && msg.senderUserId === profileId.value && (msg.deletionType === 'me' || msg.deletionType === 'permanent')) {
+      if (msg.senderUserId === profileId.value && (msg.deletionType === 'me' || msg.deletionType === 'permanent')) {
         isDeletedMessage = true
       }
     })
     if (isDeletedMessage) {
       chatRoomMessages.value = [...chatRoomMessages.value.filter(message => message.messageId !== data.messageId)]
+      chatRoomMessages.value = messageMatching(chatRoomMessages.value, chatRoomMessages.value)
+      // save to indexedDB
+      paginationMessagesComparisonWorker.value.postMessage({
+        chatRoomId: chatRoom.value?.chatRoomId,
+        messageId: data.messageId,
+        type: 'delete-message',
+      })
     } else {
       // new reference of nested field
       // because it is would triggering render
       chatRoomMessages.value[messageIndex].isDeleted = [...data.isDeleted]
+
+      // update message to indexedDB
+      paginationMessagesComparisonWorker.value.postMessage({
+        chatRoomId: memoizedChatRoomId.value,
+        chatId: memoizedChatId.value,
+        streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
+      })
     }
     triggerRef(chatRoomMessages)
     await nextTick()
@@ -665,7 +674,7 @@ const handleScroll = () => {
   previousScrollTop = scrollTop
   previousScrollHeight = el.scrollHeight
 
-  handleGetMessagesPagination()
+  // handleGetMessagesPagination()
 
   if (!loadingMessagesPagination.value && scrollTop > SCROLL_THRESHOLD) {
     isStartIndex.value = false
