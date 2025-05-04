@@ -695,13 +695,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
                 'messageId',
               ).sort(sortByTimestamp)
               triggerRef(chatRoomMessages)
+              loadingMessages.value = false
             }
             loadingGetChatRoom = false
             nextTick(async () => {
               await nextTick()
               handleStopGetChatRoomWorker()
             })
-            loadingMessages.value = false
           }
         }
 
@@ -725,12 +725,15 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             isEmptyChatRoomDB = false
           }
         } else if (!loadingGetChatRoom) {
+          // jalankan jika sudah mengambil data dari indexedDB
+          // dan check setiap streams di state
+          // apakah ada data yang terbaru di streams dan replace
           if (toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE) {
             // chatRoomMessages.value = createNewMessages([...chatRoomMessages.value, ...message])
             chatRoomMessages.value = createNewMessages(
               messageMatching(
                 [...totalMessages, ...toRaw(chatRoomMessages.value)],
-                toRaw(chatRoomMessages.value),
+                [...totalMessages, ...toRaw(chatRoomMessages.value)],
               ),
             )
             chatRoomMessages.value = [...chatRoomMessages.value]
@@ -748,6 +751,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           }
           bufferMessages = []
         }
+
+        loadingMessages.value = false
 
         streamsChatRoomWorker.value.postMessage({
           chatRoomId: itemCurrently?.chatRoomId,

@@ -432,7 +432,7 @@ onBeforeUnmount(() => {
     socket.emit('leaveRoom', {
       chatRoomId: memoizedChatRoomId.value,
       chatId: memoizedChatId.value,
-      userId: profile?.data.id
+      userId: profile.value?.data.id
     })
   }
 })
