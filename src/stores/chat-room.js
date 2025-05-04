@@ -410,6 +410,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         chatId: chatRoom.value?.chatId,
       }
       delete newData.eventType
+      delete newData.latestMessage
 
       // save to indexedDB
       addNewMessageWorker.value.postMessage({
@@ -574,7 +575,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       handleStopStreamsChatRoomWorker()
       resetChatRoomEventSource()
       handleStopGetChatRoomWorker()
-    }, 30000)
+    }, 10000)
   }
 
   const timeOutErrorStreams = () => {
@@ -583,7 +584,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       // resetChatRoomEventSource()
       // handleStopGetChatRoomWorker()
       // handleStopStreamsChatRoomWorker()
-    }, 30000)
+    }, 10000)
   }
 
   const timeOutOnmessageStreamsChatRoomWorker = () => {
@@ -591,7 +592,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       handleStopGetChatRoomWorker()
       handleStopStreamsChatRoomWorker()
       resetChatRoomEventSource()
-    }, 30000)
+    }, 10000)
   }
 
   async function handleClickUser(userId, item, isNewChatRoom) {

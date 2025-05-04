@@ -28,8 +28,8 @@ const messageDeleted = computed(() => {
     return null
   }
   const dataCurrently = isDeleted.find(msg => msg?.senderUserId !== profileId)
-  if (!dataCurrently !== undefined) {
-    return dataCurrently
+  if (dataCurrently === undefined) {
+    return null
   }
   return dataCurrently.deletionType === 'everyone' || dataCurrently.deletionType === 'permanent'
 })

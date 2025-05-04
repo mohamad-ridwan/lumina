@@ -4,7 +4,7 @@ import FooterChatRoom from './footer/FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, onUpdated, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -88,23 +88,6 @@ const typingBubbleEl = ref(null)
 const newMessageUpdate = ref(null)
 
 // logic
-// const formatDate = (date) => {
-//   const today = dayjs().startOf('day');
-//   const yesterday = dayjs().subtract(1, 'day').startOf('day');
-//   const now = dayjs();
-//   const dateToCheck = dayjs(date);
-
-//   if (dateToCheck.isSame(today, 'day')) {
-//     return 'Today';
-//   } else if (dateToCheck.isSame(yesterday, 'day')) {
-//     return 'Yesterday';
-//   } else if (dateToCheck.isSame(now, 'week') && !dateToCheck.isSame(today, 'day') && !dateToCheck.isSame(yesterday, 'day')) {
-//     return dateToCheck.format('dddd');
-//   } else {
-//     return dateToCheck.format('DD MMMM YYYY');
-//   }
-// };
-
 const memoizedChatRoomId = computed(() => {
   return chatRoom.value?.chatRoomId
 })

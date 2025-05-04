@@ -8,8 +8,22 @@ import { storeToRefs } from 'pinia';
 import { Button, Textarea } from 'primevue';
 import { computed, onBeforeUnmount, onUnmounted, ref, shallowRef, toRaw, watch } from 'vue';
 import ReplyView from './ReplyView.vue';
+import { general } from '@/helpers/general';
+import dayjs from 'dayjs'
+import 'dayjs/locale/id'
+import isToday from 'dayjs/plugin/isToday'
+import isYesterday from 'dayjs/plugin/isYesterday'
+import weekOfYear from 'dayjs/plugin/weekOfYear'
+import weekday from 'dayjs/plugin/weekday'
+
+dayjs.extend(isToday)
+dayjs.extend(isYesterday)
+dayjs.extend(weekOfYear)
+dayjs.extend(weekday)
 
 const emit = defineEmits(['triggerSendMessage'])
+
+const { formatDate } = general
 
 // store
 // profile store
@@ -39,6 +53,14 @@ const isNeedHeaderDate = computed(() => {
   if (chatRoomMessages.value.length === 0) {
     return true
   }
+  const headerCurrently = chatRoomMessages.value.find(message => {
+    if (message?.isHeader) {
+      const itemDate = dayjs(Number(message?.latestMessageTimestamp)).startOf('day')
+      return formatDate(itemDate) === 'Today'
+    }
+    return false
+  })
+  return headerCurrently ? false : true
 })
 
 const onFormSubmit = async () => {
@@ -59,7 +81,9 @@ const onFormSubmit = async () => {
       chatRoomId: memoizedChatRoomId.value,
       chatId: memoizedChatId.value,
       latestMessage,
-      eventType: 'send-message'
+      eventType: 'send-message',
+      isNeedHeaderDate: isNeedHeaderDate.value,
+      recipientProfileId: chatRoom.value?.userIds?.find(id => id !== profile.value?.data?.id)
     })
     initialValues.value.textMessage = ''
     resetReplyMessageData()
