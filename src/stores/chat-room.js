@@ -728,8 +728,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           if (toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE) {
             // chatRoomMessages.value = createNewMessages([...chatRoomMessages.value, ...message])
             chatRoomMessages.value = createNewMessages(
-              messageMatching([...totalMessages, toRaw(chatRoomMessages.value)], message),
+              messageMatching(
+                [...totalMessages, ...toRaw(chatRoomMessages.value)],
+                toRaw(chatRoomMessages.value),
+              ),
             )
+            chatRoomMessages.value = [...chatRoomMessages.value]
             triggerRef(chatRoomMessages)
           } else {
             // untuk memastikan kalau ada data yang baru di chatRoomMessages jadi tidak di remove
