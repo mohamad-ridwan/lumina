@@ -542,7 +542,8 @@ const handleGetMessagesPagination = async () => {
     chatRoomId: memoizedChatRoomId.value,
     chatId: memoizedChatId.value,
     messageId: direction === 'prev' ? chatRoomMessages.value[0]?.messageId : chatRoomMessages.value[chatRoomMessages.value.length - 1]?.messageId,
-    direction
+    direction,
+    profileId: profileId.value
   })
 
   let newData = []
