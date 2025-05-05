@@ -88,8 +88,8 @@ watch(markMessageAsReadSocketUpdate, (data) => {
 
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2" @click.stop="closeMenu">
-    <MessageReaction wrapper-class="justify-end" :message-id="messageId" :profile-id="profileId"
-      :reaction-currently="reactionCurrently">
+    <MessageReaction :message-deleted="!messageDeleted" wrapper-class="justify-end" :message-id="messageId"
+      :profile-id="profileId" :reaction-currently="reactionCurrently">
       <div ref="boxRef"
         class="group bg-[#2e74e8] rounded-tr-2xl rounded-br-2xl rounded-bl-2xl p-2 max-w-[65%] self-end flex flex-col relative"
         style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
@@ -99,7 +99,8 @@ watch(markMessageAsReadSocketUpdate, (data) => {
         <!-- Button muncul saat hover -->
         <div
           :class="`absolute left-0 bottom-[2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
-          <MessageActionMenu :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId"
+          <MessageActionMenu :message-deleted="messageDeleted"
+            :message="{ textMessage, messageId, messageType, senderUserId }" :profile-id="profileId"
             :is-deleted="isDeleted" />
         </div>
         <!-- Reaction Info -->

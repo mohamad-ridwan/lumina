@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, onUnmounted, computed, onBeforeMount } from 'vue'
+import { ref, defineProps, onUnmounted, computed, onBeforeMount, shallowRef, triggerRef, watch } from 'vue'
 import { Button, Menu } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
@@ -17,19 +17,12 @@ const props = defineProps({
   message: Object,
   profileId: String,
   isDeleted: Array,
+  messageDeleted: Boolean
 })
 
 const menu = ref(null)
 const deviceCurrently = ref(null)
-
-const memoizedMenuStyle = computed(() => {
-  if (deviceCurrently.value === 'mobile') {
-    return `margin-bottom: 40px; direction: ltr; rotate: 180deg; display: block !important; ${props.message.senderUserId === props.profileId ? '' : 'right: 0px;'}`
-  }
-  return
-})
-
-const items = [
+const items = shallowRef([
   {
     label: 'Reply',
     command: () => {
@@ -49,7 +42,21 @@ const items = [
       })
     }
   },
-]
+])
+
+const memoizedMenuStyle = computed(() => {
+  if (deviceCurrently.value === 'mobile') {
+    return `margin-bottom: 40px; direction: ltr; rotate: 180deg; display: block !important; ${props.message.senderUserId === props.profileId ? '' : 'right: 0px;'}`
+  }
+  return
+})
+
+watch(props, (props) => {
+  if (props.messageDeleted) {
+    items.value = items.value.filter(menu => menu.label !== 'Reply')
+    triggerRef(items)
+  }
+}, { immediate: true })
 
 const toggle = (event) => {
   menu.value.toggle(event)

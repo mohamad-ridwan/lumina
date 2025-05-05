@@ -7,7 +7,7 @@ import { computed, ref } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 
-const { wrapperClass, messageId, profileId, reactionCurrently } = defineProps(['wrapperClass', 'messageId', 'profileId', 'reactionCurrently'])
+const { wrapperClass, messageId, profileId, reactionCurrently, messageDeleted } = defineProps(['wrapperClass', 'messageId', 'profileId', 'reactionCurrently', 'messageDeleted'])
 
 // store
 const chatRoomStore = useChatRoomStore()
@@ -140,7 +140,7 @@ const onTouchStart = async () => {
 <template>
   <div :class="`group/emoji flex w-full items-center relative gap-1.5 ${wrapperClass}`" @click="onTouchStart">
     <!-- Tombol emoji -->
-    <Button icon="pi pi-face-smile" text rounded size="small"
+    <Button v-if="messageDeleted" icon="pi pi-face-smile" text rounded size="small"
       :class="`!w-7 !h-7 items-center justify-center absolute ${isActiveMenu ? 'opacity-100' : 'opacity-0'} group-hover/emoji:opacity-100 !bg-[#A1A1A1] shadow border rotate-180 !text-white`"
       @click.stop="toggleEmojiMenu" ref="emojiButtonRef" />
 
