@@ -27,16 +27,33 @@ export const fetchChatRoom = async (req) => {
   return result
 }
 
-export const fetchMessagesPagination = async ({ chatId, chatRoomId, messageId, direction }) => {
-  const result = await fetchData(
-    `${clientUrl}/chat-room/messages?chatId=${chatId}&chatRoomId=${chatRoomId}&messageId=${messageId}&direction=${direction}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+export const fetchMessagesPagination = async ({
+  chatId,
+  chatRoomId,
+  messageId,
+  direction,
+  isFirstMessage,
+  profileId,
+}) => {
+  let query = `?chatId=${chatId}&chatRoomId=${chatRoomId}`
+  if (messageId) {
+    query += `&messageId=${messageId}`
+  }
+  if (direction) {
+    query += `&direction=${direction}`
+  }
+  if (isFirstMessage) {
+    query += `&isFirstMessage=${isFirstMessage}`
+  }
+  if (profileId) {
+    query += `&profileId=${profileId}`
+  }
+  const result = await fetchData(`${clientUrl}/chat-room/messages${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  )
+  })
 
   return result
 }

@@ -1,4 +1,8 @@
-import { fetchChatRoom, fetchMessagesAround } from '@/services/api/chat-room'
+import {
+  fetchChatRoom,
+  fetchMessagesAround,
+  fetchMessagesPagination,
+} from '@/services/api/chat-room'
 import { general } from '@/helpers/general'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
@@ -630,10 +634,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     resetMainMessagesWorker()
 
     handleStopGetChatRoomWorker()
-    handleSetGetChatRoomWorker()
+    // handleSetGetChatRoomWorker()
 
     handleStopStreamsChatRoomWorker()
-    handleSetStreamsChatRoomWorker()
+    // handleSetStreamsChatRoomWorker()
 
     let itemCurrently = {}
     if (isNewChatRoom) {
@@ -678,140 +682,153 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       userIds: itemCurrently.userIds.slice(),
     })
 
-    chatRoomEventSource.value = new EventSource(
-      `${clientUrl}/chat-room/stream?chatId=${itemCurrently?.chatId}&chatRoomId=${itemCurrently?.chatRoomId}&profileId=${userId}`,
-    )
-
-    chatRoomEventSource.value.onmessage = async (event) => {
-      const message = JSON.parse(event.data)
-      totalMessages.push(...message)
-      if (message?.length) {
-        if (chatRoomMessages.value.length === 0 && getChatRoomWorker.value) {
-          getChatRoomWorker.value.postMessage({
-            chatRoomId: itemCurrently.chatRoomId,
-            profileId: userId,
-            streams: message,
-          })
-        }
-
-        if (getChatRoomWorker.value) {
-          getChatRoomWorker.value.onmessage = (event) => {
-            if (event.data.length === 0) {
-              isEmptyChatRoomDB = true
-            } else {
-              chatRoomMessages.value = removeDuplicates(
-                [...chatRoomMessages.value, ...event.data],
-                'messageId',
-              ).sort(sortByTimestamp)
-              triggerRef(chatRoomMessages)
-              loadingMessages.value = false
-            }
-            loadingGetChatRoom = false
-            nextTick(async () => {
-              await nextTick()
-              handleStopGetChatRoomWorker()
-            })
-          }
-        }
-
-        if (loadingGetChatRoom) {
-          // save current load streams to buffer first
-          if (bufferMessages.length < ITEMS_PER_PAGE) {
-            bufferMessages.push(...message)
-          }
-        } else if (
-          !loadingGetChatRoom &&
-          isEmptyChatRoomDB &&
-          toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE
-        ) {
-          chatRoomMessages.value = createNewMessages([
-            ...chatRoomMessages.value,
-            ...bufferMessages,
-            ...message,
-          ])
-          triggerRef(chatRoomMessages)
-          if (toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
-            isEmptyChatRoomDB = false
-          }
-          loadingMessages.value = false
-        } else if (!loadingGetChatRoom) {
-          // jalankan jika sudah mengambil data dari indexedDB
-          // dan check setiap streams di state
-          // apakah ada data yang terbaru di streams dan replace
-          if (toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE) {
-            // chatRoomMessages.value = createNewMessages([...chatRoomMessages.value, ...message])
-            chatRoomMessages.value = createNewMessages(
-              messageMatching(
-                [...totalMessages, ...toRaw(chatRoomMessages.value)],
-                [...totalMessages, ...toRaw(chatRoomMessages.value)],
-              ),
-            )
-            chatRoomMessages.value = [...chatRoomMessages.value]
-            triggerRef(chatRoomMessages)
-          } else {
-            // untuk memastikan kalau ada data yang baru di chatRoomMessages jadi tidak di remove
-            // untuk memastikan setiap streams masuk ke state
-            // dan jika ada item di indexedDB yang tidak ada di streams itu dapat dihapus
-            chatRoomMessages.value = messageMatching(
-              removeDuplicates([...totalMessages, ...toRaw(chatRoomMessages.value)], 'messageId'),
-              toRaw(chatRoomMessages.value),
-            )
-            chatRoomMessages.value = [...chatRoomMessages.value]
-            triggerRef(chatRoomMessages)
-          }
-          bufferMessages = []
-          loadingMessages.value = false
-        }
-
-        setDataStreamsToIndexedDB(message)
-
-        // streamsChatRoomWorker.value.postMessage({
-        //   chatRoomId: itemCurrently?.chatRoomId,
-        //   chatId: itemCurrently?.chatId,
-        //   streams: message,
-        // })
-
-        // streamsChatRoomWorker.value.onmessage = (event) => {
-        //   totalStreamsIndexedDB += event.data
-
-        //   if (totalStreamsIndexedDB >= ITEMS_PER_PAGE) {
-        //     totalMessages = []
-        //     isStreamsDone = true
-
-        //     timeOutOnmessageStreamsChatRoomWorker()
-        //   } else if (isStreamsDone && totalStreamsIndexedDB === totalMessagesLength) {
-        //     timeOutDoneStreams()
-        //     totalMessages = []
-        //     isStreamsDone = true
-        //   }
-        // }
-        keyLoopStreams += 1
-      } else {
-        resetChatRoomEventSource()
-        handleStopStreamsChatRoomWorker()
-        handleStopGetChatRoomWorker()
-      }
+    const messages = await fetchMessagesPagination({
+      chatId: itemCurrently.chatId,
+      chatRoomId: itemCurrently.chatRoomId,
+      isFirstMessage: true,
+      profileId: userId,
+    })
+    if (messages?.messages) {
+      chatRoomMessages.value = [...chatRoomMessages.value, ...messages.messages]
+      triggerRef(chatRoomMessages)
     }
 
-    chatRoomEventSource.value.addEventListener('done', (event) => {
-      const message = JSON.parse(event.data)
-      if (message?.length === 0 || message?.totalMessages === 0) {
-        loadingMessages.value = false
-        deleteChatRoomById(itemCurrently.chatRoomId)
-        handleStopStreamsChatRoomWorker()
-        resetChatRoomEventSource()
-        handleStopGetChatRoomWorker()
-      }
-      totalStreamsLength.value = message?.totalMessages
-      resetChatRoomEventSource()
-      bufferMessages = []
-    })
+    loadingMessages.value = false
 
-    chatRoomEventSource.value.addEventListener('error', (e) => {
-      // console.error('Streaming error:', e)
-      // loadingMessages.value = false
-      bufferMessages = []
-    })
+    // chatRoomEventSource.value = new EventSource(
+    //   `${clientUrl}/chat-room/stream?chatId=${itemCurrently?.chatId}&chatRoomId=${itemCurrently?.chatRoomId}&profileId=${userId}`,
+    // )
+
+    // chatRoomEventSource.value.onmessage = async (event) => {
+    //   const message = JSON.parse(event.data)
+    //   totalMessages.push(...message)
+    //   if (message?.length) {
+    //     if (chatRoomMessages.value.length === 0 && getChatRoomWorker.value) {
+    //       getChatRoomWorker.value.postMessage({
+    //         chatRoomId: itemCurrently.chatRoomId,
+    //         profileId: userId,
+    //         streams: message,
+    //       })
+    //     }
+
+    //     if (getChatRoomWorker.value) {
+    //       getChatRoomWorker.value.onmessage = (event) => {
+    //         if (event.data.length === 0) {
+    //           isEmptyChatRoomDB = true
+    //         } else {
+    //           chatRoomMessages.value = removeDuplicates(
+    //             [...chatRoomMessages.value, ...event.data],
+    //             'messageId',
+    //           ).sort(sortByTimestamp)
+    //           triggerRef(chatRoomMessages)
+    //           loadingMessages.value = false
+    //         }
+    //         loadingGetChatRoom = false
+    //         nextTick(async () => {
+    //           await nextTick()
+    //           handleStopGetChatRoomWorker()
+    //         })
+    //       }
+    //     }
+
+    //     if (loadingGetChatRoom) {
+    //       // save current load streams to buffer first
+    //       if (bufferMessages.length < ITEMS_PER_PAGE) {
+    //         bufferMessages.push(...message)
+    //       }
+    //     } else if (
+    //       !loadingGetChatRoom &&
+    //       isEmptyChatRoomDB &&
+    //       toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE
+    //     ) {
+    //       chatRoomMessages.value = createNewMessages([
+    //         ...chatRoomMessages.value,
+    //         ...bufferMessages,
+    //         ...message,
+    //       ])
+    //       triggerRef(chatRoomMessages)
+    //       if (toRaw(chatRoomMessages.value).length >= ITEMS_PER_PAGE) {
+    //         isEmptyChatRoomDB = false
+    //       }
+    //       loadingMessages.value = false
+    //     } else if (!loadingGetChatRoom) {
+    //       // jalankan jika sudah mengambil data dari indexedDB
+    //       // dan check setiap streams di state
+    //       // apakah ada data yang terbaru di streams dan replace
+    //       if (toRaw(chatRoomMessages.value).length < ITEMS_PER_PAGE) {
+    //         // chatRoomMessages.value = createNewMessages([...chatRoomMessages.value, ...message])
+    //         chatRoomMessages.value = createNewMessages(
+    //           messageMatching(
+    //             [...totalMessages, ...toRaw(chatRoomMessages.value)],
+    //             [...totalMessages, ...toRaw(chatRoomMessages.value)],
+    //           ),
+    //         )
+    //         chatRoomMessages.value = [...chatRoomMessages.value]
+    //         triggerRef(chatRoomMessages)
+    //       } else {
+    //         // untuk memastikan kalau ada data yang baru di chatRoomMessages jadi tidak di remove
+    //         // untuk memastikan setiap streams masuk ke state
+    //         // dan jika ada item di indexedDB yang tidak ada di streams itu dapat dihapus
+    //         chatRoomMessages.value = messageMatching(
+    //           removeDuplicates([...totalMessages, ...toRaw(chatRoomMessages.value)], 'messageId'),
+    //           toRaw(chatRoomMessages.value),
+    //         )
+    //         chatRoomMessages.value = [...chatRoomMessages.value]
+    //         triggerRef(chatRoomMessages)
+    //       }
+    //       bufferMessages = []
+    //       loadingMessages.value = false
+    //     }
+
+    //     setDataStreamsToIndexedDB(message)
+
+    //     // streamsChatRoomWorker.value.postMessage({
+    //     //   chatRoomId: itemCurrently?.chatRoomId,
+    //     //   chatId: itemCurrently?.chatId,
+    //     //   streams: message,
+    //     // })
+
+    //     // streamsChatRoomWorker.value.onmessage = (event) => {
+    //     //   totalStreamsIndexedDB += event.data
+
+    //     //   if (totalStreamsIndexedDB >= ITEMS_PER_PAGE) {
+    //     //     totalMessages = []
+    //     //     isStreamsDone = true
+
+    //     //     timeOutOnmessageStreamsChatRoomWorker()
+    //     //   } else if (isStreamsDone && totalStreamsIndexedDB === totalMessagesLength) {
+    //     //     timeOutDoneStreams()
+    //     //     totalMessages = []
+    //     //     isStreamsDone = true
+    //     //   }
+    //     // }
+    //     keyLoopStreams += 1
+    //   } else {
+    //     resetChatRoomEventSource()
+    //     handleStopStreamsChatRoomWorker()
+    //     handleStopGetChatRoomWorker()
+    //   }
+    // }
+
+    // chatRoomEventSource.value.addEventListener('done', (event) => {
+    //   const message = JSON.parse(event.data)
+    //   if (message?.length === 0 || message?.totalMessages === 0) {
+    //     loadingMessages.value = false
+    //     deleteChatRoomById(itemCurrently.chatRoomId)
+    //     handleStopStreamsChatRoomWorker()
+    //     resetChatRoomEventSource()
+    //     handleStopGetChatRoomWorker()
+    //   }
+    //   totalStreamsLength.value = message?.totalMessages
+    //   resetChatRoomEventSource()
+    //   bufferMessages = []
+    // })
+
+    // chatRoomEventSource.value.addEventListener('error', (e) => {
+    //   // console.error('Streaming error:', e)
+    //   // loadingMessages.value = false
+    //   bufferMessages = []
+    // })
   }
 
   return {

@@ -643,7 +643,7 @@ const handleScroll = () => {
   previousScrollTop = scrollTop
   previousScrollHeight = el.scrollHeight
 
-  // handleGetMessagesPagination()
+  handleGetMessagesPagination()
 
   if (!loadingMessagesPagination.value && scrollTop > SCROLL_THRESHOLD) {
     isStartIndex.value = false
