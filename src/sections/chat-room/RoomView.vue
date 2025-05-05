@@ -38,7 +38,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, handleResetConfirmDeleteMessage } = chatRoomStore
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, handleResetConfirmDeleteMessage, resetTotalStreamsLength, setDataStreamsToIndexedDB } = chatRoomStore
 const {
   chatRoom,
   chatRoomMessages,
@@ -59,6 +59,10 @@ const {
   paginationMessagesComparisonWorker,
   goingScrollToMessageId,
   loadingScrollToGoMessageId,
+  updateStreamsToIndexedDB,
+  streamsChatRoomWorker,
+  totalStreamsLength,
+  totalStreamsChatRoomWorkerDones
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -752,12 +756,39 @@ watch(loadingMessagesPagination, async (isLoading) => {
   }
 })
 
+// update streams to indexedDB
+watch(updateStreamsToIndexedDB, (streams) => {
+  if (streamsChatRoomWorker.value && streams) {
+    streamsChatRoomWorker.value.postMessage({
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      streams
+    })
+  }
+}, { immediate: true })
+
+watch(streamsChatRoomWorker, (worker) => {
+  if (worker) {
+    worker.onmessage = (event) => {
+      totalStreamsChatRoomWorkerDones.value += event.data
+    }
+  }
+}, { immediate: true })
+
+watch(totalStreamsLength, (length) => {
+  if (length === totalStreamsChatRoomWorkerDones.value) {
+    handleStopStreamsChatRoomWorker()
+    totalStreamsChatRoomWorkerDones.value = 0
+  }
+})
+
 onUnmounted(() => {
   loadingMessages.value = false
   setChatRoomMessages([])
   window.removeEventListener('popstate', preventBackNavigation)
   scroller.value = null
   showScrollDownButton.value = false
+  totalStreamsChatRoomWorkerDones.value = 0
   handleStopGetChatRoomWorker()
   handleStopStreamsChatRoomWorker()
   resetAddNewMessageEventSource()
@@ -768,6 +799,8 @@ onUnmounted(() => {
   handleResetConfirmDeleteMessage()
   resetReplyMessageData()
   resetActiveMessageMenu()
+  setDataStreamsToIndexedDB(null)
+  resetTotalStreamsLength()
   handleResetActiveSelectReactions()
   goingScrollToMessageId.value = null
   loadingScrollToGoMessageId.value = false

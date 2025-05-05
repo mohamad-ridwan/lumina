@@ -49,6 +49,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const loadingScrollToGoMessageId = ref(false)
   const triggerScrollToMessageIdIsDone = ref(false)
   const confirmDeleteMessage = ref(null)
+  const updateStreamsToIndexedDB = shallowRef(null)
+  const totalStreamsLength = shallowRef(0)
+  const totalStreamsChatRoomWorkerDones = shallowRef(0)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching } = general
   const { deleteChatRoomById } = chatRoomDB
@@ -595,12 +598,21 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }, 10000)
   }
 
+  const setDataStreamsToIndexedDB = (value) => {
+    updateStreamsToIndexedDB.value = value
+  }
+
+  const resetTotalStreamsLength = () => {
+    totalStreamsLength.value = null
+  }
+
   async function handleClickUser(userId, item, isNewChatRoom) {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
-    clearTimeout(timeOutOnmessageStreamsChatRoomWorker)
-    clearTimeout(timeOutDoneStreams)
+    totalStreamsChatRoomWorkerDones.value = 0
+    setDataStreamsToIndexedDB(null)
+    resetTotalStreamsLength()
     handleResetConfirmDeleteMessage()
     handleResetActiveSelectReactions()
     goingScrollToMessageId.value = null
@@ -658,9 +670,6 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     let bufferMessages = []
     let totalMessages = []
     let isEmptyChatRoomDB = null
-    let totalMessagesLength = 0
-    let totalStreamsIndexedDB = 0
-    let isStreamsDone = false
     let keyLoopStreams = 0
 
     Object.assign(chatRoom.value, {
@@ -754,28 +763,28 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           loadingMessages.value = false
         }
 
-        streamsChatRoomWorker.value.postMessage({
-          chatRoomId: itemCurrently?.chatRoomId,
-          chatId: itemCurrently?.chatId,
-          streams: message,
-        })
+        setDataStreamsToIndexedDB(message)
 
-        streamsChatRoomWorker.value.onmessage = (event) => {
-          totalStreamsIndexedDB += event.data
+        // streamsChatRoomWorker.value.postMessage({
+        //   chatRoomId: itemCurrently?.chatRoomId,
+        //   chatId: itemCurrently?.chatId,
+        //   streams: message,
+        // })
 
-          if (totalStreamsIndexedDB >= ITEMS_PER_PAGE) {
-            totalMessages = []
-            isStreamsDone = true
+        // streamsChatRoomWorker.value.onmessage = (event) => {
+        //   totalStreamsIndexedDB += event.data
 
-            timeOutOnmessageStreamsChatRoomWorker()
-          } else if (isStreamsDone && totalStreamsIndexedDB === totalMessagesLength) {
-            timeOutDoneStreams()
-            totalMessages = []
-            isStreamsDone = true
-          }
-        }
+        //   if (totalStreamsIndexedDB >= ITEMS_PER_PAGE) {
+        //     totalMessages = []
+        //     isStreamsDone = true
 
-        totalMessagesLength += message.length
+        //     timeOutOnmessageStreamsChatRoomWorker()
+        //   } else if (isStreamsDone && totalStreamsIndexedDB === totalMessagesLength) {
+        //     timeOutDoneStreams()
+        //     totalMessages = []
+        //     isStreamsDone = true
+        //   }
+        // }
         keyLoopStreams += 1
       } else {
         resetChatRoomEventSource()
@@ -793,16 +802,15 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         resetChatRoomEventSource()
         handleStopGetChatRoomWorker()
       }
-      // handleStopStreamsChatRoomWorker()
+      totalStreamsLength.value = message?.totalMessages
+      resetChatRoomEventSource()
       bufferMessages = []
-      isStreamsDone = true
     })
 
     chatRoomEventSource.value.addEventListener('error', (e) => {
       // console.error('Streaming error:', e)
       // loadingMessages.value = false
       bufferMessages = []
-      isStreamsDone = true
     })
   }
 
@@ -829,6 +837,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     loadingScrollToGoMessageId,
     activeSelectReactions,
     confirmDeleteMessage,
+    updateStreamsToIndexedDB,
+    streamsChatRoomWorker,
+    totalStreamsLength,
+    totalStreamsChatRoomWorkerDones,
+    setDataStreamsToIndexedDB,
+    resetTotalStreamsLength,
     handleResetConfirmDeleteMessage,
     handleSetConfirmDeleteMessage,
     handleSetActiveSelectReactions,
