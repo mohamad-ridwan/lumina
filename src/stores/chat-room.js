@@ -231,87 +231,95 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
   }
 
-  const handleGetMainMessagesOnScrollBottom = (profileId) => {
-    resetMainMessagesEventSource()
-    resetMainMessagesWorkerOnScrollBottom()
-    resetMainMessagesWorker()
-    loadingMainMessagesOnScrollBottom.value = true
-    loadingMainMessagesEventSource.value = true
-    setMainMessagesWorkerOnScrollBottom()
-    setMainMessagesWorker()
-
-    getMainMessagesWorkerOnScrollBottom.value.postMessage({
-      chatRoomId: chatRoom.value?.chatRoomId,
+  const handleGetMainMessagesOnScrollBottom = async (profileId) => {
+    const messages = await fetchMessagesPagination({
+      chatId: chatRoom.value.chatId,
+      chatRoomId: chatRoom.value.chatRoomId,
+      isFirstMessage: true,
       profileId,
     })
-
-    getMainMessagesWorkerOnScrollBottom.value.onmessage = (event) => {
-      if (event.data.length > 0) {
-        chatRoomMessages.value = createNewMessages([
-          ...bufferNewMessagesOnScrollBottom.value,
-          ...event.data,
-        ])
-      } else if (bufferNewMessagesOnScrollBottom.value.length > 0) {
-        chatRoomMessages.value = createNewMessages([
-          ...bufferNewMessagesOnScrollBottom.value,
-          ...chatRoomMessages.value,
-        ])
-      }
+    if (messages?.messages) {
+      chatRoomMessages.value = messages.messages
+      triggerRef(chatRoomMessages)
 
       scroller.value.scrollToItem(0)
       loadingMainMessagesOnScrollBottom.value = false
       showScrollDownButton.value = false
-      resetMainMessagesWorkerOnScrollBottom()
     }
 
-    setMainMessagesEventSource(profileId)
-    mainMessagesEventSource.value.onmessage = (event) => {
-      const message = JSON.parse(event.data)
-      if (message?.length) {
-        mainMessagesWorker.value.postMessage({
-          streams: message.map((msg) => ({
-            id: msg.messageId,
-            chatRoomId: chatRoom.value?.chatRoomId,
-            chatId: chatRoom.value?.chatId,
-            ...msg,
-          })),
-          messages: toRaw(chatRoomMessages.value),
-        })
-
-        mainMessagesWorker.value.onmessage = async (event) => {
-          const { messages, totalStreams } = event.data
-
-          if (messages?.length === 0 || totalStreamsMainMessagesWorker.value >= ITEMS_PER_PAGE) {
-            resetMainMessagesWorker()
-            resetMainMessagesEventSource()
-          } else if (totalStreams < ITEMS_PER_PAGE) {
-            chatRoomMessages.value = createNewMessages([...messages, ...chatRoomMessages.value])
-            await nextTick()
-            await nextTick()
-            triggerRef(chatRoomMessages)
-            scroller.value.$refs.scroller.$forceUpdate(true)
-          }
-
-          totalStreamsMainMessagesWorker.value += totalStreams
-        }
-        totalMainMessagesEventSource.value += message.length
-      } else {
-        resetMainMessagesWorker()
-        resetMainMessagesEventSource()
-      }
-    }
-    mainMessagesEventSource.value.addEventListener('done', (event) => {
-      const message = JSON.parse(event.data)
-      if (message?.length === 0) {
-        resetMainMessagesWorker()
-        resetMainMessagesEventSource()
-      }
-    })
-    mainMessagesEventSource.value.addEventListener('error', (event) => {
-      console.error('Streaming error:', event)
-      resetMainMessagesWorker()
-      resetMainMessagesEventSource()
-    })
+    // resetMainMessagesEventSource()
+    // resetMainMessagesWorkerOnScrollBottom()
+    // resetMainMessagesWorker()
+    // loadingMainMessagesOnScrollBottom.value = true
+    // loadingMainMessagesEventSource.value = true
+    // setMainMessagesWorkerOnScrollBottom()
+    // setMainMessagesWorker()
+    // getMainMessagesWorkerOnScrollBottom.value.postMessage({
+    //   chatRoomId: chatRoom.value?.chatRoomId,
+    //   profileId,
+    // })
+    // getMainMessagesWorkerOnScrollBottom.value.onmessage = (event) => {
+    //   if (event.data.length > 0) {
+    //     chatRoomMessages.value = createNewMessages([
+    //       ...bufferNewMessagesOnScrollBottom.value,
+    //       ...event.data,
+    //     ])
+    //   } else if (bufferNewMessagesOnScrollBottom.value.length > 0) {
+    //     chatRoomMessages.value = createNewMessages([
+    //       ...bufferNewMessagesOnScrollBottom.value,
+    //       ...chatRoomMessages.value,
+    //     ])
+    //   }
+    //   scroller.value.scrollToItem(0)
+    //   loadingMainMessagesOnScrollBottom.value = false
+    //   showScrollDownButton.value = false
+    //   resetMainMessagesWorkerOnScrollBottom()
+    // }
+    // setMainMessagesEventSource(profileId)
+    // mainMessagesEventSource.value.onmessage = (event) => {
+    //   const message = JSON.parse(event.data)
+    //   if (message?.length) {
+    //     mainMessagesWorker.value.postMessage({
+    //       streams: message.map((msg) => ({
+    //         id: msg.messageId,
+    //         chatRoomId: chatRoom.value?.chatRoomId,
+    //         chatId: chatRoom.value?.chatId,
+    //         ...msg,
+    //       })),
+    //       messages: toRaw(chatRoomMessages.value),
+    //     })
+    //     mainMessagesWorker.value.onmessage = async (event) => {
+    //       const { messages, totalStreams } = event.data
+    //       if (messages?.length === 0 || totalStreamsMainMessagesWorker.value >= ITEMS_PER_PAGE) {
+    //         resetMainMessagesWorker()
+    //         resetMainMessagesEventSource()
+    //       } else if (totalStreams < ITEMS_PER_PAGE) {
+    //         chatRoomMessages.value = createNewMessages([...messages, ...chatRoomMessages.value])
+    //         await nextTick()
+    //         await nextTick()
+    //         triggerRef(chatRoomMessages)
+    //         scroller.value.$refs.scroller.$forceUpdate(true)
+    //       }
+    //       totalStreamsMainMessagesWorker.value += totalStreams
+    //     }
+    //     totalMainMessagesEventSource.value += message.length
+    //   } else {
+    //     resetMainMessagesWorker()
+    //     resetMainMessagesEventSource()
+    //   }
+    // }
+    // mainMessagesEventSource.value.addEventListener('done', (event) => {
+    //   const message = JSON.parse(event.data)
+    //   if (message?.length === 0) {
+    //     resetMainMessagesWorker()
+    //     resetMainMessagesEventSource()
+    //   }
+    // })
+    // mainMessagesEventSource.value.addEventListener('error', (event) => {
+    //   console.error('Streaming error:', event)
+    //   resetMainMessagesWorker()
+    //   resetMainMessagesEventSource()
+    // })
   }
 
   function setChatRoom(chatRoomData) {
