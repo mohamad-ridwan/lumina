@@ -69,13 +69,13 @@ const submitReactionMessage = () => {
 
 <template>
   <div :class="`flex pb-1.5 ${wrapperClass}`">
-    <button type="button" class="bg-white rounded-full pr-2 py-[2px] flex items-center gap-2 cursor-pointer"
+    <button type="button" class="bg-white rounded-full pr-1.5 py-[1.5px] flex items-center gap-2 cursor-pointer"
       :class="reactions.length > 1 ? 'pl-0' : 'pl-1'" @click.prevent="submitReactionMessage">
       <div class="flex gap-1">
-        <div v-for="react of emojis" class="text-[15px] rotate-180">{{ react.emoji }}</div>
+        <div v-for="react of emojis" class="text-[13px] rotate-180">{{ react.emoji }}</div>
       </div>
       <div class="flex items-center">
-        <img v-for="image of images" class="rounded-full h-6 w-6 object-cover border border-white rotate-180"
+        <img v-for="image of images" class="rounded-full h-4.5 w-4.5 object-cover border border-white rotate-180"
           :class="image.key > 0 ? 'translate-x-[7px]' : ''" :src="image.image" />
       </div>
     </button>

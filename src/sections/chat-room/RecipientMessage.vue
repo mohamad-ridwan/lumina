@@ -116,7 +116,7 @@ onMounted(() => {
         </div>
         <!-- Reaction Info -->
         <ReactionInfo v-if="!messageDeleted && reactions?.length > 0" :reactions="reactions" :profile-id="profileId"
-          :reaction-currently="reactionCurrently" :message-id="messageId" />
+          :reaction-currently="reactionCurrently" :message-id="messageId" wrapper-class="pl-[2.5rem]" />
         <p class="text-start rotate-180" style="direction: ltr;" :class="memoizedClassTextMessage"
           v-html="memoizedTextMessage"></p>
         <!-- Reply view -->
