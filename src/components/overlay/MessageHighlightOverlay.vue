@@ -30,7 +30,7 @@ watch(
 
 <template>
   <transition name="fade-highlight">
-    <div v-if="show" class="absolute inset-0 bg-black rounded-md opacity-40 pointer-events-none z-[2]"></div>
+    <div v-if="show" class="absolute inset-0 bg-black rounded-2xl opacity-40 pointer-events-none z-[2]"></div>
   </transition>
 </template>
 
