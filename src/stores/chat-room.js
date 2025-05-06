@@ -16,6 +16,18 @@ import { ITEMS_PER_PAGE } from '@/utils/pagination'
 import { chatRoomDB } from '@/services/indexedDB/chat-room-db'
 import { useToast } from 'primevue'
 import { constant } from '@/utils/constant'
+import dayjs from 'dayjs'
+import 'dayjs/locale/id'
+import isToday from 'dayjs/plugin/isToday'
+import isYesterday from 'dayjs/plugin/isYesterday'
+import weekOfYear from 'dayjs/plugin/weekOfYear'
+import weekday from 'dayjs/plugin/weekday'
+import { generateRandomId } from '@/helpers/generateRandomId'
+
+dayjs.extend(isToday)
+dayjs.extend(isYesterday)
+dayjs.extend(weekOfYear)
+dayjs.extend(weekday)
 
 export const useChatRoomStore = defineStore('chat-room', () => {
   const chatRoom = ref({})
@@ -57,7 +69,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const totalStreamsLength = shallowRef(0)
   const totalStreamsChatRoomWorkerDones = shallowRef(0)
 
-  const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching } = general
+  const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
+    general
   const { deleteChatRoomById } = chatRoomDB
 
   const toast = useToast()
@@ -496,6 +509,13 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       handleAddNewMessageOnEventSource(newData, profileId)
     }
 
+    const currentHeaderToday = toRaw(chatRoomMessages.value).find((msg) => {
+      const itemDate = dayjs(Number(msg?.latestMessageTimestamp)).startOf('day')
+      return formatDate(itemDate) === 'Today'
+    })
+
+    const isNeedHeaderTime = !currentHeaderToday
+
     if (
       !triggerScrollToMessageIdIsDone.value &&
       !loadingMainMessagesOnScrollBottom.value &&
@@ -503,6 +523,28 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       !loadingMessagesPagination.value &&
       isStartIndex.value
     ) {
+      if (isNeedHeaderTime) {
+        const headerId = generateRandomId(15)
+        chatRoomMessages.value = removeDuplicates(
+          [
+            {
+              isHeader: true,
+              id: headerId,
+              messageId: headerId,
+              senderUserId: newData.senderUserId,
+              timeId: newData.timeId,
+              chatId: newData.chatId,
+              chatRoomId: newData.chatRoomId,
+              latestMessageTimestamp: Number(newData.latestMessageTimestamp),
+            },
+            ...chatRoomMessages.value,
+          ],
+          'messageId',
+        ).sort(sortByTimestamp)
+
+        triggerRef(chatRoomMessages)
+      }
+
       chatRoomMessages.value = removeDuplicates(
         [
           {
