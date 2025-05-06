@@ -441,11 +441,11 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       delete newData.latestMessage
 
       // save to indexedDB
-      addNewMessageWorker.value.postMessage({
-        chatRoomId: chatRoom.value?.chatRoomId,
-        chatId: chatRoom.value?.chatId,
-        item: toRaw(newData),
-      })
+      // addNewMessageWorker.value.postMessage({
+      //   chatRoomId: chatRoom.value?.chatRoomId,
+      //   chatId: chatRoom.value?.chatId,
+      //   item: toRaw(newData),
+      // })
 
       if (loadingMainMessagesOnScrollBottom.value) {
         bufferNewMessagesOnScrollBottom.value.unshift(newData)
@@ -495,11 +495,11 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
 
     // save to indexedDB
-    addNewMessageWorker.value.postMessage({
-      chatRoomId: chatRoom.value?.chatRoomId,
-      chatId: chatRoom.value?.chatId,
-      item: toRaw(newData),
-    })
+    // addNewMessageWorker.value.postMessage({
+    //   chatRoomId: chatRoom.value?.chatRoomId,
+    //   chatId: chatRoom.value?.chatId,
+    //   item: toRaw(newData),
+    // })
 
     if (loadingMainMessagesOnScrollBottom.value) {
       bufferNewMessagesOnScrollBottom.value.unshift(newData)
@@ -581,11 +581,11 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     triggerRef(chatRoomMessages)
 
     // save to indexedDB
-    paginationMessagesComparisonWorker.value.postMessage({
-      chatRoomId: chatRoom.value?.chatRoomId,
-      messageId: messageId,
-      type: 'read-message',
-    })
+    // paginationMessagesComparisonWorker.value.postMessage({
+    //   chatRoomId: chatRoom.value?.chatRoomId,
+    //   messageId: messageId,
+    //   type: 'read-message',
+    // })
   }
 
   function handleSetAddNewMessageWorker() {
@@ -677,7 +677,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     triggerRef(headerRefs)
 
     resetPaginationMessagesComparisonWorker()
-    setPaginationMessagesComparisonWorker()
+    // setPaginationMessagesComparisonWorker()
 
     resetMainMessagesEventSource()
     resetMainMessagesWorkerOnScrollBottom()

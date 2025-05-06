@@ -378,11 +378,11 @@ watch(newMessageUpdate, (data) => {
   }
 })
 
-onBeforeMount(() => {
-  if (!addNewMessageWorker.value) {
-    handleSetAddNewMessageWorker()
-  }
-})
+// onBeforeMount(() => {
+//   if (!addNewMessageWorker.value) {
+//     handleSetAddNewMessageWorker()
+//   }
+// })
 
 onBeforeUnmount(() => {
   if (addNewMessageWorker.value) {
@@ -558,14 +558,14 @@ const handleGetMessagesPagination = async () => {
     })))
   }
 
-  if (newData.length > 0) {
-    // save to indexedDB if is not already in indexedDB
-    paginationMessagesComparisonWorker.value.postMessage({
-      chatRoomId: memoizedChatRoomId.value,
-      chatId: memoizedChatId.value,
-      streams: newData
-    })
-  }
+  // if (newData.length > 0) {
+  //   // save to indexedDB if is not already in indexedDB
+  //   paginationMessagesComparisonWorker.value.postMessage({
+  //     chatRoomId: memoizedChatRoomId.value,
+  //     chatId: memoizedChatId.value,
+  //     streams: newData
+  //   })
+  // }
 
   if (result?.meta?.direction === 'prev' && result?.data?.length > 0) {
     newChatRoomMessages = [
