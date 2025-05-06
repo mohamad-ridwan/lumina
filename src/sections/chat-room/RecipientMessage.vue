@@ -18,8 +18,8 @@ const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, message
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { handleScrollToGoMessage } = chatRoomStore
-const { activeMessageMenu, chatRoom, goingScrollToMessageId } = storeToRefs(chatRoomStore)
+const { handleScrollToGoMessage, handleResetActiveSelectReactions } = chatRoomStore
+const { activeMessageMenu, chatRoom, goingScrollToMessageId, activeSelectReactions } = storeToRefs(chatRoomStore)
 
 const boxRef = ref(null)
 
@@ -60,11 +60,22 @@ const reactionCurrently = computed(() => {
   return reactions.find(react => react?.senderUserId === profileId)
 })
 
+const timeOutActiveReactions = () => {
+  setTimeout(() => {
+    activeSelectReactions.value = {
+      messageId
+    }
+  }, 0);
+}
+
 const toggleBoxMessage = (e) => {
   if (activeMessageMenu.value === messageId) {
     activeMessageMenu.value = null
+    handleResetActiveSelectReactions()
   } else {
     activeMessageMenu.value = messageId
+    clearTimeout(timeOutActiveReactions)
+    timeOutActiveReactions()
   }
 
   e.stopPropagation()

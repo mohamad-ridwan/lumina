@@ -8,7 +8,7 @@ import { general } from '@/helpers/general'
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { handleActiveMessageMenu, resetActiveMessageMenu, handleSetReplyMessageData, handleSetConfirmDeleteMessage } = chatRoomStore
+const { handleActiveMessageMenu, resetActiveMessageMenu, handleSetReplyMessageData, handleSetConfirmDeleteMessage, handleResetActiveSelectReactions } = chatRoomStore
 const { activeMessageMenu, chatRoom } = storeToRefs(chatRoomStore)
 
 const { deviceDetector } = general
@@ -77,6 +77,7 @@ const handleResetMenu = () => {
 const onHide = () => {
   clearTimeout(handleResetMenu)
   handleResetMenu()
+  handleResetActiveSelectReactions()
 }
 
 const onShow = () => {
