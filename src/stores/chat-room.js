@@ -68,6 +68,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const updateStreamsToIndexedDB = shallowRef(null)
   const totalStreamsLength = shallowRef(0)
   const totalStreamsChatRoomWorkerDones = shallowRef(0)
+  const attachments = ref(null)
+  const formMessage = ref({
+    textMessage: '',
+  })
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -76,6 +80,22 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const toast = useToast()
 
   const { globalErrMessageAPI } = constant
+
+  const handleSetAttachment = ({ type, file }) => {
+    let newAttachment = null
+    if (type === 'image') {
+      newAttachment = {
+        type,
+        file,
+      }
+    }
+
+    attachments.value = newAttachment
+  }
+
+  const handleResetAttachment = () => {
+    attachments.value = null
+  }
 
   const handleResetConfirmDeleteMessage = () => {
     confirmDeleteMessage.value = null
@@ -882,6 +902,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   }
 
   return {
+    formMessage,
     chatRoom,
     addNewMessageWorker,
     chatRoomEventSource,
@@ -908,6 +929,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     streamsChatRoomWorker,
     totalStreamsLength,
     totalStreamsChatRoomWorkerDones,
+    attachments,
+    handleSetAttachment,
+    handleResetAttachment,
     setDataStreamsToIndexedDB,
     resetTotalStreamsLength,
     handleResetConfirmDeleteMessage,

@@ -15,6 +15,7 @@ import isToday from 'dayjs/plugin/isToday'
 import isYesterday from 'dayjs/plugin/isYesterday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekday from 'dayjs/plugin/weekday'
+import AttachmentMenu from '@/components/menu/AttachmentMenu.vue';
 
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
@@ -32,12 +33,9 @@ const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { resetReplyMessageData } = chatRoomStore
-const { chatRoom, replyMessageData, chatRoomMessages } = storeToRefs(chatRoomStore)
+const { chatRoom, replyMessageData, chatRoomMessages, formMessage } = storeToRefs(chatRoomStore)
 
 // state
-const initialValues = ref({
-  textMessage: ''
-});
 const typingTimeout = ref(null);
 const isTyping = ref(false);
 const userIdCurrentlyState = shallowRef(null)
@@ -47,7 +45,7 @@ const footerRef = ref(null)
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
 const memoizedChatId = computed(() => chatRoom.value.chatId);
 const formattedText = computed(() => {
-  return initialValues.value.textMessage.replace(/\n/g, '<br>');
+  return formMessage.value.textMessage.replace(/\n/g, '<br>');
 });
 const isNeedHeaderDate = computed(() => {
   if (chatRoomMessages.value.length === 0) {
@@ -64,7 +62,7 @@ const isNeedHeaderDate = computed(() => {
 })
 
 const onFormSubmit = async () => {
-  if (initialValues.value.textMessage.trim()) {
+  if (formMessage.value.textMessage.trim()) {
     let latestMessage = {
       messageId: generateRandomId(15),
       senderUserId: profile.value.data.id,
@@ -85,7 +83,7 @@ const onFormSubmit = async () => {
       isNeedHeaderDate: isNeedHeaderDate.value,
       recipientProfileId: chatRoom.value?.userIds?.find(id => id !== profile.value?.data?.id)
     })
-    initialValues.value.textMessage = ''
+    formMessage.value.textMessage = ''
     resetReplyMessageData()
     emit('triggerSendMessage')
   }
@@ -94,7 +92,7 @@ const onFormSubmit = async () => {
 const handleTextareaKeydown = (event) => {
   if (event.key === 'Enter' && event.shiftKey) {
     // Shift + Enter: Sisipkan baris baru
-    initialValues.value.textMessage += '\n';
+    formMessage.value.textMessage += '\n';
     // Mencegah perilaku default Enter (submit jika tidak ada preventDefault di form)
     event.preventDefault();
   } else if (event.key === 'Enter') {
@@ -148,17 +146,20 @@ watch(chatRoom, (data) => {
     <div class="relative">
       <slot />
     </div>
-    <div class="bg-white p-4 border-t-[#f1f1f1] border-t-[1px] w-full flex flex-col gap-2">
-      <ReplyView />
-      <Form :initialValues="initialValues" @submit="onFormSubmit" class="flex items-end w-full gap-2">
-        <Textarea v-model="initialValues.textMessage" rows="1" cols="20"
-          class="!text-sm flex-1 rounded-l-md p-2 bg-[#f1f1f1] min-h-[38px] max-h-[150px] w-full !overflow-y-auto"
-          placeholder="Type Message..." name="textMessage" :autoResize="true" @keydown="handleTextareaKeydown"
-          @input="handleInputChange" />
-        <Button icon="pi pi-send" aria-label="Send Message"
-          class="!rounded-full !bg-[#2e74e8] hover:!bg-[#2e74e8] !h-[35px] !w-[35px] justify-center items-center flex cursor-pointer !text-white !outline-none !border-none !p-0"
-          size="large" icon-class="!text-[16px] !mr-0.5 !mt-0.5" type="submit" />
-      </Form>
+    <div class="bg-white pr-4 py-4 pl-2 border-t-[#f1f1f1] border-t-[1px] w-full flex items-end gap-2">
+      <AttachmentMenu />
+      <div class="flex items-end flex-col w-full">
+        <ReplyView />
+        <Form :initialValues="formMessage" @submit="onFormSubmit" class="flex items-end w-full gap-2">
+          <Textarea v-model="formMessage.textMessage" rows="1" cols="20"
+            class="!text-sm flex-1 rounded-l-md p-2 bg-[#f1f1f1] min-h-[38px] max-h-[150px] w-full !overflow-y-auto"
+            placeholder="Type Message..." name="textMessage" :autoResize="true" @keydown="handleTextareaKeydown"
+            @input="handleInputChange" />
+          <Button icon="pi pi-send" aria-label="Send Message"
+            class="!rounded-full !bg-[#2e74e8] hover:!bg-[#2e74e8] !h-[35px] !w-[35px] justify-center items-center flex cursor-pointer !text-white !outline-none !border-none !p-0"
+            size="large" icon-class="!text-[16px] !mr-0.5 !mt-0.5" type="submit" />
+        </Form>
+      </div>
     </div>
   </footer>
 </template>

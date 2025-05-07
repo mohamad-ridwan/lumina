@@ -68,7 +68,7 @@ watch(confirmDeleteMessage, (data) => {
 
 <template>
   <Dialog v-model:visible="isVisible" modal :header="'Delete Message'" :style="{ width: '350px' }" :closable="false">
-    <div class="flex justify-center flex-col gap-2">
+    <div class="flex justify-center flex-col gap-2 pb-4 px-4">
       <Button v-if="isMe && !myDeletedMessage" class="!text-sm" label="Delete for everyone" severity="danger" outlined
         @click="handleDeleteForEveryone" />
       <Button class="!text-sm" label="Delete for me" :severity="(!isMe || myDeletedMessage) ? 'danger' : 'warning'"

@@ -62,3 +62,7 @@
 .p-menu .p-menuitem-link {
   width: 100% !important;
 }
+
+.p-dialog-content {
+  padding: 0 !important;
+}

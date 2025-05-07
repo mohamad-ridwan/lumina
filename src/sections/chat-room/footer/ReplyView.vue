@@ -51,7 +51,7 @@ watch(replyMessageData, (data) => {
 
 <template>
   <transition name="reply-fade-slide">
-    <div v-show="showReplyView" class="flex pb-1 w-full justify-between gap-2 items-end overflow-hidden">
+    <div v-show="showReplyView" class="flex pb-3 w-full justify-between gap-2 items-end overflow-hidden">
       <ReplyViewCard :username-class="`${fromMessageUsername === 'You' ? 'text-[#2e74e8]' : 'text-black'} text-sm`"
         :wrapper-class="`${fromMessageUsername === 'You' ? 'border-l-[#2e74e8]' : 'border-l-black'} bg-[#F1F1F1] border-l-3 rounded-md py-1`"
         :text-message="replyMessageData?.textMessage" text-message-class="text-[#6b7280]"
