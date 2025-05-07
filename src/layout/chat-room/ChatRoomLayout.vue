@@ -1,4 +1,5 @@
 <script setup>
+import ImageLightBox from '@/components/media/ImageLightBox.vue';
 import ConfirmDeleteMessageModal from '@/components/modals/ConfirmDeleteMessageModal.vue';
 import MediaAttachmentPreview from '@/components/modals/MediaAttachmentPreview.vue';
 import MainBackground from '@/sections/chat-room/MainBackground.vue';
@@ -54,6 +55,8 @@ watch(newMessageUpdate, (data) => {
   <ConfirmDeleteMessageModal />
   <!-- modal send attachment -->
   <MediaAttachmentPreview />
+  <!-- MEDIA -->
+  <ImageLightBox />
   <div :class="`col-span-2 ${!memoizedChatId ? 'hidden md:block' : 'md:block'}`">
     <MainBackground :chat-id="!memoizedChatId" />
     <template v-if="memoizedChatId">

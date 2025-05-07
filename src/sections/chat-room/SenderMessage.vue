@@ -143,7 +143,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
         </p>
         <!-- MEDIA -->
         <ImageMessage v-if="document?.type && !messageDeleted"
-          :info="{ url: document.url, caption: document?.caption, username: 'You' }" />
+          :info="{ url: document.url, caption: document?.caption, username: 'You', latestMessageTimestamp: Number(latestMessageTimestamp), hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm') }" />
         <!-- Reply view -->
         <div v-if="!messageDeleted && replyView" class="flex !text-white" :class="memoizedWrapperReplyViewClass">
           <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
