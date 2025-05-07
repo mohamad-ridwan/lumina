@@ -63,7 +63,8 @@ const {
   streamsChatRoomWorker,
   totalStreamsLength,
   totalStreamsChatRoomWorkerDones,
-  stayScrollCurrently
+  stayScrollCurrently,
+  usersTyping
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -73,18 +74,7 @@ const currentStickyHeader = shallowRef({
   text: ''
 })
 const showDateHeader = shallowRef(false)
-const typingStartSocketUpdate = shallowRef({
-  key: 0,
-  senderId: null,
-  recipientId: null
-})
-const typingStopSocketUpdate = shallowRef({
-  key: 0,
-  senderId: null,
-  recipientId: null
-})
 // const memoizedChatRoomDataWithHeaders = ref([]);
-const anyUserTyping = shallowRef(false)
 const isUserInitiatedScroll = shallowRef(false)
 const scrollTimeout = shallowRef(null)
 const scrollTimeOutDateHeader = shallowRef(null)
@@ -98,12 +88,19 @@ const memoizedChatRoomId = computed(() => {
 const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
+const profileId = computed(() => profile.value?.data?.id ?? null)
+const memoizedUserIdCurrently = computed(() => {
+  return memoizedUserIds.value?.find(id => id !== profile.value?.data.id)
+})
+const isUserTyping = computed(() => {
+  return usersTyping.value.find(type => type?.senderId === memoizedUserIdCurrently.value && type?.recipientId === profileId.value)
+})
 const memoizedMessages = computed(() => {
   if (!chatRoomMessages.value) {
     return []
   }
 
-  if (anyUserTyping.value) {
+  if (isUserTyping.value) {
     return [{
       id: 'typing',
       messageId: 'typing',
@@ -128,10 +125,6 @@ const memoizedMessages = computed(() => {
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
 })
-const memoizedUserIdCurrently = computed(() => {
-  return memoizedUserIds.value?.find(id => id !== profile.value?.data.id)
-})
-const profileId = computed(() => profile.value?.data?.id ?? null)
 
 const scrollToBottom = () => {
   if (scroller.value) {
@@ -474,12 +467,17 @@ const scrollStop = () => {
   }
 }
 
-watch(anyUserTyping, async (newVal, oldVal) => {
+watch(isUserTyping, async (newVal, oldVal) => {
   const el = scroller.value?.$el
   if (!el) return
 
   const prevScrollHeight = el.scrollHeight
   const prevScrollTop = el.scrollTop
+
+  // if (prevScrollTop !== 0 && !showScrollDownButton.value && newVal) {
+  //   el.scrollTop = 0
+  //   return
+  // }
 
   await nextTick()
 
@@ -695,36 +693,6 @@ onUnmounted(() => {
   el.removeEventListener('touchmove', markUserScroll)
   el.removeEventListener('pointerdown', markUserScroll)
   el.removeEventListener('scroll', handleScroll)
-})
-
-onMounted(() => {
-  socket.on('typing-start', (data) => {
-    typingStartSocketUpdate.value = {
-      ...data,
-      key: typingStartSocketUpdate.value.key + 1
-    }
-  })
-})
-
-onMounted(() => {
-  socket.on('typing-stop', (data) => {
-    typingStopSocketUpdate.value = {
-      ...data,
-      key: typingStopSocketUpdate.value.key + 1
-    }
-  })
-})
-
-watch(typingStartSocketUpdate, (data) => {
-  if (data?.senderId === memoizedUserIdCurrently.value && data?.recipientId === profile.value?.data?.id) {
-    anyUserTyping.value = true
-  }
-})
-
-watch(typingStopSocketUpdate, (data) => {
-  if (data?.senderId === memoizedUserIdCurrently.value && data?.recipientId === profile.value?.data?.id) {
-    anyUserTyping.value = false
-  }
 })
 
 watch(loadingMessagesPagination, async (isLoading) => {

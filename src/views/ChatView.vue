@@ -2,6 +2,7 @@
 import ChatRoomLayout from '@/layout/chat-room/ChatRoomLayout.vue';
 import ChatLayout from '@/layout/chat/ChatLayout.vue';
 import { socket } from '@/services/socket/socket';
+import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
@@ -13,6 +14,9 @@ const { profile } = storeToRefs(userStore)
 // chats store
 const chatStore = chatsStore()
 const { chats } = storeToRefs(chatStore)
+// chat-room store
+const chatRoomStore = useChatRoomStore()
+const { handleUpdateUsersTyping } = chatRoomStore
 
 // state
 const userOnlineSocketUpdate = shallowRef({
@@ -20,12 +24,40 @@ const userOnlineSocketUpdate = shallowRef({
   id: null
 })
 const userOfflineSocketUpdate = shallowRef(null)
+const typingStartSocketUpdate = shallowRef({
+  key: 0,
+  senderId: null,
+  recipientId: null,
+})
+const typingStopSocketUpdate = shallowRef({
+  key: 0,
+  senderId: null,
+  recipientId: null,
+})
 
 // logic
 const profileId = computed(() => profile.value?.data.id)
 const memoizedChats = computed(() => chats.value)
 
 // hooks rendering
+onMounted(() => {
+  socket.on('typing-start', (data) => {
+    typingStartSocketUpdate.value = {
+      ...data,
+      key: typingStartSocketUpdate.value.key + 1
+    }
+  })
+})
+
+onMounted(() => {
+  socket.on('typing-stop', (data) => {
+    typingStopSocketUpdate.value = {
+      ...data,
+      key: typingStopSocketUpdate.value.key + 1
+    }
+  })
+})
+
 onBeforeMount(() => {
   if (profileId.value) {
     socket.emit('userOnline', profileId.value)
@@ -63,6 +95,18 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('focus', notifyOnline)
   window.removeEventListener('online', notifyOnline)
+})
+
+watch(typingStartSocketUpdate, (data) => {
+  if (data?.recipientId === profile.value?.data.id) {
+    handleUpdateUsersTyping(data, 'start')
+  }
+})
+
+watch(typingStopSocketUpdate, (data) => {
+  if (data?.recipientId === profile.value?.data.id) {
+    handleUpdateUsersTyping(data, 'stop')
+  }
 })
 
 watch(userOfflineSocketUpdate, (data) => {

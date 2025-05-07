@@ -4,7 +4,7 @@ import ChatProfile from '@/components/ChatProfile.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
-import { computed, markRaw, onBeforeMount, onMounted, ref, shallowRef, triggerRef, watch, } from 'vue';
+import { computed, markRaw, onBeforeMount, ref, shallowRef, triggerRef, watch, } from 'vue';
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -31,7 +31,7 @@ const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleClickUser } = chatRoomStore
-const { chatRoom } = storeToRefs(chatRoomStore)
+const { chatRoom, usersTyping } = storeToRefs(chatRoomStore)
 // chats store
 const chatStore = chatsStore()
 const { chats } = storeToRefs(chatStore)
@@ -39,22 +39,15 @@ const { chats } = storeToRefs(chatStore)
 // state
 const userProfileSocketUpdate = ref(null)
 const userOnlineInfoSocketUpdate = shallowRef(null)
-const typingStartSocketUpdate = shallowRef({
-  key: 0,
-  senderId: null,
-  recipientId: null
-})
-const typingStopSocketUpdate = shallowRef({
-  key: 0,
-  senderId: null,
-  recipientId: null
-})
-const anyUserTyping = shallowRef(false)
 
 // logic
 const userIdsCurrently = item.userIds.slice().find(id => id !== profile.value.data.id)
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
 const memoizedChats = computed(() => chats.value)
+
+const isUserTyping = computed(() => {
+  return usersTyping.value.find(type => type?.senderId === userIdsCurrently && type?.recipientId === profile.value?.data.id)
+})
 
 const formattedDate = computed(() => {
   if (!item?.latestMessageTimestamp) {
@@ -142,36 +135,6 @@ onBeforeMount(() => {
     })
   }
 })
-
-onMounted(() => {
-  socket.on('typing-start', (data) => {
-    typingStartSocketUpdate.value = {
-      ...data,
-      key: typingStartSocketUpdate.value.key + 1
-    }
-  })
-})
-
-onMounted(() => {
-  socket.on('typing-stop', (data) => {
-    typingStopSocketUpdate.value = {
-      ...data,
-      key: typingStopSocketUpdate.value.key + 1
-    }
-  })
-})
-
-watch(typingStartSocketUpdate, (data) => {
-  if (data?.senderId === userIdsCurrently && data?.recipientId === profile.value?.data.id) {
-    anyUserTyping.value = true
-  }
-})
-
-watch(typingStopSocketUpdate, (data) => {
-  if (data?.senderId === userIdsCurrently && data?.recipientId === profile.value?.data.id) {
-    anyUserTyping.value = false
-  }
-})
 </script>
 
 <template>
@@ -182,6 +145,6 @@ watch(typingStopSocketUpdate, (data) => {
     :text-message="item.latestMessage.textMessage || item.latestMessage?.document?.caption"
     @click="handleClickUser(profile?.data.id, item)" :latest-message-timestamp="formattedDate"
     :unread-count="item.unreadCount[profile?.data.id]" :is-active="item.chatRoomId === memoizedChatRoomId"
-    :image="item?.image" :status="item.lastSeenTime" :is-typing="anyUserTyping"
+    :image="item?.image" :status="item.lastSeenTime" :is-typing="isUserTyping"
     :document="item?.latestMessage?.document" />
 </template>

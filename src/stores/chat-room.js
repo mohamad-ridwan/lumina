@@ -75,6 +75,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const stayScrollCurrently = shallowRef(null)
   const proccessSubmitAttachmentData = ref(null)
   const activeMediaData = ref(null)
+  const usersTyping = shallowRef([])
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -83,6 +84,27 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const toast = useToast()
 
   const { globalErrMessageAPI } = constant
+
+  const handleUpdateUsersTyping = async (data, actionType) => {
+    if (actionType === 'start') {
+      // Buat Set dari kombinasi senderId + recipientId (stringify)
+      const usersTypingCurrentlySet = new Set(usersTyping.value.map((item) => JSON.stringify(item)))
+
+      // Data baru (juga stringify)
+      const newItemStr = JSON.stringify(data)
+
+      // Tambahkan kalau belum ada
+      if (!usersTypingCurrentlySet.has(newItemStr)) {
+        usersTyping.value = [...usersTyping.value, data]
+      }
+    }
+
+    if (actionType === 'stop') {
+      usersTyping.value = usersTyping.value.filter((item) => {
+        return !(item.senderId === data.senderId && item.recipientId === data.recipientId)
+      })
+    }
+  }
 
   const handleResetActiveMediaData = () => {
     activeMediaData.value = null
@@ -959,6 +981,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     stayScrollCurrently,
     proccessSubmitAttachmentData,
     activeMediaData,
+    usersTyping,
+    handleUpdateUsersTyping,
     handleSetActiveMediaData,
     handleResetActiveMediaData,
     triggerSendMessage,
