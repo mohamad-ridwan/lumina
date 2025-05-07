@@ -6,7 +6,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, shallowRef, triggerRef, watch } from 'vue';
+import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, shallowRef, triggerRef, watch } from 'vue';
 
 // store
 const userStore = usersStore()
@@ -17,6 +17,7 @@ const { chats } = storeToRefs(chatStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleUpdateUsersTyping } = chatRoomStore
+const { usersTyping } = storeToRefs(chatRoomStore)
 
 // state
 const userOnlineSocketUpdate = shallowRef({
@@ -135,6 +136,10 @@ watch(userOnlineSocketUpdate, (data) => {
       triggerRef(chats)
     }
   }
+})
+
+onUnmounted(() => {
+  usersTyping.value = []
 })
 </script>
 
