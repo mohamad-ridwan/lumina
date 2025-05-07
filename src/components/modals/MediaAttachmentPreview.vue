@@ -31,7 +31,7 @@ const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleResetAttachment, resetReplyMessageData, triggerSendMessage } = chatRoomStore
-const { attachments, formMessage, replyMessageData, chatRoom, chatRoomMessages } = storeToRefs(chatRoomStore)
+const { attachments, formMessage, replyMessageData, chatRoom, chatRoomMessages, proccessSubmitAttachmentData } = storeToRefs(chatRoomStore)
 
 const isVisible = ref(false)
 const formInput = ref({
@@ -88,33 +88,39 @@ const onFormSubmit = async () => {
   }
   if (!filePath.trim()) return
 
-  const url = await uploadFileToFirebase(memoizedAttachments.value.file, `lumina/${filePath}`)
-
-  let latestMessage = {
-    messageId: generateRandomId(15),
-    senderUserId: profile.value.data.id,
-    messageType: memoizedAttachments.value.type,
-    textMessage: '',
-    latestMessageTimestamp: Date.now(),
-    status: "UNREAD",
-    document: {
-      type: memoizedAttachments.value.type,
-      url,
-      caption: formattedText.value
-    }
+  proccessSubmitAttachmentData.value = {
+    chatRoomId: memoizedChatRoomId.value,
+    chatId: memoizedChatId.value,
+    latestMessage: {
+      messageId: generateRandomId(15),
+      senderUserId: profile.value.data.id,
+      messageType: memoizedAttachments.value.type,
+      textMessage: '',
+      latestMessageTimestamp: Date.now(),
+      status: "UNREAD",
+      document: {
+        type: memoizedAttachments.value.type,
+        url: null,
+        caption: formattedText.value
+      }
+    },
+    eventType: 'send-message',
+    isNeedHeaderDate: isNeedHeaderDate.value,
+    recipientProfileId: chatRoom.value?.userIds?.find(id => id !== profile.value?.data?.id),
   }
 
   if (toRaw(replyMessageData.value)) {
-    latestMessage.replyView = toRaw(replyMessageData.value)
+    proccessSubmitAttachmentData.value.latestMessage.replyView = toRaw(replyMessageData.value)
   }
-  socket.emit('sendMessage', {
-    chatRoomId: memoizedChatRoomId.value,
-    chatId: memoizedChatId.value,
-    latestMessage,
-    eventType: 'send-message',
-    isNeedHeaderDate: isNeedHeaderDate.value,
-    recipientProfileId: chatRoom.value?.userIds?.find(id => id !== profile.value?.data?.id)
-  })
+
+  uploadFileToFirebase(memoizedAttachments.value.file, `lumina/${filePath}`)
+    .then(url => {
+      proccessSubmitAttachmentData.value.latestMessage.document.url = url
+      socket.emit('sendMessage', {
+        ...toRaw(proccessSubmitAttachmentData.value)
+      })
+      proccessSubmitAttachmentData.value = null
+    })
   formInput.value.caption = ''
   resetReplyMessageData()
   triggerSendMessage()

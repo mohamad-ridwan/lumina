@@ -73,6 +73,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     textMessage: '',
   })
   const stayScrollCurrently = shallowRef(null)
+  const proccessSubmitAttachmentData = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -947,6 +948,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     totalStreamsChatRoomWorkerDones,
     attachments,
     stayScrollCurrently,
+    proccessSubmitAttachmentData,
     triggerSendMessage,
     handleSetAttachment,
     handleResetAttachment,

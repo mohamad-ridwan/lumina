@@ -1,14 +1,18 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Button, Menu } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
+import { storeToRefs } from 'pinia'
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleSetAttachment } = chatRoomStore
+const { proccessSubmitAttachmentData } = storeToRefs(chatRoomStore)
 
 // Ref for menu
 const menu = ref(null)
+
+const isUploading = computed(() => !!proccessSubmitAttachmentData.value)
 
 const toggleMenu = (event) => {
   menu.value.toggle(event)
@@ -31,23 +35,26 @@ const onSelectPhoto = async () => {
 }
 
 // Menu items
-const attachmentItems = [
+const attachmentItems = computed(() => [
   {
     label: 'Photo',
     icon: 'pi pi-image',
-    command: onSelectPhoto
+    command: onSelectPhoto,
+    disabled: isUploading.value
   },
   {
     label: 'Video',
     icon: 'pi pi-video',
-    command: () => console.log('Kirim Video')
+    command: () => console.log('Kirim Video'),
+    disabled: isUploading.value
   },
   {
     label: 'File',
     icon: 'pi pi-file',
-    command: () => console.log('Kirim File')
+    command: () => console.log('Kirim File'),
+    disabled: isUploading.value
   },
-]
+])
 </script>
 
 <!-- components/AttachmentMenu.vue -->
