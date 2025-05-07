@@ -294,11 +294,11 @@ const handleUpdateReactions = async (newData) => {
     // new reference of nested field
     // because it is would triggering render
     chatRoomMessages.value[messageIndex].reactions = [...newReactions]
-    paginationMessagesComparisonWorker.value.postMessage({
-      chatRoomId: memoizedChatRoomId.value,
-      chatId: memoizedChatId.value,
-      streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
-    })
+    // paginationMessagesComparisonWorker.value.postMessage({
+    //   chatRoomId: memoizedChatRoomId.value,
+    //   chatId: memoizedChatId.value,
+    //   streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
+    // })
     triggerRef(chatRoomMessages)
     await nextTick()
     await nextTick()
@@ -313,11 +313,11 @@ const handleUpdateReactions = async (newData) => {
     // new reference of nested field
     // because it is would triggering render
     chatRoomMessages.value[messageIndex].reactions = [...newReactions]
-    paginationMessagesComparisonWorker.value.postMessage({
-      chatRoomId: memoizedChatRoomId.value,
-      chatId: memoizedChatId.value,
-      streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
-    })
+    // paginationMessagesComparisonWorker.value.postMessage({
+    //   chatRoomId: memoizedChatRoomId.value,
+    //   chatId: memoizedChatId.value,
+    //   streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
+    // })
     triggerRef(chatRoomMessages)
     await nextTick()
     await nextTick()
@@ -341,22 +341,22 @@ const handleUpdateDeleteMessage = async (newData) => {
       chatRoomMessages.value = [...chatRoomMessages.value.filter(message => message.messageId !== data.messageId)]
       chatRoomMessages.value = messageMatching(chatRoomMessages.value, chatRoomMessages.value)
       // save to indexedDB
-      paginationMessagesComparisonWorker.value.postMessage({
-        chatRoomId: chatRoom.value?.chatRoomId,
-        messageId: data.messageId,
-        type: 'delete-message',
-      })
+      // paginationMessagesComparisonWorker.value.postMessage({
+      //   chatRoomId: chatRoom.value?.chatRoomId,
+      //   messageId: data.messageId,
+      //   type: 'delete-message',
+      // })
     } else {
       // new reference of nested field
       // because it is would triggering render
       chatRoomMessages.value[messageIndex].isDeleted = [...data.isDeleted]
 
       // update message to indexedDB
-      paginationMessagesComparisonWorker.value.postMessage({
-        chatRoomId: memoizedChatRoomId.value,
-        chatId: memoizedChatId.value,
-        streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
-      })
+      // paginationMessagesComparisonWorker.value.postMessage({
+      //   chatRoomId: memoizedChatRoomId.value,
+      //   chatId: memoizedChatId.value,
+      //   streams: [toRaw(chatRoomMessages.value).find(message => message.messageId === data.messageId)]
+      // })
     }
     triggerRef(chatRoomMessages)
     await nextTick()
