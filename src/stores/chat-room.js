@@ -74,6 +74,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   })
   const stayScrollCurrently = shallowRef(null)
   const proccessSubmitAttachmentData = ref(null)
+  const activeMediaData = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -82,6 +83,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const toast = useToast()
 
   const { globalErrMessageAPI } = constant
+
+  const handleResetActiveMediaData = () => {
+    activeMediaData.value = null
+  }
+
+  const handleSetActiveMediaData = (data) => {
+    activeMediaData.value = data
+  }
 
   const handleSetAttachment = ({ type, file }) => {
     let newAttachment = null
@@ -949,6 +958,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     attachments,
     stayScrollCurrently,
     proccessSubmitAttachmentData,
+    activeMediaData,
+    handleSetActiveMediaData,
+    handleResetActiveMediaData,
     triggerSendMessage,
     handleSetAttachment,
     handleResetAttachment,

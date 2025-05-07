@@ -38,7 +38,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, handleResetConfirmDeleteMessage, resetTotalStreamsLength, setDataStreamsToIndexedDB, handleResetAttachment } = chatRoomStore
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, handleResetConfirmDeleteMessage, resetTotalStreamsLength, setDataStreamsToIndexedDB, handleResetAttachment, handleResetActiveMediaData } = chatRoomStore
 const {
   chatRoom,
   chatRoomMessages,
@@ -785,6 +785,7 @@ onUnmounted(() => {
   scroller.value = null
   showScrollDownButton.value = false
   totalStreamsChatRoomWorkerDones.value = 0
+  handleResetActiveMediaData()
   handleResetAttachment()
   handleStopGetChatRoomWorker()
   handleStopStreamsChatRoomWorker()
