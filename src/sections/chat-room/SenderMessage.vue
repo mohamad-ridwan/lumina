@@ -44,7 +44,7 @@ const memoizedTextMessage = computed(() => {
   return 'You deleted this message.'
 })
 const memoizedBoxWrapperClass = computed(() => {
-  if (!document) return 'p-2'
+  if (messageDeleted.value || !document) return 'p-2'
   return ''
 })
 const memoizedReactionInfoClass = computed(() => {
@@ -143,7 +143,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
         <p class="rotate-180" style="direction: ltr;" :class="memoizedClassTextMessage" v-html="memoizedTextMessage">
         </p>
         <!-- MEDIA -->
-        <ImageMessage v-if="document?.type" :url="document.url" />
+        <ImageMessage v-if="document?.type && !messageDeleted" :url="document.url" />
         <!-- Reply view -->
         <div v-if="!messageDeleted && replyView" class="flex !text-white" :class="memoizedWrapperReplyViewClass">
           <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"

@@ -45,7 +45,7 @@ const memoizedTextMessage = computed(() => {
   return 'Message has been deleted.'
 })
 const memoizedBoxWrapperClass = computed(() => {
-  if (!document) return 'p-2'
+  if (messageDeleted.value || !document) return 'p-2'
   return ''
 })
 const memoizedWrapperReplyViewClass = computed(() => {
@@ -143,7 +143,7 @@ onMounted(() => {
         <p class="text-start rotate-180" style="direction: ltr;" :class="memoizedClassTextMessage"
           v-html="memoizedTextMessage"></p>
         <!-- MEDIA -->
-        <ImageMessage v-if="document?.type" :url="document.url" />
+        <ImageMessage v-if="document?.type && !messageDeleted" :url="document.url" />
         <!-- Reply view -->
         <div v-if="!messageDeleted && replyView" class="flex !text-black" :class="memoizedWrapperReplyViewClass">
           <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
