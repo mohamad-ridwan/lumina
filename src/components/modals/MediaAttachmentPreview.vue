@@ -90,37 +90,35 @@ const onFormSubmit = async () => {
 
   const url = await uploadFileToFirebase(memoizedAttachments.value.file, `lumina/${filePath}`)
 
-  if (formInput.value.caption.trim()) {
-    let latestMessage = {
-      messageId: generateRandomId(15),
-      senderUserId: profile.value.data.id,
-      messageType: memoizedAttachments.value.type,
-      textMessage: '',
-      latestMessageTimestamp: Date.now(),
-      status: "UNREAD",
-      document: {
-        type: memoizedAttachments.value.type,
-        url,
-        caption: formattedText.value
-      }
+  let latestMessage = {
+    messageId: generateRandomId(15),
+    senderUserId: profile.value.data.id,
+    messageType: memoizedAttachments.value.type,
+    textMessage: '',
+    latestMessageTimestamp: Date.now(),
+    status: "UNREAD",
+    document: {
+      type: memoizedAttachments.value.type,
+      url,
+      caption: formattedText.value
     }
-
-    if (toRaw(replyMessageData.value)) {
-      latestMessage.replyView = toRaw(replyMessageData.value)
-    }
-    socket.emit('sendMessage', {
-      chatRoomId: memoizedChatRoomId.value,
-      chatId: memoizedChatId.value,
-      latestMessage,
-      eventType: 'send-message',
-      isNeedHeaderDate: isNeedHeaderDate.value,
-      recipientProfileId: chatRoom.value?.userIds?.find(id => id !== profile.value?.data?.id)
-    })
-    formInput.value.caption = ''
-    resetReplyMessageData()
-    triggerSendMessage()
-    handleResetAttachment()
   }
+
+  if (toRaw(replyMessageData.value)) {
+    latestMessage.replyView = toRaw(replyMessageData.value)
+  }
+  socket.emit('sendMessage', {
+    chatRoomId: memoizedChatRoomId.value,
+    chatId: memoizedChatId.value,
+    latestMessage,
+    eventType: 'send-message',
+    isNeedHeaderDate: isNeedHeaderDate.value,
+    recipientProfileId: chatRoom.value?.userIds?.find(id => id !== profile.value?.data?.id)
+  })
+  formInput.value.caption = ''
+  resetReplyMessageData()
+  triggerSendMessage()
+  handleResetAttachment()
 }
 
 const handleTextareaKeydown = (event) => {
