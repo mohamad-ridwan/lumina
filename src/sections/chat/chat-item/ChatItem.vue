@@ -178,8 +178,10 @@ watch(typingStopSocketUpdate, (data) => {
   <ChatProfileSkeleton v-if="!item?.image || !item?.username" />
 
   <ChatProfile v-if="item?.username && item?.image" :username="item?.username"
-    :from-me="item.latestMessage.senderUserId === profile?.data?.id" :text-message="item.latestMessage.textMessage"
+    :from-me="item.latestMessage.senderUserId === profile?.data?.id"
+    :text-message="item.latestMessage.textMessage || item.latestMessage?.document?.caption"
     @click="handleClickUser(profile?.data.id, item)" :latest-message-timestamp="formattedDate"
     :unread-count="item.unreadCount[profile?.data.id]" :is-active="item.chatRoomId === memoizedChatRoomId"
-    :image="item?.image" :status="item.lastSeenTime" :is-typing="anyUserTyping" />
+    :image="item?.image" :status="item.lastSeenTime" :is-typing="anyUserTyping"
+    :document="item?.latestMessage?.document" />
 </template>

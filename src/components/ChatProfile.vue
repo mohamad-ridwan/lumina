@@ -2,7 +2,7 @@
 import { Button } from 'primevue';
 import { computed } from 'vue';
 
-const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer, latestMessageTimestamp, unreadCount, isActive, image, status, isTyping } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping'])
+const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer, latestMessageTimestamp, unreadCount, isActive, image, status, isTyping, document } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document'])
 
 const emits = defineEmits(['click'])
 
@@ -13,6 +13,17 @@ const handleClick = () => {
 const formattedTextMessage = computed(() => {
   return textMessage.replace(/<br\s*\/?>/gi, ' ');
 });
+
+const memoizedTypeMessageIcon = computed(() => {
+  if (!document) return null
+  if (document?.type === 'image') {
+    return 'pi pi-image'
+  } else if (document?.type === 'video') {
+    return 'pi pi-video'
+  } else if (document?.type === 'file') {
+    return 'pi pi-file'
+  }
+})
 </script>
 
 <template>
@@ -47,6 +58,7 @@ const formattedTextMessage = computed(() => {
           <p v-if="!isTyping && textMessage"
             class="opacity-0 animate-fade-in flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 w-full truncate">
             <span v-if="fromMe" class="hidden sm:inline">You:</span>
+            <i v-if="memoizedTypeMessageIcon" class="!text-[13px]" :class="memoizedTypeMessageIcon"></i>
             <span class="truncate w-full">{{ formattedTextMessage }}</span>
           </p>
           <p v-if="isTyping" class="opacity-0 animate-fade-in italic text-xs text-gray-600 dark:text-gray-400">
