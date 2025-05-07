@@ -77,7 +77,7 @@ watch(memoizedAttachments, (data) => {
 })
 
 const onFormSubmit = async () => {
-  if (!memoizedAttachments.value) return
+  if (!memoizedAttachments.value || proccessSubmitAttachmentData.value) return
   let filePath = ''
   if (memoizedAttachments.value.type === 'image') {
     filePath = 'images'
