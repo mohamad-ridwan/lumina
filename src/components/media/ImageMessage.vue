@@ -18,8 +18,8 @@ const handleClickImg = () => {
 
 <template>
   <div @click.stop="handleClickImg" class="cursor-pointer">
-    <v-lazy-image :src="info?.url" class="max-w-full max-h-64 object-cover rounded-sm rotate-180 bg-gray-500/70"
-      :class="imgClass" />
+    <v-lazy-image :src="`${info?.url}`" class="max-w-full max-h-64 object-cover rounded-sm rotate-180 bg-gray-500/70"
+      sizes="(max-width: 320px) 280px, 440px" :class="imgClass" />
   </div>
 </template>
 
