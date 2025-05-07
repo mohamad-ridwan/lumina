@@ -72,6 +72,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const formMessage = ref({
     textMessage: '',
   })
+  const stayScrollCurrently = shallowRef(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -680,6 +681,11 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     totalStreamsLength.value = null
   }
 
+  const triggerSendMessage = () => {
+    const scrollTop = scroller.value?.$el?.scrollTop
+    stayScrollCurrently.value = scrollTop
+  }
+
   async function handleClickUser(userId, item, isNewChatRoom) {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
@@ -930,6 +936,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     totalStreamsLength,
     totalStreamsChatRoomWorkerDones,
     attachments,
+    stayScrollCurrently,
+    triggerSendMessage,
     handleSetAttachment,
     handleResetAttachment,
     setDataStreamsToIndexedDB,

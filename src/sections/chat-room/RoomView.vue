@@ -4,7 +4,7 @@ import FooterChatRoom from './footer/FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -62,7 +62,8 @@ const {
   updateStreamsToIndexedDB,
   streamsChatRoomWorker,
   totalStreamsLength,
-  totalStreamsChatRoomWorkerDones
+  totalStreamsChatRoomWorkerDones,
+  stayScrollCurrently
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -87,7 +88,6 @@ const anyUserTyping = shallowRef(false)
 const isUserInitiatedScroll = shallowRef(false)
 const scrollTimeout = shallowRef(null)
 const scrollTimeOutDateHeader = shallowRef(null)
-const stayScrollCurrently = shallowRef(null)
 const typingBubbleEl = ref(null)
 const newMessageUpdate = ref(null)
 
@@ -146,11 +146,6 @@ function handleBeforeUnload() {
       userId: profile?.data.id
     })
   }
-}
-
-const triggerSendMessage = () => {
-  const scrollTop = scroller.value?.$el?.scrollTop
-  stayScrollCurrently.value = scrollTop
 }
 
 function setHeaderRef(el, item) {
@@ -857,7 +852,7 @@ onUnmounted(() => {
       </template>
     </DynamicScroller>
 
-    <FooterChatRoom v-memo="[showScrollDownButton]" v-on:triggerSendMessage="triggerSendMessage">
+    <FooterChatRoom v-memo="[showScrollDownButton]">
       <Button @click="scrollToBottom"
         class="!absolute !right-4 !bg-white !h-[2rem] !w-[2rem] !shadow !rounded-full !duration-300 !ease-in-out !border-none !transition-all"
         :class="{ '!opacity-100': showScrollDownButton, '!opacity-0 pointer-events-none': !showScrollDownButton }"

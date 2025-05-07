@@ -1,21 +1,45 @@
 <!-- components/MediaAttachmentPreview.vue -->
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, toRaw, watch } from 'vue'
 import { Dialog, Button, Textarea } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { Form } from '@primevue/forms';
+import { firebaseUtils } from '@/services/firebase/firebaseUtils';
+import { socket } from '@/services/socket/socket';
+import { generateRandomId } from '@/helpers/generateRandomId';
+import { usersStore } from '@/stores/users';
+import { general } from '@/helpers/general';
+import dayjs from 'dayjs'
+import 'dayjs/locale/id'
+import isToday from 'dayjs/plugin/isToday'
+import isYesterday from 'dayjs/plugin/isYesterday'
+import weekOfYear from 'dayjs/plugin/weekOfYear'
+import weekday from 'dayjs/plugin/weekday'
 
+dayjs.extend(isToday)
+dayjs.extend(isYesterday)
+dayjs.extend(weekOfYear)
+dayjs.extend(weekday)
+
+const { uploadFileToFirebase } = firebaseUtils
+const { formatDate } = general
+
+// profile store
+const userStore = usersStore()
+const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { handleResetAttachment } = chatRoomStore
-const { attachments, formMessage } = storeToRefs(chatRoomStore)
+const { handleResetAttachment, resetReplyMessageData, triggerSendMessage } = chatRoomStore
+const { attachments, formMessage, replyMessageData, chatRoom, chatRoomMessages } = storeToRefs(chatRoomStore)
 
 const isVisible = ref(false)
 const formInput = ref({
   caption: ''
 })
 
+const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
+const memoizedChatId = computed(() => chatRoom.value.chatId);
 const memoizedAttachments = computed(() => {
   if (!attachments.value) return null
   if (attachments.value?.type === 'image') {
@@ -27,6 +51,22 @@ const memoizedAttachments = computed(() => {
   }
   return null
 })
+const formattedText = computed(() => {
+  return formInput.value.caption.replace(/\n/g, '<br>');
+});
+const isNeedHeaderDate = computed(() => {
+  if (chatRoomMessages.value.length === 0) {
+    return true
+  }
+  const headerCurrently = chatRoomMessages.value.find(message => {
+    if (message?.isHeader) {
+      const itemDate = dayjs(Number(message?.latestMessageTimestamp)).startOf('day')
+      return formatDate(itemDate) === 'Today'
+    }
+    return false
+  })
+  return headerCurrently ? false : true
+})
 
 watch(memoizedAttachments, (data) => {
   if (data?.file) {
@@ -36,18 +76,51 @@ watch(memoizedAttachments, (data) => {
   }
 })
 
-// Close modal
-const closeModal = () => {
-  handleResetAttachment()
-}
-
-// Send action
-const handleSend = () => {
-  handleResetAttachment()
-}
-
 const onFormSubmit = async () => {
-  console.log(formInput.value, memoizedAttachments.value)
+  if (!memoizedAttachments.value) return
+  let filePath = ''
+  if (memoizedAttachments.value.type === 'image') {
+    filePath = 'images'
+  } else if (memoizedAttachments.value.type === 'video') {
+    filePath = 'videos'
+  } else if (memoizedAttachments.value.type === 'file') {
+    filePath = 'files'
+  }
+  if (!filePath.trim()) return
+
+  const url = await uploadFileToFirebase(memoizedAttachments.value.file, `lumina/${filePath}`)
+
+  if (formInput.value.caption.trim()) {
+    let latestMessage = {
+      messageId: generateRandomId(15),
+      senderUserId: profile.value.data.id,
+      messageType: memoizedAttachments.value.type,
+      textMessage: '',
+      latestMessageTimestamp: Date.now(),
+      status: "UNREAD",
+      document: {
+        type: memoizedAttachments.value.type,
+        url,
+        caption: formattedText.value
+      }
+    }
+
+    if (toRaw(replyMessageData.value)) {
+      latestMessage.replyView = toRaw(replyMessageData.value)
+    }
+    socket.emit('sendMessage', {
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      latestMessage,
+      eventType: 'send-message',
+      isNeedHeaderDate: isNeedHeaderDate.value,
+      recipientProfileId: chatRoom.value?.userIds?.find(id => id !== profile.value?.data?.id)
+    })
+    formInput.value.caption = ''
+    resetReplyMessageData()
+    triggerSendMessage()
+    handleResetAttachment()
+  }
 }
 
 const handleTextareaKeydown = (event) => {
@@ -72,7 +145,8 @@ watch([isVisible, formMessage], ([isVisible, formMessage]) => {
 
 <template>
   <Dialog v-model:visible="isVisible" modal header="1 Media"
-    :style="{ width: '100%', maxWidth: '300px', minWidth: '300px' }" :dismissableMask="true" class="!bg-[#f9fafb]">
+    :style="{ width: '100%', maxWidth: '300px', minWidth: '300px' }" :dismissableMask="true" class="!bg-[#f9fafb]"
+    @hide="handleResetAttachment">
     <div class="flex flex-col items-center gap-4 pb-1">
       <!-- Image preview -->
       <img v-if="memoizedAttachments.type === 'image' && memoizedAttachments.previewUrl"

@@ -22,8 +22,6 @@ dayjs.extend(isYesterday)
 dayjs.extend(weekOfYear)
 dayjs.extend(weekday)
 
-const emit = defineEmits(['triggerSendMessage'])
-
 const { formatDate } = general
 
 // store
@@ -32,7 +30,7 @@ const userStore = usersStore()
 const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { resetReplyMessageData } = chatRoomStore
+const { resetReplyMessageData, triggerSendMessage } = chatRoomStore
 const { chatRoom, replyMessageData, chatRoomMessages, formMessage } = storeToRefs(chatRoomStore)
 
 // state
@@ -85,7 +83,7 @@ const onFormSubmit = async () => {
     })
     formMessage.value.textMessage = ''
     resetReplyMessageData()
-    emit('triggerSendMessage')
+    triggerSendMessage()
   }
 };
 
