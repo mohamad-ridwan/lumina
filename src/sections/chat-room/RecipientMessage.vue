@@ -1,6 +1,7 @@
 <script setup>
 import MessageReaction from '@/components/emoji/MessageReaction.vue'
 import ReactionInfo from '@/components/emoji/ReactionInfo.vue'
+import ImageMessage from '@/components/media/ImageMessage.vue'
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
 import MessageHighlightOverlay from '@/components/overlay/MessageHighlightOverlay.vue'
 import ReplyViewCard from '@/components/ReplyViewCard.vue'
@@ -13,7 +14,7 @@ import { computed, onMounted, ref } from 'vue'
 
 dayjs.extend(localizedFormat)
 
-const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView, profileId, reactions, isDeleted } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId', 'reactions', 'isDeleted'])
+const { textMessage, latestMessageTimestamp, status, chatId, chatRoomId, messageId, messageType, senderUserId, replyView, profileId, reactions, isDeleted, document } = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'chatRoomId', 'chatId', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId', 'reactions', 'isDeleted', 'document'])
 
 // store
 // chat-room store
@@ -35,12 +36,33 @@ const messageDeleted = computed(() => {
 })
 
 const memoizedTextMessage = computed(() => {
-  if (!messageDeleted.value) return textMessage
+  if (!messageDeleted.value) {
+    if (document?.caption) {
+      return document.caption
+    }
+    return textMessage
+  }
   return 'Message has been deleted.'
 })
-
+const memoizedBoxWrapperClass = computed(() => {
+  if (!document) return 'p-2'
+  return ''
+})
+const memoizedWrapperReplyViewClass = computed(() => {
+  if (!document) return 'pt-1.5'
+  return 'p-2'
+})
+const memoizedReactionInfoClass = computed(() => {
+  if (!document) return 'pl-[2.5rem]'
+  return 'pl-[2.5rem] pr-2 pt-2'
+})
 const memoizedClassTextMessage = computed(() => {
-  if (!messageDeleted.value) return 'text-sm'
+  if (!messageDeleted.value) {
+    if (document?.caption) {
+      return `text-sm ${reactions?.length > 0 ? '' : 'pb-2'} px-2 pt-2`
+    }
+    return 'text-sm'
+  }
   return 'text-[#888] italic text-xs'
 })
 
@@ -102,8 +124,9 @@ onMounted(() => {
     <MessageReaction :message-deleted="!messageDeleted" wrapper-class="justify-end flex-row-reverse"
       :message-id="messageId" :profile-id="profileId" :reaction-currently="reactionCurrently">
       <div ref="boxRef"
-        class="group bg-[#f1f1f1] rounded-tl-2xl rounded-bl-2xl rounded-br-2xl p-2 max-w-[65%] self-start relative"
-        style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);" @click.stop="toggleBoxMessage">
+        class="group bg-[#f1f1f1] rounded-tl-2xl rounded-bl-2xl rounded-br-2xl max-w-[65%] self-start relative"
+        :class="memoizedBoxWrapperClass" style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"
+        @click.stop="toggleBoxMessage">
         <!-- ⬇️ Tambahkan di sini overlay -->
         <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
 
@@ -116,11 +139,13 @@ onMounted(() => {
         </div>
         <!-- Reaction Info -->
         <ReactionInfo v-if="!messageDeleted && reactions?.length > 0" :reactions="reactions" :profile-id="profileId"
-          :reaction-currently="reactionCurrently" :message-id="messageId" wrapper-class="pl-[2.5rem]" />
+          :reaction-currently="reactionCurrently" :message-id="messageId" :wrapper-class="memoizedReactionInfoClass" />
         <p class="text-start rotate-180" style="direction: ltr;" :class="memoizedClassTextMessage"
           v-html="memoizedTextMessage"></p>
+        <!-- MEDIA -->
+        <ImageMessage v-if="document?.type" :url="document.url" img-class="rounded-tr-2xl rounded-tl-2xl" />
         <!-- Reply view -->
-        <div v-if="!messageDeleted && replyView" class="pt-1.5 flex !text-black">
+        <div v-if="!messageDeleted && replyView" class="flex !text-black" :class="memoizedWrapperReplyViewClass">
           <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
             @on-click="handleScrollToGoMessage(replyView?.messageId)" wrapper-style="direction: ltr; rotate: 180deg;"
             wrapper-class="border-l-1 py-0.5" text-message-class="!text-[#6b7280]"
