@@ -828,22 +828,23 @@ onUnmounted(() => {
         <DynamicScrollerItem :data-index="index" :item="item" :active="active" :size-dependencies="[
           item.textMessage,
         ]" :key="item.messageId">
-          <div v-if="item?.isHeader" :id="`${item.id}-${item.latestMessageTimestamp}`">
+          <div v-if="item?.isHeader" :id="`${item.messageId}-${item.latestMessageTimestamp}`">
             <DateHeader :date="formatDate(Number(item?.latestMessageTimestamp))" />
           </div>
           <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
-            <SenderMessage v-if="item.senderUserId === profile.data.id" :text-message="item.textMessage"
-              :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :message-id="item.messageId"
-              :message-type="item.messageType" :sender-user-id="item.senderUserId" :reply-view="item?.replyView"
-              :profile-id="profileId" :reactions="item?.reactions" :is-deleted="item?.isDeleted"
-              :document="item?.document" />
-          </WrapperSetHeaderTimes>
-          <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
-            <RecipientMessage v-if="item.senderUserId !== profile.data.id" :text-message="item.textMessage"
-              :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :chat-id="memoizedChatId"
-              :chat-room-id="memoizedChatRoomId" :message-id="item.messageId" :message-type="item.messageType"
+            <SenderMessage v-if="!item?.isHeader && item.senderUserId === profile.data.id"
+              :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
+              :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
               :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId"
               :reactions="item?.reactions" :is-deleted="item?.isDeleted" :document="item?.document" />
+          </WrapperSetHeaderTimes>
+          <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
+            <RecipientMessage v-if="!item?.isHeader && item.senderUserId !== profile.data.id"
+              :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
+              :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
+              :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
+              :reply-view="item?.replyView" :profile-id="profileId" :reactions="item?.reactions"
+              :is-deleted="item?.isDeleted" :document="item?.document" />
           </WrapperSetHeaderTimes>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />

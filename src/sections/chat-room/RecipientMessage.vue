@@ -147,7 +147,7 @@ onMounted(() => {
           v-html="memoizedTextMessage"></p>
         <!-- MEDIA -->
         <ImageMessage v-if="document?.type && !messageDeleted"
-          :info="{ url: document.url, caption: document?.caption, username: chatRoom.username, latestMessageTimestamp: Number(latestMessageTimestamp), hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm') }"
+          :info="{ url: document.url, thumbnail: document?.thumbnail, caption: document?.caption, username: chatRoom.username, latestMessageTimestamp: Number(latestMessageTimestamp), hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm') }"
           :img-class="memoizedWrapperImageClass" />
         <!-- Reply view -->
         <div v-if="!messageDeleted && replyView" class="flex !text-black" :class="memoizedWrapperReplyViewClass">
