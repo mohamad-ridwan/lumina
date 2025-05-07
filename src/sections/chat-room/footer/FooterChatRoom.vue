@@ -72,6 +72,9 @@ const onFormSubmit = async () => {
 
     if (toRaw(replyMessageData.value)) {
       latestMessage.replyView = toRaw(replyMessageData.value)
+      if (toRaw(replyMessageData.value)?.document) {
+        latestMessage.replyView.document = toRaw(replyMessageData.value).document
+      }
     }
     socket.emit('sendMessage', {
       chatRoomId: memoizedChatRoomId.value,
