@@ -42,18 +42,18 @@ const attachmentItems = computed(() => [
     command: onSelectPhoto,
     disabled: isUploading.value
   },
-  {
-    label: 'Video',
-    icon: 'pi pi-video',
-    command: () => console.log('Kirim Video'),
-    disabled: isUploading.value
-  },
-  {
-    label: 'File',
-    icon: 'pi pi-file',
-    command: () => console.log('Kirim File'),
-    disabled: isUploading.value
-  },
+  // {
+  //   label: 'Video',
+  //   icon: 'pi pi-video',
+  //   command: () => console.log('Kirim Video'),
+  //   disabled: isUploading.value
+  // },
+  // {
+  //   label: 'File',
+  //   icon: 'pi pi-file',
+  //   command: () => console.log('Kirim File'),
+  //   disabled: isUploading.value
+  // },
 ])
 </script>
 
