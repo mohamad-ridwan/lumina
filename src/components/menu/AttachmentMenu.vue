@@ -1,13 +1,18 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Button, Menu } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
+import { toRef } from 'vue'
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleSetAttachment } = chatRoomStore
 const { proccessSubmitAttachmentData } = storeToRefs(chatRoomStore)
+
+const props = defineProps(['blurInputKey'])
+
+const blurInputKey = toRef(props, 'blurInputKey')
 
 // Ref for menu
 const menu = ref(null)
@@ -55,6 +60,10 @@ const attachmentItems = computed(() => [
   //   disabled: isUploading.value
   // },
 ])
+
+watch(blurInputKey, () => {
+  menu.value = null
+})
 </script>
 
 <!-- components/AttachmentMenu.vue -->

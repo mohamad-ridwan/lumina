@@ -39,6 +39,7 @@ const typingTimeout = ref(null);
 const isTyping = ref(false);
 const userIdCurrentlyState = shallowRef(null)
 const footerRef = ref(null)
+const blurInputKey = ref(0)
 
 // logic
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
@@ -142,6 +143,9 @@ const handleInputChange = (event) => {
     emitTypingStop();
   }, 5000);
 }
+const onBlur = () => {
+  blurInputKey.value += 1
+}
 
 // hooks rendering
 onUnmounted(() => {
@@ -166,14 +170,14 @@ watch(chatRoom, (data) => {
       <slot />
     </div>
     <div class="bg-white pr-2 py-4 pl-2 border-t-[#f1f1f1] border-t-[1px] w-full flex items-end gap-2">
-      <AttachmentMenu />
+      <AttachmentMenu :blur-input-key="blurInputKey" />
       <div class="flex items-end flex-col w-full">
         <ReplyView />
         <Form :initialValues="formMessage" @submit="onFormSubmit" class="flex items-end w-full gap-2">
           <Textarea v-model="formMessage.textMessage" rows="1" cols="20"
             class="!text-sm flex-1 rounded-l-md p-2 bg-[#f1f1f1] min-h-[38px] max-h-[150px] w-full !overflow-y-auto"
             placeholder="Type Message..." name="textMessage" :autoResize="true" @keydown="handleTextareaKeydown"
-            @input="handleInputChange" />
+            @input="handleInputChange" @blur="onBlur" />
           <Button icon="pi pi-send" aria-label="Send Message"
             class="!rounded-full !bg-[#2e74e8] hover:!bg-[#2e74e8] !h-[35px] !w-[35px] justify-center items-center flex cursor-pointer !text-white !outline-none !border-none !p-0"
             size="large" icon-class="!text-[16px] !mr-0.5 !mt-0.5" type="submit" />
