@@ -50,7 +50,7 @@ const memoizedBoxWrapperClass = computed(() => {
 })
 const memoizedWrapperImageClass = computed(() => {
   if (replyView) return ''
-  return 'rounded-tr-2xl rounded-tl-2xl'
+  return document?.caption ? 'rounded-br-2xl rounded-bl-2xl rounded-tr-md rounded-tl-md' : 'rounded-2xl'
 })
 const memoizedWrapperReplyViewClass = computed(() => {
   if (!document) return 'pt-1.5'
@@ -126,8 +126,7 @@ onMounted(() => {
   <div class="flex flex-col-reverse gap-1 pb-2" @click.stop="closeMenu">
     <MessageReaction :message-deleted="!messageDeleted" wrapper-class="justify-end flex-row-reverse"
       :message-id="messageId" :profile-id="profileId" :reaction-currently="reactionCurrently">
-      <div ref="boxRef"
-        class="group bg-[#f1f1f1] rounded-tl-2xl rounded-bl-2xl rounded-br-2xl max-w-[65%] self-start relative"
+      <div ref="boxRef" class="group bg-[#f1f1f1] rounded-2xl max-w-[65%] md:max-w-[350px] self-start relative"
         :class="memoizedBoxWrapperClass" style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"
         @click.stop="toggleBoxMessage">
         <!-- ⬇️ Tambahkan di sini overlay -->

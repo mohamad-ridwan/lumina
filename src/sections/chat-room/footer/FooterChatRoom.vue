@@ -165,7 +165,7 @@ watch(chatRoom, (data) => {
     <div class="relative">
       <slot />
     </div>
-    <div class="bg-white pr-4 py-4 pl-2 border-t-[#f1f1f1] border-t-[1px] w-full flex items-end gap-2">
+    <div class="bg-white pr-2 py-4 pl-2 border-t-[#f1f1f1] border-t-[1px] w-full flex items-end gap-2">
       <AttachmentMenu />
       <div class="flex items-end flex-col w-full">
         <ReplyView />

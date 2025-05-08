@@ -35,7 +35,7 @@ const messageDeleted = computed(() => {
 })
 const memoizedWrapperImageClass = computed(() => {
   if (replyView) return ''
-  return 'rounded-tr-2xl rounded-tl-2xl'
+  return document?.caption ? 'rounded-br-2xl rounded-bl-2xl rounded-tr-md rounded-tl-md' : 'rounded-2xl'
 })
 const memoizedTextMessage = computed(() => {
   if (!messageDeleted.value) {
@@ -126,7 +126,7 @@ watch(markMessageAsReadSocketUpdate, (data) => {
     <MessageReaction :message-deleted="!messageDeleted" wrapper-class="justify-end" :message-id="messageId"
       :profile-id="profileId" :reaction-currently="reactionCurrently">
       <div ref="boxRef"
-        class="group bg-[#2e74e8] rounded-tr-2xl rounded-br-2xl rounded-bl-2xl max-w-[65%] self-end flex flex-col relative"
+        class="group bg-[#2e74e8] rounded-2xl max-w-[65%] md:max-w-[350px] self-end flex flex-col relative"
         :class="memoizedBoxWrapperClass" style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"
         @click.stop="toggleBoxMessage">
         <!-- ⬇️ Tambahkan di sini overlay -->
