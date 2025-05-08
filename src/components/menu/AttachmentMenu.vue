@@ -4,6 +4,7 @@ import { Button, Menu } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { toRef } from 'vue'
+import { useKeyboardVisibility } from '@/composables/useKeyboardVisibility'
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
@@ -60,6 +61,13 @@ const attachmentItems = computed(() => [
   //   disabled: isUploading.value
   // },
 ])
+
+useKeyboardVisibility(() => {
+  // Keyboard ditutup → hide menu
+  if (menu.value) {
+    menu.value.hide()
+  }
+})
 
 watch(blurInputKey, () => {
   menu.value = null
