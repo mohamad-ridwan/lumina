@@ -514,9 +514,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         bufferNewMessagesOnScrollBottom.value.unshift(newData)
       }
 
-      if (!loadingMainMessagesOnScrollBottom.value) {
-        handleAddNewMessageOnEventSource(newData, profileId)
-      }
+      // if (!loadingMainMessagesOnScrollBottom.value) {
+      //   handleAddNewMessageOnEventSource(newData, profileId)
+      // }
 
       if (
         !triggerScrollToMessageIdIsDone.value &&
@@ -568,9 +568,9 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       bufferNewMessagesOnScrollBottom.value.unshift(newData)
     }
 
-    if (!loadingMainMessagesOnScrollBottom.value) {
-      handleAddNewMessageOnEventSource(newData, profileId)
-    }
+    // if (!loadingMainMessagesOnScrollBottom.value) {
+    //   handleAddNewMessageOnEventSource(newData, profileId)
+    // }
 
     const currentHeaderToday = toRaw(chatRoomMessages.value).find((msg) => {
       const itemDate = dayjs(Number(msg?.latestMessageTimestamp)).startOf('day')
