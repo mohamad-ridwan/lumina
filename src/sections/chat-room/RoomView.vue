@@ -6,7 +6,7 @@ import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
-import SpamMessage from '@/spam-message/SpamMessage.vue'
+// import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
 import { ITEMS_PER_PAGE, SCROLL_THRESHOLD, } from '@/utils/pagination';
 import { storeToRefs } from 'pinia';
@@ -231,29 +231,31 @@ watch(chatRoomMessages, async (data, oldData) => {
   }
 
   // handle scroll by new message
-  // const newItemCount = data.length - (oldData?.length || 0)
+  const newItemCount = data.length - (oldData?.length || 0)
   // when recipient user send message,
   // just stay on current scrollTop
 
-  maintainScrollAfterInsert()
+  if (!loadingMessagesPagination.value && isStartIndex.value && scroller.value) {
+    scroller.value.scrollToItem(0)
+    return
+  }
 
-  // if (
-  //   (newItemCount === 1 ||
-  //     (data?.[0]?.latestMessageTimestamp !== oldData?.[0]?.latestMessageTimestamp))
-  //   &&
-  //   data[0]?.senderUserId !== profile.value?.data.id
-  // ) {
-  //   maintainScrollAfterInsert()
-  // } else if (
-  //   newItemCount === 1 &&
-  //   data[0]?.senderUserId === profile.value?.data.id &&
-  //   (data?.[0]?.latestMessageTimestamp !== oldData?.[0]?.latestMessageTimestamp)
-  // ) {
-  //   if (el?.scrollTop !== undefined && el?.scrollTop !== 0) {
-  //     await nextTick()
-  //     el.scrollTop = 0
-  //   }
-  // }
+  if (
+    (newItemCount === 1 ||
+      (data?.[0]?.latestMessageTimestamp !== oldData?.[0]?.latestMessageTimestamp))
+    &&
+    data[0]?.senderUserId !== profile.value?.data.id
+  ) {
+    maintainScrollAfterInsert()
+  } else if (
+    newItemCount === 1 &&
+    data[0]?.senderUserId === profile.value?.data.id &&
+    (data?.[0]?.latestMessageTimestamp !== oldData?.[0]?.latestMessageTimestamp)
+  ) {
+    // if (el?.scrollTop !== undefined && el?.scrollTop !== 0) {
+    //   el.scrollTop = 0
+    // }
+  }
 }, { immediate: true })
 
 watch(
@@ -626,11 +628,18 @@ const handleGetMessagesPagination = async () => {
   }
 
   if (result?.meta?.direction === 'prev' && result?.data?.length === 0) {
-    isStartIndex.value = true
+    if (showScrollDownButton.value) {
+      isStartIndex.value = false
+    } else {
+      isStartIndex.value = true
+    }
   } else if (result?.meta?.direction === 'prev' && result?.data?.length > 0) {
     isStartIndex.value = false
   }
   loadingMessagesPagination.value = false
+  if (result?.meta?.direction === 'next') {
+    isStartIndex.value = false
+  }
 }
 
 const handleScroll = () => {
@@ -781,7 +790,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <SpamMessage v-once />
+  <!-- <SpamMessage v-once /> -->
   <div class="flex flex-col flex-1 overflow-hidden relative bg-[#f9fafb] border-l border-[#f1f1f1]">
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />

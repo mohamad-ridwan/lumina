@@ -6,7 +6,7 @@ import { usersStore } from '@/stores/users';
 import { Form } from '@primevue/forms';
 import { storeToRefs } from 'pinia';
 import { Button, Textarea } from 'primevue';
-import { computed, onBeforeUnmount, onUnmounted, ref, shallowRef, toRaw, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
 import ReplyView from './ReplyView.vue';
 import { general } from '@/helpers/general';
 import dayjs from 'dayjs'
@@ -16,6 +16,7 @@ import isYesterday from 'dayjs/plugin/isYesterday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekday from 'dayjs/plugin/weekday'
 import AttachmentMenu from '@/components/menu/AttachmentMenu.vue';
+import { fetchMessagesPagination } from '@/services/api/chat-room';
 
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
@@ -31,7 +32,7 @@ const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { resetReplyMessageData, triggerSendMessage } = chatRoomStore
-const { chatRoom, replyMessageData, chatRoomMessages, formMessage } = storeToRefs(chatRoomStore)
+const { chatRoom, replyMessageData, chatRoomMessages, formMessage, scroller, isStartIndex } = storeToRefs(chatRoomStore)
 
 // state
 const typingTimeout = ref(null);
@@ -87,6 +88,23 @@ const onFormSubmit = async () => {
     formMessage.value.textMessage = ''
     resetReplyMessageData()
     triggerSendMessage()
+
+    if (!isStartIndex.value) {
+      const messages = await fetchMessagesPagination({
+        chatId: memoizedChatId.value,
+        chatRoomId: memoizedChatRoomId.value,
+        isFirstMessage: true,
+        profileId: profile.value?.data?.id,
+      })
+      if (messages?.messages) {
+        chatRoomMessages.value = messages.messages
+        await nextTick()
+        await nextTick()
+        triggerRef(chatRoomMessages)
+        scroller.value.$refs.scroller.$forceUpdate(true)
+        scroller.value.scrollToItem(0)
+      }
+    }
   }
 };
 

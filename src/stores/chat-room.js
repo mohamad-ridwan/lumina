@@ -622,6 +622,11 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         await nextTick()
         chatRoomMessages.value = chatRoomMessages.value.slice(0, -1)
       }
+
+      if (newData?.senderUserId === profileId) {
+        scroller.value.$refs.scroller.$forceUpdate(true)
+        scroller.value.scrollToItem(0)
+      }
     }
 
     if (

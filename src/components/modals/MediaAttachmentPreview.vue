@@ -1,6 +1,6 @@
 <!-- components/MediaAttachmentPreview.vue -->
 <script setup>
-import { computed, ref, toRaw, watch } from 'vue'
+import { computed, nextTick, ref, toRaw, watch } from 'vue'
 import { Dialog, Button, Textarea } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
@@ -16,6 +16,8 @@ import isToday from 'dayjs/plugin/isToday'
 import isYesterday from 'dayjs/plugin/isYesterday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekday from 'dayjs/plugin/weekday'
+import { fetchMessagesPagination } from '@/services/api/chat-room';
+import { triggerRef } from 'vue';
 
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
@@ -31,7 +33,7 @@ const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleResetAttachment, resetReplyMessageData, triggerSendMessage } = chatRoomStore
-const { attachments, formMessage, replyMessageData, chatRoom, chatRoomMessages, proccessSubmitAttachmentData } = storeToRefs(chatRoomStore)
+const { attachments, formMessage, replyMessageData, chatRoom, chatRoomMessages, proccessSubmitAttachmentData, isStartIndex, scroller } = storeToRefs(chatRoomStore)
 
 const isVisible = ref(false)
 const formInput = ref({
@@ -114,12 +116,29 @@ const onFormSubmit = async () => {
   }
 
   uploadFileToFirebase(memoizedAttachments.value.file, `lumina/${filePath}`)
-    .then(url => {
+    .then(async (url) => {
       proccessSubmitAttachmentData.value.latestMessage.document.url = url
       socket.emit('sendMessage', {
         ...toRaw(proccessSubmitAttachmentData.value)
       })
       proccessSubmitAttachmentData.value = null
+
+      if (!isStartIndex.value) {
+        const messages = await fetchMessagesPagination({
+          chatId: memoizedChatId.value,
+          chatRoomId: memoizedChatRoomId.value,
+          isFirstMessage: true,
+          profileId: profile.value?.data?.id,
+        })
+        if (messages?.messages) {
+          chatRoomMessages.value = messages.messages
+          await nextTick()
+          await nextTick()
+          triggerRef(chatRoomMessages)
+          scroller.value.$refs.scroller.$forceUpdate(true)
+          scroller.value.scrollToItem(0)
+        }
+      }
     })
   formInput.value.caption = ''
   resetReplyMessageData()
