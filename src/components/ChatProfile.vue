@@ -11,7 +11,8 @@ const handleClick = () => {
 }
 
 const formattedTextMessage = computed(() => {
-  return textMessage.replace(/<br\s*\/?>/gi, ' ');
+  if (!document) return textMessage.replace(/<br\s*\/?>/gi, ' ');
+  if (!document?.caption && document?.type === 'image') return 'Photo'
 });
 
 const memoizedTypeMessageIcon = computed(() => {
@@ -55,7 +56,7 @@ const memoizedTypeMessageIcon = computed(() => {
           </h1>
 
           <!-- Last message -->
-          <p v-if="!isTyping && textMessage"
+          <p v-if="!isTyping && formattedTextMessage"
             class="opacity-0 animate-fade-in flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 w-full truncate">
             <span v-if="fromMe" class="hidden sm:inline">You:</span>
             <i v-if="memoizedTypeMessageIcon" class="!text-[13px]" :class="memoizedTypeMessageIcon"></i>
