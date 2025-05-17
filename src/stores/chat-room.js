@@ -493,6 +493,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   async function handleAddNewMessage(newMessage, profileId) {
     let newData = {}
 
+    const latestMessage = newMessage.latestMessage?.find((msg) => msg.userId === profileId)
+
     if (newMessage?.isHeader) {
       newData = {
         ...newMessage,
@@ -548,8 +550,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }
 
     newData = {
-      ...newMessage.latestMessage,
-      id: newMessage.latestMessage.messageId,
+      ...latestMessage,
+      id: latestMessage.messageId,
       chatRoomId: chatRoom.value?.chatRoomId,
       chatId: chatRoom.value?.chatId,
     }

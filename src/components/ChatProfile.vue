@@ -1,8 +1,20 @@
 <script setup>
 import { Button } from 'primevue';
 import { computed } from 'vue';
+import dayjs from 'dayjs'
+import localizedFormat from 'dayjs/plugin/localizedFormat'
+import relativeTime from 'dayjs/plugin/relativeTime';
+import weekday from 'dayjs/plugin/weekday';
+import isToday from 'dayjs/plugin/isToday';
+import isYesterday from 'dayjs/plugin/isYesterday';
 
-const { fromMe, textMessage, username, fontSizeUsername, imgSize, heightContainer, latestMessageTimestamp, unreadCount, isActive, image, status, isTyping, document } = defineProps(['fromMe', 'textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document'])
+dayjs.extend(localizedFormat)
+dayjs.extend(relativeTime);
+dayjs.extend(weekday);
+dayjs.extend(isToday);
+dayjs.extend(isYesterday);
+
+const { textMessage, username, fontSizeUsername, imgSize, heightContainer, unreadCount, isActive, image, status, isTyping, document, latestMessage, profileId } = defineProps(['textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document', 'latestMessage', 'profileId'])
 
 const emits = defineEmits(['click'])
 
@@ -10,19 +22,55 @@ const handleClick = () => {
   emits('click')
 }
 
+const latestMessageCurrently = computed(() => {
+  const currentLatestMessage = latestMessage?.find(msg => msg?.userId === profileId)
+  if (!currentLatestMessage) {
+    return
+  }
+  return currentLatestMessage
+})
+
+const formattedDate = computed(() => {
+  if (!latestMessageCurrently.value?.latestMessageTimestamp) {
+    return ''
+  }
+  const timestampInMilliseconds = latestMessageCurrently.value.latestMessageTimestamp;
+
+  const date = dayjs(timestampInMilliseconds);
+
+  const today = dayjs();
+
+  const oneWeekAgo = today.subtract(7, 'day');
+
+  if (date.isToday()) {
+    return date.format('HH.mm')
+  } else if (date.isYesterday()) {
+    return 'Yesterday'
+  } else if (date.isAfter(oneWeekAgo)) {
+    return date.format('dddd')
+  } else {
+    return date.format('DD/MM/YYYY')
+  }
+});
+
+const fromMe = computed(() => {
+  if (!latestMessageCurrently.value) return false
+  return latestMessageCurrently.value?.senderUserId === profileId ? true : false
+})
+
 const formattedTextMessage = computed(() => {
-  if (!document) return textMessage?.replace(/<br\s*\/?>/gi, ' ');
-  if (!document?.caption && document?.type === 'image') return 'Photo'
-  if (document?.caption) return document.caption
+  if (!latestMessageCurrently.value?.document) return latestMessageCurrently.value?.textMessage?.replace(/<br\s*\/?>/gi, ' ');
+  if (!latestMessageCurrently.value?.document?.caption && latestMessageCurrently.value?.document?.type === 'image') return 'Photo'
+  if (latestMessageCurrently.value?.document?.caption) return latestMessageCurrently.value.document.caption
 });
 
 const memoizedTypeMessageIcon = computed(() => {
-  if (!document) return null
-  if (document?.type === 'image') {
+  if (!latestMessageCurrently.value?.document) return null
+  if (latestMessageCurrently.value?.document.type === 'image') {
     return 'pi pi-image'
-  } else if (document?.type === 'video') {
+  } else if (latestMessageCurrently.value?.document.type === 'video') {
     return 'pi pi-video'
-  } else if (document?.type === 'file') {
+  } else if (latestMessageCurrently.value?.document.type === 'file') {
     return 'pi pi-file'
   }
 })
@@ -47,7 +95,6 @@ const memoizedTypeMessageIcon = computed(() => {
           </div>
         </div>
 
-
         <!-- Chat Info -->
         <div class="flex flex-col min-w-0">
           <!-- Username -->
@@ -69,9 +116,9 @@ const memoizedTypeMessageIcon = computed(() => {
       </div>
 
       <!-- Time & Unread Count -->
-      <div v-if="latestMessageTimestamp" class="flex flex-col items-end gap-1 flex-shrink-0">
+      <div v-if="formattedDate" class="flex flex-col items-end gap-1 flex-shrink-0">
         <span :class="`text-[10px] ${isActive ? 'text-gray-400' : unreadCount ? 'text-[#2e74e8]' : 'text-[#6b7280]'}`">
-          {{ latestMessageTimestamp }}
+          {{ formattedDate }}
         </span>
 
         <!-- Unread Messages Indicator -->

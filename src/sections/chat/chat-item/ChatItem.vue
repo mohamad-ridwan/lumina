@@ -5,21 +5,9 @@ import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
 import { computed, markRaw, onBeforeMount, ref, shallowRef, triggerRef, watch, } from 'vue';
-import dayjs from 'dayjs'
-import localizedFormat from 'dayjs/plugin/localizedFormat'
-import relativeTime from 'dayjs/plugin/relativeTime';
-import weekday from 'dayjs/plugin/weekday';
-import isToday from 'dayjs/plugin/isToday';
-import isYesterday from 'dayjs/plugin/isYesterday';
 import { storeToRefs } from 'pinia';
 import { chatsStore } from '@/stores/chats';
 import ChatProfileSkeleton from './ChatProfileSkeleton.vue';
-
-dayjs.extend(localizedFormat)
-dayjs.extend(relativeTime);
-dayjs.extend(weekday);
-dayjs.extend(isToday);
-dayjs.extend(isYesterday);
 
 // props
 const { item } = defineProps(['item'])
@@ -48,29 +36,6 @@ const memoizedChats = computed(() => chats.value)
 const isUserTyping = computed(() => {
   return usersTyping.value.find(type => type?.senderId === userIdsCurrently && type?.recipientId === profile.value?.data.id)
 })
-
-const formattedDate = computed(() => {
-  if (!item?.latestMessageTimestamp) {
-    return ''
-  }
-  const timestampInMilliseconds = item.latestMessageTimestamp;
-
-  const date = dayjs(timestampInMilliseconds);
-
-  const today = dayjs();
-
-  const oneWeekAgo = today.subtract(7, 'day');
-
-  if (date.isToday()) {
-    return date.format('HH.mm')
-  } else if (date.isYesterday()) {
-    return 'Yesterday'
-  } else if (date.isAfter(oneWeekAgo)) {
-    return date.format('dddd')
-  } else {
-    return date.format('DD/MM/YYYY')
-  }
-});
 
 // hooks rendering
 onBeforeMount(() => {
@@ -141,10 +106,9 @@ onBeforeMount(() => {
   <ChatProfileSkeleton v-if="!item?.image || !item?.username" />
 
   <ChatProfile v-if="item?.username && item?.image" :username="item?.username"
-    :from-me="item.latestMessage.senderUserId === profile?.data?.id"
     :text-message="item.latestMessage.textMessage || item.latestMessage?.document?.caption"
-    @click="handleClickUser(profile?.data.id, item)" :latest-message-timestamp="formattedDate"
-    :unread-count="item.unreadCount[profile?.data.id]" :is-active="item.chatRoomId === memoizedChatRoomId"
-    :image="item?.image" :status="item.lastSeenTime" :is-typing="isUserTyping"
-    :document="item?.latestMessage?.document" />
+    @click="handleClickUser(profile?.data.id, item)" :unread-count="item.unreadCount[profile?.data.id]"
+    :is-active="item.chatRoomId === memoizedChatRoomId" :image="item?.image" :status="item.lastSeenTime"
+    :is-typing="isUserTyping" :document="item?.latestMessage?.document" :latest-message="item.latestMessage"
+    :profile-id="profile?.data.id" />
 </template>
