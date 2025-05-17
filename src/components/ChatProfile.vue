@@ -13,6 +13,7 @@ const handleClick = () => {
 const formattedTextMessage = computed(() => {
   if (!document) return textMessage?.replace(/<br\s*\/?>/gi, ' ');
   if (!document?.caption && document?.type === 'image') return 'Photo'
+  if (document?.caption) return document.caption
 });
 
 const memoizedTypeMessageIcon = computed(() => {
