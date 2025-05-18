@@ -38,7 +38,8 @@ const items = shallowRef([
         messageId: props.message?.messageId,
         senderUserId: props.message?.senderUserId,
         profileId: props.profileId,
-        isDeleted: props.isDeleted
+        isDeleted: props.isDeleted,
+        secondProfileId: chatRoom.value?.userIds?.find(id => id !== props.profileId)
       })
     }
   },

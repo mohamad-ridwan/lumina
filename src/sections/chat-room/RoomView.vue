@@ -142,14 +142,14 @@ function handleBeforeUnload() {
 }
 
 function setHeaderRef(el, item) {
-  if (!item?.latestMessageTimestamp) return
+  // if (!item?.latestMessageTimestamp) return
 
-  const key = item.id // bisa juga pakai uniqueKey kalau ada
-  if (el) {
-    headerRefs.value[key] = el
-  } else {
-    delete headerRefs.value[key]
-  }
+  // const key = item.id // bisa juga pakai uniqueKey kalau ada
+  // if (el) {
+  //   headerRefs.value[key] = el
+  // } else {
+  //   delete headerRefs.value[key]
+  // }
 }
 
 const onScroll = () => {
@@ -795,10 +795,10 @@ onUnmounted(() => {
     <HeaderChatRoom :recipient-id="memoizedUserIds.filter(id => id !== profile.data.id)?.[0]"
       :profile-id="profile.data.id" :profile-id-connection="profileIdConnection" />
 
-    <div v-if="currentStickyHeader.text"
+    <!-- <div v-if="currentStickyHeader.text"
       :class="`absolute top-22 z-10 rotate-180 flex justify-center items-center left-2 right-[0.8rem] ${showDateHeader ? 'opacity-100' : 'opacity-0'} transition-all`">
       <DateHeader :date="currentStickyHeader.text" />
-    </div>
+    </div> -->
 
     <SkeletonMessages v-if="loadingMessages" />
 

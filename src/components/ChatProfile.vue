@@ -34,7 +34,7 @@ const formattedDate = computed(() => {
   if (!latestMessageCurrently.value?.latestMessageTimestamp) {
     return ''
   }
-  const timestampInMilliseconds = latestMessageCurrently.value.latestMessageTimestamp;
+  const timestampInMilliseconds = Number(latestMessageCurrently.value.latestMessageTimestamp);
 
   const date = dayjs(timestampInMilliseconds);
 
@@ -53,12 +53,31 @@ const formattedDate = computed(() => {
   }
 });
 
+const isDeleted = computed(() => {
+  if (!latestMessageCurrently.value?.isDeleted || latestMessageCurrently.value?.isDeleted?.length === 0) {
+    return
+  }
+  const deletedEveryone = latestMessageCurrently.value.isDeleted.find(data => data?.deletionType === 'everyone')
+  if (!deletedEveryone) {
+    return
+  }
+  if (deletedEveryone?.senderUserId === profileId) {
+    return 'You deleted this message.'
+  } else if (deletedEveryone?.senderUserId !== profileId) {
+    return 'Message has been deleted.'
+  }
+  return
+})
+
 const fromMe = computed(() => {
   if (!latestMessageCurrently.value) return false
   return latestMessageCurrently.value?.senderUserId === profileId ? true : false
 })
 
 const formattedTextMessage = computed(() => {
+  if (isDeleted.value) {
+    return isDeleted.value
+  }
   if (!latestMessageCurrently.value?.document) return latestMessageCurrently.value?.textMessage?.replace(/<br\s*\/?>/gi, ' ');
   if (!latestMessageCurrently.value?.document?.caption && latestMessageCurrently.value?.document?.type === 'image') return 'Photo'
   if (latestMessageCurrently.value?.document?.caption) return latestMessageCurrently.value.document.caption
@@ -108,7 +127,7 @@ const memoizedTypeMessageIcon = computed(() => {
             class="opacity-0 animate-fade-in flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 w-full truncate">
             <span v-if="fromMe" class="hidden sm:inline">You:</span>
             <i v-if="memoizedTypeMessageIcon" class="!text-[13px]" :class="memoizedTypeMessageIcon"></i>
-            <span class="truncate w-full">{{ formattedTextMessage }}</span>
+            <span class="truncate w-full" :class="`${isDeleted ? 'italic' : ''}`">{{ formattedTextMessage }}</span>
           </p>
           <p v-if="isTyping" class="opacity-0 animate-fade-in italic text-xs text-gray-600 dark:text-gray-400">
             Typing...</p>

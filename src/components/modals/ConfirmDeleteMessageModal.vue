@@ -30,6 +30,7 @@ const submitDeleteMessage = (deletionType) => {
     messageId: confirmDeleteMessage.value?.messageId,
     deletionType,
     senderUserId: confirmDeleteMessage.value?.profileId,
+    secondProfileId: confirmDeleteMessage.value?.secondProfileId,
     eventType: 'delete-message'
   }
 
