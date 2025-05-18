@@ -152,6 +152,16 @@ const handleUpdateDeleteMessage = async (data) => {
   // Salin seluruh chats agar triggerRef bekerja
   const updatedChats = [...chats.value]
 
+  if (!data?.latestMessage || data.latestMessage?.length === 0) {
+    updatedChats[indexChat] = {
+      ...updatedChats[indexChat],
+      latestMessage: []
+    }
+    chats.value = updatedChats
+    triggerRef(chats)
+    return
+  }
+
   // Ganti item chat dengan versi yang diperbarui
   updatedChats[indexChat] = {
     ...updatedChats[indexChat],
@@ -173,7 +183,7 @@ const handleUpdateDeleteMessage = async (data) => {
 watch(newMessateSocketUpdate, (data) => {
   if (data.eventType === 'send-message') {
     handleNewMessage(data)
-  } else if (data?.eventType === 'delete-message' && data?.latestMessage) {
+  } else if (data?.eventType === 'delete-message') {
     handleUpdateDeleteMessage(data)
   }
 })
