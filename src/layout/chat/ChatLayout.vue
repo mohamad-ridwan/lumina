@@ -183,7 +183,7 @@ const handleUpdateDeleteMessage = async (data) => {
 watch(newMessateSocketUpdate, (data) => {
   if (data.eventType === 'send-message') {
     handleNewMessage(data)
-  } else if (data?.eventType === 'delete-message') {
+  } else if (data?.eventType === 'delete-message' && data?.isUpdatedLatestMessage) {
     handleUpdateDeleteMessage(data)
   }
 })
