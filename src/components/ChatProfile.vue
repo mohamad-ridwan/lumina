@@ -57,7 +57,7 @@ const isDeleted = computed(() => {
   if (!latestMessageCurrently.value?.isDeleted || latestMessageCurrently.value?.isDeleted?.length === 0) {
     return
   }
-  const deletedEveryone = latestMessageCurrently.value.isDeleted.find(data => data?.deletionType === 'everyone')
+  const deletedEveryone = latestMessageCurrently.value.isDeleted.find(data => data?.deletionType === 'everyone' || data?.deletionType === 'permanent')
   if (!deletedEveryone) {
     return
   }
@@ -85,7 +85,9 @@ const formattedTextMessage = computed(() => {
 
 const memoizedTypeMessageIcon = computed(() => {
   if (!latestMessageCurrently.value?.document) return null
-  if (latestMessageCurrently.value?.document.type === 'image') {
+  if (isDeleted.value) {
+    return 'pi pi-ban'
+  } else if (latestMessageCurrently.value?.document.type === 'image') {
     return 'pi pi-image'
   } else if (latestMessageCurrently.value?.document.type === 'video') {
     return 'pi pi-video'

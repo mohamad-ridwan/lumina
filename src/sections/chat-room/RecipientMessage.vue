@@ -42,7 +42,7 @@ const memoizedTextMessage = computed(() => {
     }
     return textMessage
   }
-  return 'Message has been deleted.'
+  return '<span class="items-center flex gap-1"><i class="pi pi-ban !text-[13px]"></i> Message has been deleted.</span>'
 })
 const memoizedBoxWrapperClass = computed(() => {
   if (messageDeleted.value || !document) return 'p-2'
