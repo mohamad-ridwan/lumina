@@ -493,7 +493,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   async function handleAddNewMessage(newMessage, profileId) {
     let newData = {}
 
-    const latestMessage = newMessage.latestMessage?.find((msg) => msg.userId === profileId)
+    const latestMessage = newMessage?.latestMessage?.find((msg) => msg.userId === profileId)
 
     if (newMessage?.isHeader) {
       newData = {
@@ -546,6 +546,10 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         bufferNewMessages.value.unshift(newData)
       }
 
+      return
+    }
+
+    if (!latestMessage) {
       return
     }
 
