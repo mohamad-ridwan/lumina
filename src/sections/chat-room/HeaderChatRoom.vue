@@ -4,7 +4,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue';
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import calendar from 'dayjs/plugin/calendar'
@@ -26,7 +26,7 @@ const chatStore = chatsStore()
 const { chats } = storeToRefs(chatStore)
 
 // state
-// const userProfileSocketUpdate = ref(null)
+const userProfileSocketUpdate = ref(null)
 const now = ref(Date.now())
 
 // logic
@@ -105,48 +105,48 @@ onUnmounted(() => {
   }
 })
 
-// watch(profileInfo, (data) => {
-//   if (data?.key) {
-//     socket.emit('user-profile', {
-//       profileId: recipientId,
-//       senderId: profileId,
-//       profileIdConnection,
-//       actionType: 'chat-room'
-//     })
-//   }
-// }, { immediate: true })
-
-// onBeforeMount(() => {
-//   socket.on('user-profile', (data) => {
-//     if (
-//       data?.actionType === 'chat-room' &&
-//       data?.senderId === profileId &&
-//       data?.profileIdConnection === profileIdConnection &&
-//       data?.profile?.id === recipientId
-//     ) {
-//       userProfileSocketUpdate.value = data
-//     }
-//   })
-// })
-
-// watch(userProfileSocketUpdate, (data) => {
-//   if (
-//     data?.actionType === 'chat-room' &&
-//     data?.senderId === profileId &&
-//     data?.profileIdConnection === profileIdConnection &&
-//     data?.profile?.id === recipientId
-//   ) {
-//     chatRoomUsername.value = data.profile.username
-//     image.value = data.profile.image
-//   }
-// })
-
 watch(profileInfo, (data) => {
-  if (data?.username) {
-    chatRoom.value.username = data.username
-    chatRoom.value.image = data.image
+  if (data?.key) {
+    socket.emit('user-profile', {
+      profileId: recipientId,
+      senderId: profileId,
+      profileIdConnection,
+      actionType: 'chat-room'
+    })
   }
 }, { immediate: true })
+
+onBeforeMount(() => {
+  socket.on('user-profile', (data) => {
+    if (
+      data?.actionType === 'chat-room' &&
+      data?.senderId === profileId &&
+      data?.profileIdConnection === profileIdConnection &&
+      data?.profile?.id === recipientId
+    ) {
+      userProfileSocketUpdate.value = data
+    }
+  })
+})
+
+watch(userProfileSocketUpdate, (data) => {
+  if (
+    data?.actionType === 'chat-room' &&
+    data?.senderId === profileId &&
+    data?.profileIdConnection === profileIdConnection &&
+    data?.profile?.id === recipientId
+  ) {
+    chatRoom.value.username = data.profile.username
+    chatRoom.value.image = data.profile.image
+  }
+})
+
+// watch(profileInfo, (data) => {
+//   if (data?.username) {
+//     chatRoom.value.username = data.username
+//     chatRoom.value.image = data.image
+//   }
+// }, { immediate: true })
 </script>
 
 <template>
