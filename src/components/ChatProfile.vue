@@ -84,10 +84,11 @@ const formattedTextMessage = computed(() => {
 });
 
 const memoizedTypeMessageIcon = computed(() => {
-  if (!latestMessageCurrently.value?.document) return null
   if (isDeleted.value) {
     return 'pi pi-ban'
-  } else if (latestMessageCurrently.value?.document.type === 'image') {
+  }
+  if (!latestMessageCurrently.value?.document) return null
+  if (latestMessageCurrently.value?.document.type === 'image') {
     return 'pi pi-image'
   } else if (latestMessageCurrently.value?.document.type === 'video') {
     return 'pi pi-video'
