@@ -8,7 +8,7 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch } from 'vue';
+import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 import { clientUrl } from '@/services/apiBaseUrl';
@@ -144,9 +144,37 @@ const handleNewMessage = (data) => {
   }
 }
 
+const handleUpdateDeleteMessage = async (data) => {
+  const indexChat = memoizedChats.value?.findIndex(chat => chat?.chatId === data?.chatId)
+  if (indexChat === -1) {
+    return
+  }
+  // Salin seluruh chats agar triggerRef bekerja
+  const updatedChats = [...chats.value]
+
+  // Ganti item chat dengan versi yang diperbarui
+  updatedChats[indexChat] = {
+    ...updatedChats[indexChat],
+    latestMessage: data.latestMessage.map(message => {
+      let newData = {
+        ...message
+      }
+      if (message?.isDeleted) {
+        newData.isDeleted = [...message.isDeleted]
+      }
+      return newData
+    })
+  }
+
+  chats.value = updatedChats
+  triggerRef(chats)
+}
+
 watch(newMessateSocketUpdate, (data) => {
   if (data.eventType === 'send-message') {
     handleNewMessage(data)
+  } else if (data?.eventType === 'delete-message' && data?.latestMessage) {
+    handleUpdateDeleteMessage(data)
   }
 })
 
