@@ -1,10 +1,10 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Button, Menu } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { toRef } from 'vue'
 import { useKeyboardVisibility } from '@/composables/useKeyboardVisibility'
+import MenuCard from './MenuCard.vue'
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
@@ -21,7 +21,7 @@ const menu = ref(null)
 const isUploading = computed(() => !!proccessSubmitAttachmentData.value)
 
 const toggleMenu = (event) => {
-  menu.value.toggle(event)
+  menu.value.menu.toggle(event)
 }
 
 const onSelectPhoto = async () => {
@@ -65,7 +65,7 @@ const attachmentItems = computed(() => [
 useKeyboardVisibility(() => {
   // Keyboard ditutup → hide menu
   if (menu.value) {
-    menu.value.hide()
+    menu.value.menu.hide()
   }
 })
 
@@ -77,11 +77,8 @@ watch(blurInputKey, () => {
 <!-- components/AttachmentMenu.vue -->
 <template>
   <div class="relative inline-block">
-    <!-- Button icon (PrimeVue Button with icon) -->
-    <Button icon="pi pi-paperclip" class="p-button-rounded p-button-text" @click="toggleMenu" aria-label="Attachment" />
-
-    <!-- Dropdown menu -->
-    <Menu ref="menu" :model="attachmentItems" popup />
+    <MenuCard ref="menu" :items="attachmentItems" :toggleMenu="toggleMenu" btnMenuIcon="pi pi-paperclip"
+      btn-size="medium" btn-icon-class="text-sm" />
   </div>
 </template>
 

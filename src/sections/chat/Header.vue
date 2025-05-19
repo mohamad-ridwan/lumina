@@ -11,7 +11,7 @@ import { chatsStore } from '@/stores/chats';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { socket } from '@/services/socket/socket';
 import { storeToRefs } from 'pinia';
-import { Menu } from 'primevue';
+import MenuCard from '@/components/menu/MenuCard.vue';
 
 // props
 const { scroller } = defineProps(['scroller'])
@@ -105,7 +105,7 @@ const handleScrollToTop = () => {
 }
 
 const toggleMenu = (event) => {
-  menu.value.toggle(event)
+  menu.value.menu.toggle(event)
 }
 </script>
 
@@ -120,15 +120,7 @@ const toggleMenu = (event) => {
       <div class="flex items-center gap-4">
         <Button icon="pi pi-plus" aria-label="Chat" :class="theme.regularBtn" size="small" icon-class="!text-xs"
           @click="showTemplate($event)" />
-        <Button icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" @click="toggleMenu" aria-label="Menu"
-          size="small" icon-class="!text-xs" />
-        <Menu ref="menu" :model="chatsMenu" popup>
-          <template #item="{ item }">
-            <button class="flex items-center gap-2 py-1.5 px-2.5 cursor-pointer"><i
-                :class="['pi', item.icon, item.iconClass]"></i>
-              <span :class="item.labelClass">{{ item.label }}</span></button>
-          </template>
-        </Menu>
+        <MenuCard ref="menu" :items="chatsMenu" :toggleMenu="toggleMenu" btnMenuIcon="pi pi-ellipsis-v" />
       </div>
     </div>
     <slot name="search"></slot>

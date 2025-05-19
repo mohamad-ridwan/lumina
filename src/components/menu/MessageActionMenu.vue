@@ -4,6 +4,7 @@ import { Button, Menu } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { general } from '@/helpers/general'
+import MenuCard from './MenuCard.vue'
 
 // store
 // chat-room store
@@ -60,7 +61,7 @@ watch(props, (props) => {
 }, { immediate: true })
 
 const toggle = (event) => {
-  menu.value.toggle(event)
+  menu.value.menu.toggle(event)
   if (activeMessageMenu.value === props.message.messageId) {
     resetActiveMessageMenu()
   } else {
@@ -103,11 +104,12 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col">
-    <Button type="button" icon="pi pi-angle-up" rounded severity="secondary" aria-label="More" @click="toggle"
-      size="small" aria-haspopup="true" :aria-controls="`overlay_menu_${props.message?.messageId}`"
-      class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]" />
-    <Menu ref="menu" :id="`overlay_menu_${props.message?.messageId}`" :model="items" :popup="true" @show="onShow"
-      @hide="onHide" class="!text-[13px] absolute top-6 !min-w-[100px] !flex"
-      :appendTo="deviceCurrently === 'desktop' ? 'body' : 'self'" :style="memoizedMenuStyle" />
+    <MenuCard ref="menu" menu-class="!text-[13px] absolute top-6 !min-w-[100px] !flex"
+      :id="`overlay_menu_${props.message?.messageId}`" :items="items" :toggleMenu="toggle"
+      btnMenuIcon="pi pi-ellipsis-v" @show="onShow" @hide="onHide" :style="memoizedMenuStyle"
+      :append-to="deviceCurrently === 'desktop' ? 'body' : 'self'" btn-icon-class="pi pi-angle-up"
+      btn-menu-class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]"
+      :btn-menu-aria-controls="`overlay_menu_${props.message?.messageId}`" btn-menu-aria-haspopup="true"
+      :btn-menu-rounded="true" btn-menu-severity="secondary" btn-menu-aria-label="More" />
   </div>
 </template>
