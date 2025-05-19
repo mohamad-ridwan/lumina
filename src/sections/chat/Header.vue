@@ -11,6 +11,7 @@ import { chatsStore } from '@/stores/chats';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { socket } from '@/services/socket/socket';
 import { storeToRefs } from 'pinia';
+import { Menu } from 'primevue';
 
 // props
 const { scroller } = defineProps(['scroller'])
@@ -33,6 +34,7 @@ const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
 const confirmState = ref(null)
+const menu = ref(null)
 
 // logic
 const profileId = computed(() => profile.value?.data.id)
@@ -43,22 +45,7 @@ const memoizedChatRoomId = computed(() => {
   return chatRoom.value?.chatRoomId
 })
 
-const showTemplate = (event) => {
-  if (confirmState.value) {
-    confirmState.value = event.currentTarget
-  } else {
-    confirmState.value = null
-    confirm.close()
-  }
-
-  confirm.require({
-    target: confirmState.value,
-    group: 'templating',
-    message: 'Please confirm to proceed moving forward.',
-    acceptClass: '!hidden',
-    rejectClass: '!hidden',
-  });
-}
+const handleOpenProfile = () => { }
 
 const handleLogout = () => {
   // offline first
@@ -79,10 +66,46 @@ const handleLogout = () => {
   setChatRoomMessages([])
 }
 
+const chatsMenu = [
+  {
+    label: 'Profile',
+    icon: 'pi pi-image',
+    command: handleOpenProfile,
+  },
+  {
+    label: 'Logout',
+    icon: 'pi pi-sign-out',
+    command: handleLogout,
+    iconClass: '!text-red-700',
+    labelClass: '!text-red-700',
+  },
+]
+
+const showTemplate = (event) => {
+  if (confirmState.value) {
+    confirmState.value = event.currentTarget
+  } else {
+    confirmState.value = null
+    confirm.close()
+  }
+
+  confirm.require({
+    target: confirmState.value,
+    group: 'templating',
+    message: 'Please confirm to proceed moving forward.',
+    acceptClass: '!hidden',
+    rejectClass: '!hidden',
+  });
+}
+
 const handleScrollToTop = () => {
   if (scroller) {
     scroller.scrollToItem(0)
   }
+}
+
+const toggleMenu = (event) => {
+  menu.value.toggle(event)
 }
 </script>
 
@@ -97,9 +120,15 @@ const handleScrollToTop = () => {
       <div class="flex items-center gap-4">
         <Button icon="pi pi-plus" aria-label="Chat" :class="theme.regularBtn" size="small" icon-class="!text-xs"
           @click="showTemplate($event)" />
-        <Button icon="pi pi-sign-out" aria-label="Log out"
-          class="'rounded-tl-[6px] !rounded-bl-[6px] rounded-tr-[6px] rounded-br-[6px] !bg-transparent hover:!bg-transparent !h-[23px] !w-[23px] justify-center items-center flex cursor-pointer !text-red-700 !outline-none !border-none !p-0"
-          size="small" icon-class="!text-xs" @click="handleLogout" />
+        <Button icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" @click="toggleMenu" aria-label="Menu"
+          size="small" icon-class="!text-xs" />
+        <Menu ref="menu" :model="chatsMenu" popup>
+          <template #item="{ item }">
+            <button class="flex items-center gap-2 py-1.5 px-2.5 cursor-pointer"><i
+                :class="['pi', item.icon, item.iconClass]"></i>
+              <span :class="item.labelClass">{{ item.label }}</span></button>
+          </template>
+        </Menu>
       </div>
     </div>
     <slot name="search"></slot>
