@@ -5,6 +5,7 @@ import MenuCard from '@/components/menu/MenuCard.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 import { general } from '@/helpers/general';
+import CropperImgPreview from '@/components/modals/CropperImgPreview.vue';
 
 // users store
 const userStore = usersStore()
@@ -16,6 +17,7 @@ const { handleSetActiveMediaData } = chatRoomStore
 const { getUploadFile } = general
 
 const menuRef = ref(null)
+const imgUploaded = ref(null)
 
 const items = [
   {
@@ -30,7 +32,10 @@ const items = [
   },
   {
     label: 'Upload Photo', icon: 'pi-upload', command: async () => {
-      const file = await getUploadFile('image/*')
+      const file = await getUploadFile()
+      if (file) {
+        imgUploaded.value = URL.createObjectURL(file)
+      }
     }
   },
   { label: 'Delete Photo', icon: 'pi-trash', command: () => console.log('Delete Photo') }
@@ -39,9 +44,14 @@ const items = [
 const toggleMenu = (event) => {
   menuRef.value?.menu?.toggle?.(event);
 };
+
+const closeCropper = () => {
+  imgUploaded.value = null
+}
 </script>
 
 <template>
+  <CropperImgPreview @close="closeCropper" :imgUploaded="imgUploaded" />
   <div class="w-full flex justify-center items-center bg-[#F1F1F1] px-2 py-5">
     <div class="relative group h-[150px] w-[150px] rounded-full overflow-hidden">
       <img :src="profile?.data?.image" alt="Profile Image" class="h-full w-full object-cover cursor-pointer"
