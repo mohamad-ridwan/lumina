@@ -9,7 +9,6 @@ const props = defineProps({
   },
   toggleMenu: {
     type: Function,
-    required: true
   },
   btnMenuIcon: {
     type: String,
@@ -60,6 +59,10 @@ const props = defineProps({
   btnMenuAriaLabel: {
     type: String,
   },
+  isUseBtnToggle: {
+    type: Boolean,
+    default: true
+  }
 })
 const emits = defineEmits(['show', 'hide']);
 
@@ -78,8 +81,8 @@ const onHide = (event) => {
 </script>
 
 <template>
-  <Button :icon="props.btnMenuIcon" :class="props.btnMenuClass" @click="props.toggleMenu" aria-label="Menu"
-    :size="props.btnSize" :icon-class="btnIconClass" :aria-controls="props.btnMenuAriaControls"
+  <Button v-if="props.isUseBtnToggle" :icon="props.btnMenuIcon" :class="props.btnMenuClass" @click="props.toggleMenu"
+    aria-label="Menu" :size="props.btnSize" :icon-class="btnIconClass" :aria-controls="props.btnMenuAriaControls"
     :aria-haspopup="props.btnMenuAriaHaspopup" :rounded="props.btnMenuRounded" :severity="props.btnMenuSeverity"
     :type="props.btnMenuType" :aria-label="props.btnMenuAriaLabel" />
   <Menu :id="menuId" ref="menu" :model="props.items" :class="props.menuClass" popup @show="onShow" @hide="onHide"

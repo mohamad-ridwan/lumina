@@ -32,7 +32,7 @@ const images = computed(() => {
 })
 
 const date = computed(() => {
-  if (!activeMediaData.value) return ''
+  if (!activeMediaData.value || !activeMediaData.value?.latestMessageTimestamp) return ''
   const itemDate = dayjs(Number(activeMediaData.value?.latestMessageTimestamp)).startOf('day')
   return `${formatDate(itemDate)} at ${activeMediaData.value.hours}`
 })
@@ -59,7 +59,7 @@ const onHide = () => {
     <!-- Username -->
     <div class="flex flex-col">
       <span class="font-semibold">{{ activeMediaData.username }}</span>
-      <span class="text-sm text-gray-300">{{ date }}</span>
+      <span v-if="date" class="text-sm text-gray-300">{{ date }}</span>
     </div>
 
     <!-- Close button (PrimeVue Button) -->

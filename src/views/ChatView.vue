@@ -1,6 +1,7 @@
 <script setup>
 import ChatRoomLayout from '@/layout/chat-room/ChatRoomLayout.vue';
 import ChatLayout from '@/layout/chat/ChatLayout.vue';
+import ProfileLayoutWrapper from '@/layout/profile/ProfileLayoutWrapper.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
@@ -145,6 +146,7 @@ onUnmounted(() => {
 
 <template>
   <div class="grid grid-cols-1 md:grid-cols-3">
+    <ProfileLayoutWrapper />
     <ChatLayout />
     <ChatRoomLayout />
   </div>

@@ -1,6 +1,5 @@
 <script setup>
 import { ref, defineProps, onUnmounted, computed, onBeforeMount, shallowRef, triggerRef, watch } from 'vue'
-import { Button, Menu } from 'primevue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { general } from '@/helpers/general'

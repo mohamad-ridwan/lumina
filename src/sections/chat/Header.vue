@@ -22,14 +22,14 @@ const router = useRouter()
 // store
 // users store
 const userStore = usersStore()
-const { setProfile } = userStore
+const { setProfile, setActiveProfile } = userStore
 const { profile } = storeToRefs(userStore)
 // chat store
 const chatStore = chatsStore()
 const { setChats } = chatStore
 // chat room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoom, setChatRoomMessages } = chatRoomStore
+const { setChatRoom, setChatRoomMessages, handleResetConfirmDeleteMessage } = chatRoomStore
 const { chatRoom } = storeToRefs(chatRoomStore)
 
 // state
@@ -44,8 +44,6 @@ const memoizedChatId = computed(() => {
 const memoizedChatRoomId = computed(() => {
   return chatRoom.value?.chatRoomId
 })
-
-const handleOpenProfile = () => { }
 
 const handleLogout = () => {
   // offline first
@@ -64,6 +62,20 @@ const handleLogout = () => {
   setChats([])
   setChatRoom({})
   setChatRoomMessages([])
+}
+
+const handleOpenProfile = () => {
+  handleResetConfirmDeleteMessage()
+  setActiveProfile(true)
+  setChatRoom({})
+  setChatRoomMessages([])
+  if (memoizedChatId.value) {
+    socket.emit('leaveRoom', {
+      chatRoomId: memoizedChatRoomId.value,
+      chatId: memoizedChatId.value,
+      userId: profileId.value
+    })
+  }
 }
 
 const chatsMenu = [
