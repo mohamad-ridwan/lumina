@@ -5,11 +5,14 @@ import { storeToRefs } from 'pinia'
 import { toRef } from 'vue'
 import { useKeyboardVisibility } from '@/composables/useKeyboardVisibility'
 import MenuCard from './MenuCard.vue'
+import { general } from '@/helpers/general'
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleSetAttachment } = chatRoomStore
 const { proccessSubmitAttachmentData } = storeToRefs(chatRoomStore)
+
+const { getUploadFile } = general
 
 const props = defineProps(['blurInputKey'])
 
@@ -25,19 +28,10 @@ const toggleMenu = (event) => {
 }
 
 const onSelectPhoto = async () => {
-  // Trigger file picker
-  const fileInput = document.createElement('input')
-  fileInput.type = 'file'
-  fileInput.accept = 'image/*'
-  fileInput.onchange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      // selectedImage.value = file
-      // isPreviewVisible.value = true
-      handleSetAttachment({ type: 'image', file })
-    }
+  const file = await getUploadFile('image/*')
+  if (file) {
+    handleSetAttachment({ type: 'image', file })
   }
-  fileInput.click()
 }
 
 // Menu items

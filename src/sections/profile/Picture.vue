@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import MenuCard from '@/components/menu/MenuCard.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
+import { general } from '@/helpers/general';
 
 // users store
 const userStore = usersStore()
@@ -11,6 +12,8 @@ const { profile } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleSetActiveMediaData } = chatRoomStore
+
+const { getUploadFile } = general
 
 const menuRef = ref(null)
 
@@ -25,7 +28,11 @@ const items = [
       }
     }
   },
-  { label: 'Upload Photo', icon: 'pi-upload', command: () => console.log('Upload Photo') },
+  {
+    label: 'Upload Photo', icon: 'pi-upload', command: async () => {
+      const file = await getUploadFile('image/*')
+    }
+  },
   { label: 'Delete Photo', icon: 'pi-trash', command: () => console.log('Delete Photo') }
 ];
 

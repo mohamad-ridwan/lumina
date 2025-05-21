@@ -114,6 +114,22 @@ function messageMatching(streams, indexedDBData) {
   return result.sort(sortByTimestamp)
 }
 
+const getUploadFile = async (accept = 'image/*') => {
+  // Trigger file picker
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
+  fileInput.accept = accept
+  return await new Promise((resolve) => {
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0]
+      if (file) {
+        resolve(file)
+      }
+    }
+    fileInput.click()
+  })
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -121,4 +137,5 @@ export const general = {
   deviceDetector,
   messageMatching,
   formatDate,
+  getUploadFile,
 }
