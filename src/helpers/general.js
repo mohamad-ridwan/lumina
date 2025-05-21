@@ -130,6 +130,20 @@ const getUploadFile = async (accept = 'image/*') => {
   })
 }
 
+const base64ToBlob = (base64, mimeType = 'image/jpeg') => {
+  const byteString = atob(base64.split(',')[1])
+  const arrayBuffer = new ArrayBuffer(byteString.length)
+  const intArray = new Uint8Array(arrayBuffer)
+  for (let i = 0; i < byteString.length; i++) {
+    intArray[i] = byteString.charCodeAt(i)
+  }
+  return new Blob([intArray], { type: mimeType })
+}
+const blobToFile = (blob, filename) => {
+  const file = new File([blob], filename, { type: blob.type })
+  return file
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -138,4 +152,6 @@ export const general = {
   messageMatching,
   formatDate,
   getUploadFile,
+  base64ToBlob,
+  blobToFile,
 }

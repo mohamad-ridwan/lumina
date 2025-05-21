@@ -1,6 +1,18 @@
 import { clientUrl } from '../apiBaseUrl'
 import { fetchData } from '../fetchData'
 
+export const fetchUpdateProfile = async (req) => {
+  const result = await fetchData(`${clientUrl}/users/update-profile`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(req),
+  })
+
+  return result
+}
+
 export const fetchRegisterVerification = async (req) => {
   const result = await fetchData(`${clientUrl}/register-verify/verification`, {
     method: 'POST',
