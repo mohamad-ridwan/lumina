@@ -42,8 +42,10 @@ watch(imgUploaded, (image) => {
       :stencil-props="{ aspectRatio: 1 }" class="h-[300px] w-full" @change="onChangeImgUploaded" />
 
     <template #footer>
-      <Button label="Cancel" severity="secondary" @click="close" />
-      <Button icon="pi pi-check" label="Apply" severity="success" @click="handleSubmit" />
+      <div class="flex justify-end gap-2 items-center pt-4">
+        <Button label="Cancel" severity="secondary" size="small" @click="close" />
+        <Button icon="pi pi-check" label="Apply" size="small" @click="handleSubmit" />
+      </div>
     </template>
   </Dialog>
 </template>
