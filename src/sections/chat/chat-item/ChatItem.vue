@@ -59,7 +59,9 @@ watch(userProfileSocketUpdate, (data) => {
       chats.value[chatUserIndex] = {
         ...chats.value[chatUserIndex],
         username: data.profile.username,
-        image: data.profile.image
+        image: data.profile.image,
+        thumbnail: data.profile.thumbnail,
+        imgCropped: data.profile.imgCropped,
       }
       chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data
       triggerRef(chats)
