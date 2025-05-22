@@ -42,7 +42,7 @@ const items = [
     }
   },
   {
-    label: 'Upload Photo', icon: 'pi-upload', command: async () => {
+    label: 'Upload Photo', icon: 'pi-folder-open', command: async () => {
       const file = await getUploadFile()
       if (file) {
         imgUploaded.value = {
@@ -113,7 +113,7 @@ const handleSubmit = async (url) => {
       <div
         :class="`absolute inset-0 bg-black/60 flex flex-col justify-center items-center text-white ${!loadingUpdated ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'} transition-opacity duration-300 pointer-events-none`">
         <div v-if="!loadingUpdated" class="flex flex-col justify-center items-center gap-1">
-          <i class="pi pi-pencil text-lg mb-1"></i>
+          <i class="pi pi-camera text-lg mb-1"></i>
           <span class="text-sm">Change Profile Photo</span>
         </div>
         <div v-else class="flex flex-col justify-center items-center gap-1">

@@ -10,7 +10,7 @@ const { activeProfile } = storeToRefs(userStore)
 
 <template>
   <div v-if="activeProfile" class="flex flex-col gap-2 relative h-dvh w-full">
-    <div class="flex-1 flex-col flex w-full">
+    <div class="flex-1 flex-col flex w-full bg-[#F1F1F1]">
       <ProfileLayout />
     </div>
   </div>

@@ -4,6 +4,7 @@ import { onMounted } from 'vue';
 import Header from '@/sections/profile/Header.vue';
 import Picture from '@/sections/profile/Picture.vue';
 import ImageLightBox from '@/components/media/ImageLightBox.vue';
+import UpdateUsername from '@/sections/profile/UpdateUsername.vue';
 
 // users store
 const userStore = usersStore()
@@ -34,4 +35,5 @@ onMounted(() => {
   <ImageLightBox />
   <Header />
   <Picture />
+  <UpdateUsername />
 </template>
