@@ -111,7 +111,7 @@ const memoizedTypeMessageIcon = computed(() => {
         <!-- Avatar -->
         <div :class="`${imgSize ?? 'w-12 sm:w-14'}`">
           <div :class="`relative ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
-            <v-lazy-image :src="image" alt="profile" :src-placeholder="thumbnail"
+            <v-lazy-image :src="imgCropped ?? image" alt="profile" :src-placeholder="thumbnail"
               class="object-cover rounded-full h-full w-full" sizes="(max-width: 60px) 40px, 80px" />
             <div v-if="status === 'online'" class="absolute bottom-0.5 right-0">
               <div class="h-[12px] w-[12px] rounded-full bg-green-500 border-[1px] border-white"></div>
