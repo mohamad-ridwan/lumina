@@ -21,7 +21,10 @@ const { getUploadFile, base64ToBlob, blobToFile } = general
 
 const menuRef = ref(null)
 const loadingUpdated = ref(false)
-const imgUploaded = ref(null)
+const imgUploaded = ref({
+  image: null,
+  imgCropped: null,
+})
 
 const { uploadFileToFirebase } = firebaseUtils
 
@@ -42,7 +45,10 @@ const items = [
     label: 'Upload Photo', icon: 'pi-upload', command: async () => {
       const file = await getUploadFile()
       if (file) {
-        imgUploaded.value = URL.createObjectURL(file)
+        imgUploaded.value = {
+          image: file,
+          imgCropped: URL.createObjectURL(file),
+        }
       }
     }
   },
@@ -64,7 +70,17 @@ const handleSubmit = async (url) => {
 
   const blob = base64ToBlob(url)
   const file = blobToFile(blob, 'profile.jpg')
-  const urlImage = await uploadFileToFirebase(file, 'lumina/images')
+  const imgResult = await Promise.all([
+    uploadFileToFirebase(file, 'lumina/images'),
+    uploadFileToFirebase(imgUploaded.value.image, 'lumina/images')
+  ])
+  const urlCroppedImage = imgResult[0]
+  const urlImage = imgResult[1]
+  if (!urlCroppedImage) {
+    loadingUpdated.value = false
+    toast.add({ severity: 'error', summary: 'An error occurred. Please try again.', life: 3000 });
+    return
+  }
   if (!urlImage) {
     loadingUpdated.value = false
     toast.add({ severity: 'error', summary: 'An error occurred. Please try again.', life: 3000 });
@@ -72,6 +88,7 @@ const handleSubmit = async (url) => {
   }
   const profileUpdated = await fetchUpdateProfile({
     id: profile.value?.data?.id,
+    imgCropped: urlCroppedImage,
     image: urlImage,
   })
   if (profileUpdated?.isErr) {
@@ -80,6 +97,7 @@ const handleSubmit = async (url) => {
     return
   }
   toast.add({ severity: 'success', summary: profileUpdated.message, life: 3000 })
+  profile.value.data.imgCropped = urlCroppedImage
   profile.value.data.image = urlImage
   loadingUpdated.value = false
 }
@@ -89,7 +107,7 @@ const handleSubmit = async (url) => {
   <CropperImgPreview @close="closeCropper" :imgUploaded="imgUploaded" @submit="handleSubmit" />
   <div class="w-full flex justify-center items-center bg-[#F1F1F1] px-2 py-5">
     <div class="relative group h-[150px] w-[150px] rounded-full overflow-hidden">
-      <img :src="profile?.data?.image" alt="Profile Image"
+      <img :src="profile?.data?.imgCropped" alt="Profile Image"
         :class="`h-full w-full object-cover ${loadingUpdated ? 'cursor-not-allowed' : 'cursor-pointer'}`"
         @click="toggleMenu" />
       <div

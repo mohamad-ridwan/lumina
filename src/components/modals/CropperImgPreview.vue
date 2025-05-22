@@ -6,7 +6,7 @@ import 'vue-advanced-cropper/dist/style.css';
 import { ref, toRefs, watch } from 'vue'
 
 const props = defineProps({
-  imgUploaded: String,
+  imgUploaded: Object,
 })
 const emit = defineEmits(['close', 'submit'])
 
@@ -30,15 +30,15 @@ const onChangeImgUploaded = ({ coordinates: coords }) => {
   coordinates.value = coords
 }
 
-watch(imgUploaded, (url) => {
-  visible.value = !!url
+watch(imgUploaded, (image) => {
+  visible.value = !!image?.imgCropped
 })
 </script>
 
 <template>
   <Dialog v-model:visible="visible" modal header="Set Image to Fit" :style="{ width: '400px' }" @hide="close"
     :dismissableMask="true">
-    <Cropper ref="cropperRef" :src="props.imgUploaded" :stencil-component="CircleStencil"
+    <Cropper ref="cropperRef" :src="imgUploaded.imgCropped" :stencil-component="CircleStencil"
       :stencil-props="{ aspectRatio: 1 }" class="h-[300px] w-full" @change="onChangeImgUploaded" />
 
     <template #footer>
