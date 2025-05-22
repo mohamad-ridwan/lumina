@@ -110,5 +110,5 @@ onBeforeMount(() => {
     @click="handleClickUser(profile?.data.id, item)" :unread-count="item.unreadCount[profile?.data.id]"
     :is-active="item.chatRoomId === memoizedChatRoomId" :image="item?.image" :status="item.lastSeenTime"
     :is-typing="isUserTyping" :document="item?.latestMessage?.document" :latest-message="item.latestMessage"
-    :profile-id="profile?.data.id" />
+    :profile-id="profile?.data.id" :img-cropped="item?.imgCropped" :thumbnail="item?.thumbnail" />
 </template>

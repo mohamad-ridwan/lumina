@@ -7,6 +7,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import weekday from 'dayjs/plugin/weekday';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
+import VLazyImage from "v-lazy-image";
 
 dayjs.extend(localizedFormat)
 dayjs.extend(relativeTime);
@@ -14,7 +15,7 @@ dayjs.extend(weekday);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 
-const { textMessage, username, fontSizeUsername, imgSize, heightContainer, unreadCount, isActive, image, status, isTyping, document, latestMessage, profileId } = defineProps(['textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document', 'latestMessage', 'profileId'])
+const { textMessage, username, fontSizeUsername, imgSize, heightContainer, unreadCount, isActive, image, status, isTyping, document, latestMessage, profileId, thumbnail, imgCropped } = defineProps(['textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document', 'latestMessage', 'profileId', 'thumbnail', 'imgCropped'])
 
 const emits = defineEmits(['click'])
 
@@ -110,7 +111,8 @@ const memoizedTypeMessageIcon = computed(() => {
         <!-- Avatar -->
         <div :class="`${imgSize ?? 'w-12 sm:w-14'}`">
           <div :class="`relative ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
-            <img :src="image" alt="profile" :class="`object-cover rounded-full h-full w-full`">
+            <v-lazy-image :src="image" alt="profile" :src-placeholder="thumbnail"
+              class="object-cover rounded-full h-full w-full" sizes="(max-width: 60px) 40px, 80px" />
             <div v-if="status === 'online'" class="absolute bottom-0.5 right-0">
               <div class="h-[12px] w-[12px] rounded-full bg-green-500 border-[1px] border-white"></div>
             </div>
@@ -172,5 +174,14 @@ const memoizedTypeMessageIcon = computed(() => {
 .animate-fade-in {
   animation: fade-in 0.5s ease-in-out forwards;
   /* Sesuaikan durasi dan easing */
+}
+
+.v-lazy-image {
+  filter: blur(4px);
+  transition: filter 0.7s;
+}
+
+.v-lazy-image-loaded {
+  filter: blur(0);
 }
 </style>
