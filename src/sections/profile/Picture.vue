@@ -1,6 +1,6 @@
 <script setup>
 import { usersStore } from '@/stores/users';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import MenuCard from '@/components/menu/MenuCard.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
@@ -30,6 +30,15 @@ const { uploadFileToFirebase } = firebaseUtils
 
 const toast = useToast()
 
+const memoizedImage = computed(() => {
+  if (!profile.value.data?.imgCropped && profile.value.data?.image) {
+    return profile.value.data?.image
+  } else if (profile.value.data?.imgCropped) {
+    return profile.value.data?.imgCropped
+  }
+  return '/avatar.png'
+})
+
 const items = [
   {
     label: 'See Photo', icon: 'pi-eye', command: () => {
@@ -39,7 +48,8 @@ const items = [
           username: profile.value?.data?.username,
         })
       }
-    }
+    },
+    disabled: !profile.value?.data?.image,
   },
   {
     label: 'Upload Photo', icon: 'pi-folder-open', command: async () => {
@@ -107,7 +117,7 @@ const handleSubmit = async (url) => {
   <CropperImgPreview @close="closeCropper" :imgUploaded="imgUploaded" @submit="handleSubmit" />
   <div class="w-full flex justify-center items-center bg-[#F1F1F1] px-2 py-5">
     <div class="relative group h-[150px] w-[150px] rounded-full overflow-hidden">
-      <img :src="profile?.data?.imgCropped" alt="Profile Image"
+      <img :src="memoizedImage" alt="Profile Image"
         :class="`h-full w-full object-cover ${loadingUpdated ? 'cursor-not-allowed' : 'cursor-pointer'}`"
         @click="toggleMenu" />
       <div
