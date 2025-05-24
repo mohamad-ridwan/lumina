@@ -118,9 +118,6 @@ onBeforeMount(() => {
   })
 })
 
-let previousScrollHeight = 0
-let previousScrollTop = 0
-
 const handleGetNextChats = async () => {
   if (loadingNextChats.value) return
   loadingNextChats.value = true
@@ -146,10 +143,6 @@ const handleGetNextChats = async () => {
 const handleScroll = () => {
   const el = scroller.value?.$el
   if (!el) return
-
-  const scrollTop = scroller.value?.$el?.scrollTop ?? 0
-  previousScrollTop = scrollTop
-  previousScrollHeight = el.scrollHeight
 
   // console.log(el.scrollTop, el.scrollHeight, el.clientHeight)
   if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
