@@ -168,6 +168,7 @@ watch(scroller, (scroller) => {
   if (!el) return
 
   el.addEventListener('scroll', handleScroll)
+  window.addEventListener('resize', handleScroll)
 }, { once: true })
 
 onUnmounted(() => {
@@ -175,6 +176,7 @@ onUnmounted(() => {
   if (!el) return
 
   el.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('resize', handleScroll)
 })
 
 onBeforeMount(async () => {
