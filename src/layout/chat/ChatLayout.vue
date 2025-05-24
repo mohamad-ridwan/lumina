@@ -8,13 +8,13 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch } from 'vue';
+import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
-import { clientUrl } from '@/services/apiBaseUrl';
 import NoSearchResult from './NoSearchResult.vue';
 import NoChats from './NoChats.vue';
 import ChatProfileSkeleton from '@/sections/chat/chat-item/ChatProfileSkeleton.vue';
+import { fetchChats } from '@/services/api/chats';
 
 // store
 // profile store
@@ -46,44 +46,64 @@ const searchMessengerData = computed(() => {
   )
 })
 
-function resetChatsEventSource() {
-  chatsEventSource.value.close()
-  chatsEventSource.value = null
-}
+// function resetChatsEventSource() {
+//   chatsEventSource.value.close()
+//   chatsEventSource.value = null
+// }
 
-async function handleGetChats() {
-  chatsEventSource.value = new EventSource(
-    `${clientUrl}/chats?userId=${profile.value?.data.id}`,
-  )
+const handleGetChats = async () => {
+  loadingChats.value = true
+  const chatsData = await fetchChats(profile.value?.data.id)
+  if (chatsData?.data?.length > 0) {
+    const newChats = [...markRaw(memoizedChats.value), ...chatsData.data].filter((chat, index, self) =>
+      index === self.findIndex(c => c.chatId === chat.chatId)
+    ).sort((a, b) => {
+      const a_currentLatestMessage = a?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
+      const b_currentLatestMessage = b?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
 
-  chatsEventSource.value.onmessage = (event) => {
-    const message = JSON.parse(event.data)
-
-    if (message?.length) {
-      const chatIds = new Set()
-      const newChats = [...markRaw(memoizedChats.value), ...message].filter(item => {
-        if (chatIds.has(item.chatId)) {
-          return false; // Hilangkan duplikat
-        }
-        chatIds.add(item.chatId);
-        return true; // Pertahankan kemunculan pertama
-      });
-      setChats(newChats)
-    }
+      return a_currentLatestMessage?.latestMessageTimestamp > b_currentLatestMessage?.latestMessageTimestamp ? -1 : 1
+    })
+    setChats(newChats, true)
     loadingChats.value = false
+  } else {
+    loadingChats.value = false
+    setChats([], true)
   }
-
-  chatsEventSource.value.addEventListener('done', () => {
-    resetChatsEventSource()
-    loadingChats.value = false
-  })
-
-  chatsEventSource.value.addEventListener('error', (e) => {
-    console.error('Streaming error:', e)
-    resetChatsEventSource()
-    loadingChats.value = false
-  })
 }
+
+// async function handleGetChats() {
+//   chatsEventSource.value = new EventSource(
+//     `${clientUrl}/chats?userId=${profile.value?.data.id}`,
+//   )
+
+//   chatsEventSource.value.onmessage = (event) => {
+//     const message = JSON.parse(event.data)
+
+//     if (message?.length) {
+//       const chatIds = new Set()
+//       const newChats = [...markRaw(memoizedChats.value), ...message].filter(item => {
+//         if (chatIds.has(item.chatId)) {
+//           return false; // Hilangkan duplikat
+//         }
+//         chatIds.add(item.chatId);
+//         return true; // Pertahankan kemunculan pertama
+//       });
+//       setChats(newChats)
+//     }
+//     loadingChats.value = false
+//   }
+
+//   chatsEventSource.value.addEventListener('done', () => {
+//     resetChatsEventSource()
+//     loadingChats.value = false
+//   })
+
+//   chatsEventSource.value.addEventListener('error', (e) => {
+//     console.error('Streaming error:', e)
+//     resetChatsEventSource()
+//     loadingChats.value = false
+//   })
+// }
 
 // hooks rendering
 onBeforeMount(() => {
