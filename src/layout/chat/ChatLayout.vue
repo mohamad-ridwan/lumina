@@ -8,7 +8,7 @@ import { socket } from '@/services/socket/socket';
 import { chatsStore } from '@/stores/chats';
 import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
-import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch } from 'vue';
+import { computed, markRaw, nextTick, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ChatLayoutWrapper from './ChatLayoutWrapper.vue';
 import NoSearchResult from './NoSearchResult.vue';
@@ -28,10 +28,12 @@ const { chats } = storeToRefs(chatStore)
 // state
 const newMessateSocketUpdate = ref(null)
 const newReadNotificationSocketUpdate = ref(null)
-const chatsEventSource = ref(null)
+// const chatsEventSource = ref(null)
 const scroller = ref(null)
 const searchValue = shallowRef('')
 const loadingChats = shallowRef(true)
+const loadingNextChats = ref(false)
+const firstLoadChats = ref(true)
 
 // logic
 const memoizedChats = computed(() => chats.value)
@@ -114,6 +116,72 @@ onBeforeMount(() => {
   socket.on('readNotification', (data) => {
     newReadNotificationSocketUpdate.value = data
   })
+})
+
+let previousScrollHeight = 0
+let previousScrollTop = 0
+
+const handleGetNextChats = async () => {
+  if (loadingNextChats.value) return
+  loadingNextChats.value = true
+  const anchorChatId = searchMessengerData.value?.[searchMessengerData.value.length - 1]?.chatId
+  if (!anchorChatId) return
+  const chatsData = await fetchChats(profile.value?.data.id, anchorChatId)
+  if (!chatsData?.data?.length) {
+    loadingNextChats.value = false
+    return
+  }
+  const newChats = [...markRaw(memoizedChats.value), ...chatsData.data].filter((chat, index, self) =>
+    index === self.findIndex(c => c.chatId === chat.chatId)
+  ).sort((a, b) => {
+    const a_currentLatestMessage = a?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
+    const b_currentLatestMessage = b?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
+
+    return a_currentLatestMessage?.latestMessageTimestamp > b_currentLatestMessage?.latestMessageTimestamp ? -1 : 1
+  })
+  setChats(newChats, true)
+  loadingNextChats.value = false
+}
+
+const handleScroll = () => {
+  const el = scroller.value?.$el
+  if (!el) return
+
+  const scrollTop = scroller.value?.$el?.scrollTop ?? 0
+  previousScrollTop = scrollTop
+  previousScrollHeight = el.scrollHeight
+
+  // console.log(el.scrollTop, el.scrollHeight, el.clientHeight)
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
+    // Scroll ke bawah
+    handleGetNextChats()
+  }
+}
+
+watch([searchMessengerData, scroller], async ([_, scroller]) => {
+  await nextTick()
+  await nextTick()
+  await nextTick()
+  if (!scroller || !firstLoadChats.value) {
+    return
+  }
+  handleScroll()
+  firstLoadChats.value = false
+})
+
+watch(scroller, (scroller) => {
+  const el = scroller.$el
+
+  if (!el) return
+
+  el.addEventListener('scroll', handleScroll)
+}, { once: true })
+
+onUnmounted(() => {
+  const el = scroller.value?.$el
+  if (!el) return
+
+  el.removeEventListener('scroll', handleScroll)
 })
 
 onBeforeMount(async () => {

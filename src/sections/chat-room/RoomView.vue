@@ -688,6 +688,12 @@ watch(loadingMessages, async (loading) => {
   const el = scroller.value?.$el
   if (!el) return
 
+  el.removeEventListener('wheel', markUserScroll)
+  el.removeEventListener('touchstart', markUserScroll)
+  el.removeEventListener('touchmove', markUserScroll)
+  el.removeEventListener('pointerdown', markUserScroll)
+  el.removeEventListener('scroll', handleScroll)
+
   // Tangkap gesture dari user
   el.addEventListener('wheel', markUserScroll, { passive: true })
   el.addEventListener('touchstart', markUserScroll, { passive: true })
