@@ -179,7 +179,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       await nextTick()
       triggerRef(chatRoomMessages)
       scroller.value.$refs.scroller.$forceUpdate(true)
-      scroller.value.scrollToItem(messageIndex)
+      scroller.value.scrollToItem(messageIndex - 1)
       clearTimeout(handleResetGoingScrollToMessageId)
       goingScrollToMessageId.value = messageId
       handleResetGoingScrollToMessageId()
@@ -211,7 +211,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         if (messageIndex !== -1) {
           clearTimeout(resetTriggerGoToMessageIndex)
           scroller.value.scrollToItem(messageIndex)
-          resetTriggerGoToMessageIndex(messageIndex)
+          resetTriggerGoToMessageIndex(messageIndex - 1)
           await nextTick()
           await nextTick()
           triggerRef(chatRoomMessages)
