@@ -80,7 +80,6 @@ const lastSeenText = computed(() => {
 })
 
 function handleBack() {
-  setChatRoom({})
   if (chatRoomEventSource.value) {
     resetChatRoomEventSource()
   }
@@ -91,6 +90,7 @@ function handleBack() {
       userId: profileId
     })
   }
+  setChatRoom({})
 }
 
 // hooks rendering
@@ -166,7 +166,7 @@ watch(userProfileSocketUpdate, (data) => {
       <div class="flex flex-col">
         <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? chatRoom.username :
           profileInfo.username
-          }}</h2>
+        }}</h2>
         <span v-if="memoizedStatusUserOnline && memoizedStatusUserOnline !== 'online'"
           class="text-[11px] text-[#6b7280]">
           Last seen {{ lastSeenText }}

@@ -26,7 +26,7 @@ const { setProfile, setActiveProfile } = userStore
 const { profile } = storeToRefs(userStore)
 // chat store
 const chatStore = chatsStore()
-const { setChats } = chatStore
+const { setChats, searchMessengerData } = chatStore
 // chat room store
 const chatRoomStore = useChatRoomStore()
 const { setChatRoom, setChatRoomMessages, handleResetConfirmDeleteMessage } = chatRoomStore
@@ -62,6 +62,7 @@ const handleLogout = () => {
   setChats([])
   setChatRoom({})
   setChatRoomMessages([])
+  searchMessengerData.value = []
 }
 
 const handleOpenProfile = () => {

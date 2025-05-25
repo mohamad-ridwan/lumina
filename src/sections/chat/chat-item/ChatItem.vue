@@ -22,7 +22,7 @@ const { handleClickUser } = chatRoomStore
 const { chatRoom, usersTyping } = storeToRefs(chatRoomStore)
 // chats store
 const chatStore = chatsStore()
-const { chats } = storeToRefs(chatStore)
+const { chats, searchMessengerData } = storeToRefs(chatStore)
 
 // state
 const userProfileSocketUpdate = ref(null)
@@ -66,6 +66,21 @@ watch(userProfileSocketUpdate, (data) => {
       chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data
       triggerRef(chats)
     }
+
+    const searchMessageUserIndex = markRaw(searchMessengerData.value)
+      ?.slice()
+      ?.findIndex((chat) => chat?.chatId === item?.chatId)
+    if (searchMessageUserIndex !== -1) {
+      searchMessengerData.value[searchMessageUserIndex] = {
+        ...searchMessengerData.value[searchMessageUserIndex],
+        username: data.profile.username,
+        image: data.profile.image,
+        thumbnail: data.profile.thumbnail,
+        imgCropped: data.profile.imgCropped,
+      }
+      searchMessengerData.value = markRaw([...searchMessengerData.value]) // gunakan markRaw karena hanya replace data
+      triggerRef(searchMessengerData)
+    }
   }
 }, { immediate: true })
 
@@ -84,11 +99,37 @@ watch(userOnlineInfoSocketUpdate, (data) => {
       chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data array
       triggerRef(chats)
     }
+
+    const searchMessageUserIndex = markRaw(searchMessengerData.value)?.slice()?.findIndex(chat => chat?.userIds.find(id => id === data.recipientId))
+    if (searchMessageUserIndex !== -1) {
+      searchMessengerData.value[searchMessageUserIndex] = {
+        ...searchMessengerData.value[searchMessageUserIndex],
+        lastSeenTime: data.status
+      }
+      searchMessengerData.value = markRaw([...searchMessengerData.value]) // gunakan markRaw karena hanya replace data array
+      triggerRef(searchMessengerData)
+    }
   }
 }, { immediate: true })
 
 onBeforeMount(() => {
   if (profile && userIdsCurrently) {
+    socket.emit('user-profile', {
+      profileId: userIdsCurrently,
+      senderId: profile.value.data.id,
+      profileIdConnection: profileIdConnection.value,
+      actionType: 'chats'
+    })
+    socket.emit('getUserOnlineInfo', {
+      recipientId: userIdsCurrently,
+      senderId: profile.value?.data.id,
+      profileIdConnection: profileIdConnection.value,
+    })
+  }
+})
+
+watch(() => item?.username, () => {
+  if (!item?.username) {
     socket.emit('user-profile', {
       profileId: userIdsCurrently,
       senderId: profile.value.data.id,

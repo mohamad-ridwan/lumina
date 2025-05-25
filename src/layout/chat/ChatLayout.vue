@@ -23,7 +23,7 @@ const { profile } = storeToRefs(userStore)
 // chats store
 const chatStore = chatsStore()
 const { setChats } = chatStore
-const { chats } = storeToRefs(chatStore)
+const { chats, searchMessengerData } = storeToRefs(chatStore)
 
 // state
 const newMessateSocketUpdate = ref(null)
@@ -34,18 +34,16 @@ const searchValue = shallowRef('')
 const loadingChats = shallowRef(true)
 const loadingNextChats = ref(false)
 const firstLoadChats = ref(true)
+const loadingSearch = ref(false)
+const isNextSearchMessengerData = ref(true)
 
 // logic
 const memoizedChats = computed(() => chats.value)
-const searchMessengerData = computed(() => {
-  if (!searchValue.value.trim()) {
-    return memoizedChats.value
-  }
-
-  return memoizedChats.value.filter(chat =>
-    chat?.latestMessage?.textMessage?.toLowerCase()?.includes(searchValue.value.toLowerCase()) ||
-    chat?.username?.toLowerCase()?.includes(searchValue.value.toLowerCase())
-  )
+const memoizedChatsCurrently = computed(() => {
+  // if (!searchMessengerData.value.length) {
+  //   return memoizedChats.value
+  // }
+  return searchMessengerData.value
 })
 
 // function resetChatsEventSource() {
@@ -66,10 +64,13 @@ const handleGetChats = async () => {
       return a_currentLatestMessage?.latestMessageTimestamp > b_currentLatestMessage?.latestMessageTimestamp ? -1 : 1
     })
     setChats(newChats, true)
+    searchMessengerData.value = newChats
+    triggerRef(searchMessengerData)
     loadingChats.value = false
   } else {
     loadingChats.value = false
     setChats([], true)
+    searchMessengerData.value = []
   }
 }
 
@@ -118,12 +119,12 @@ onBeforeMount(() => {
   })
 })
 
-const handleGetNextChats = async () => {
+const handleGetNextChats = async (getNextSearchMessengerData) => {
   if (loadingNextChats.value) return
   loadingNextChats.value = true
-  const anchorChatId = searchMessengerData.value?.[searchMessengerData.value.length - 1]?.chatId
+  const anchorChatId = memoizedChatsCurrently.value?.[memoizedChatsCurrently.value.length - 1]?.chatId
   if (!anchorChatId) return
-  const chatsData = await fetchChats(profile.value?.data.id, anchorChatId)
+  const chatsData = await fetchChats(profile.value?.data.id, anchorChatId, searchValue.value.trim() || undefined)
   if (!chatsData?.data?.length) {
     loadingNextChats.value = false
     return
@@ -137,21 +138,53 @@ const handleGetNextChats = async () => {
     return a_currentLatestMessage?.latestMessageTimestamp > b_currentLatestMessage?.latestMessageTimestamp ? -1 : 1
   })
   setChats(newChats, true)
+
+  const newSearchMessenger = [...markRaw(memoizedChatsCurrently.value), ...chatsData.data].filter((chat, index, self) =>
+    index === self.findIndex(c => c.chatId === chat.chatId)
+  ).sort((a, b) => {
+    const a_currentLatestMessage = a?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
+    const b_currentLatestMessage = b?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
+
+    return a_currentLatestMessage?.latestMessageTimestamp > b_currentLatestMessage?.latestMessageTimestamp ? -1 : 1
+  })
+  searchMessengerData.value = newSearchMessenger
+  triggerRef(searchMessengerData)
   loadingNextChats.value = false
+  if (getNextSearchMessengerData && chatsData?.isNext === true && searchValue.value.trim()) {
+    isNextSearchMessengerData.value = true
+  } else if (getNextSearchMessengerData) {
+    isNextSearchMessengerData.value = false
+  }
+  if (chatsData?.isNext === true) {
+    await nextTick()
+    await nextTick()
+    await nextTick()
+    handleScroll()
+  }
 }
 
-const handleScroll = () => {
+const handleScroll = (getNextSearchMessengerData) => {
   const el = scroller.value?.$el
   if (!el) return
 
   // console.log(el.scrollTop, el.scrollHeight, el.clientHeight)
   if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
     // Scroll ke bawah
-    handleGetNextChats()
+    handleGetNextChats(getNextSearchMessengerData)
   }
 }
 
-watch([searchMessengerData, scroller], async ([_, scroller]) => {
+watch([memoizedChatsCurrently, isNextSearchMessengerData, loadingSearch, searchValue], async ([_, isNextSearchMessengerData, loadingSearch, searchValue]) => {
+  if (searchValue.trim() && isNextSearchMessengerData && !loadingSearch) {
+    await nextTick()
+    await nextTick()
+    await nextTick()
+
+    handleScroll(true)
+  }
+})
+
+watch([memoizedChatsCurrently, scroller], async ([_, scroller]) => {
   await nextTick()
   await nextTick()
   await nextTick()
@@ -170,6 +203,39 @@ watch(scroller, (scroller) => {
   el.addEventListener('scroll', handleScroll)
   window.addEventListener('resize', handleScroll)
 }, { once: true })
+
+let searchTimeout = null
+
+watch(searchValue, async (search) => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  if (search.trim() === '') {
+    searchMessengerData.value = chats.value
+    triggerRef(searchMessengerData)
+    loadingSearch.value = false
+    return
+  }
+  loadingSearch.value = true
+  searchTimeout = setTimeout(async () => {
+    if (search.trim()) {
+      const searchResult = await fetchChats(profile.value?.data.id, null, search)
+      if (searchResult?.data?.length > 0) {
+        searchMessengerData.value = searchResult.data
+        searchMessengerData.value = [...searchMessengerData.value]
+        triggerRef(searchMessengerData)
+        loadingSearch.value = false
+      } else {
+        searchMessengerData.value = []
+        loadingSearch.value = false
+      }
+    } else {
+      loadingSearch.value = false
+      searchMessengerData.value = chats.value
+      triggerRef(searchMessengerData)
+    }
+  }, 500)
+})
 
 onUnmounted(() => {
   const el = scroller.value?.$el
@@ -200,7 +266,7 @@ const handleNewMessage = (data) => {
       ...chatCurrently,
       latestMessage: data.latestMessage,
       unreadCount: data.unreadCount,
-      latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
+      // latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
     }
     const removeChatUserCurrently = memoizedChats.value?.slice()?.filter(chat =>
       chat.chatId !== data?.chatId
@@ -217,13 +283,62 @@ const handleNewMessage = (data) => {
     // buat baru dan masukkan ke awal index
     const newUserChat = {
       ...data,
-      latestMessageTimestamp: data.latestMessage?.latestMessageTimestamp,
+      // latestMessageTimestamp: data.latestMessage?.latestMessageTimestamp,
       userIds: [Object.entries(data.unreadCount).find((k) => k[0] === profile.value?.data.id).find(id => id !== 0), Object.entries(data.unreadCount).find((k) => k[0] !== profile.value?.data.id).find(id => id !== 0)]
     }
     delete newUserChat.eventType
     chats.value.unshift(newUserChat)
     chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data
     triggerRef(chats)
+  }
+}
+
+const handleNewMessageSearchMessenger = (data) => {
+  const chatCurrently = markRaw(memoizedChatsCurrently.value)?.find(chat => chat?.chatId === data?.chatId)
+  // jika data ada di chats store
+  // tinggal ubah datanya
+  if (chatCurrently && !data?.isHeader) {
+    const newChatUserCurrently = {
+      ...chatCurrently,
+      latestMessage: data.latestMessage,
+      unreadCount: data.unreadCount,
+      // latestMessageTimestamp: data.latestMessage.latestMessageTimestamp
+    }
+    const removeChatUserCurrently = memoizedChatsCurrently.value?.slice()?.filter(chat =>
+      chat.chatId !== data?.chatId
+    )
+    searchMessengerData.value = [newChatUserCurrently, ...removeChatUserCurrently]
+    triggerRef(searchMessengerData)
+  } else if (
+    !chatCurrently && data?.unreadCount?.[profile.value?.data.id] !== undefined &&
+    !data?.isHeader
+  ) {
+    if (searchValue.value.trim()) {
+      if (data?.recipientProfileId !== profile.value?.data.id) {
+        return
+      }
+      const latestMessageCurrently = data.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
+
+      const inSearch = data?.username?.toLowerCase().includes(searchValue.value.toLowerCase()) ||
+        (latestMessageCurrently && latestMessageCurrently?.textMessage?.toLowerCase().includes(searchValue.value.toLowerCase())) ||
+        (latestMessageCurrently && latestMessageCurrently?.document?.caption?.toLowerCase().includes(searchValue.value.toLowerCase()))
+
+      if (!inSearch) {
+        return
+      }
+    }
+
+    // jika belum ada di chats store
+    // buat baru dan masukkan ke awal index
+    const newUserChat = {
+      ...data,
+      // latestMessageTimestamp: data.latestMessage?.latestMessageTimestamp,
+      userIds: [Object.entries(data.unreadCount).find((k) => k[0] === profile.value?.data.id).find(id => id !== 0), Object.entries(data.unreadCount).find((k) => k[0] !== profile.value?.data.id).find(id => id !== 0)]
+    }
+    delete newUserChat.eventType
+    searchMessengerData.value.unshift(newUserChat)
+    searchMessengerData.value = markRaw([...searchMessengerData.value]) // gunakan markRaw karena hanya replace data
+    triggerRef(searchMessengerData)
   }
 }
 
@@ -263,11 +378,49 @@ const handleUpdateDeleteMessage = async (data) => {
   triggerRef(chats)
 }
 
+const handleUpdateDeleteSearchMessenger = (data) => {
+  const indexChat = memoizedChatsCurrently.value?.findIndex(chat => chat?.chatId === data?.chatId)
+  if (indexChat === -1) {
+    return
+  }
+  // Salin seluruh chats agar triggerRef bekerja
+  const updatedChats = [...searchMessengerData.value]
+
+  if (!data?.latestMessage || data.latestMessage?.length === 0) {
+    updatedChats[indexChat] = {
+      ...updatedChats[indexChat],
+      latestMessage: []
+    }
+    searchMessengerData.value = updatedChats
+    triggerRef(searchMessengerData)
+    return
+  }
+
+  // Ganti item chat dengan versi yang diperbarui
+  updatedChats[indexChat] = {
+    ...updatedChats[indexChat],
+    latestMessage: data.latestMessage.map(message => {
+      let newData = {
+        ...message
+      }
+      if (message?.isDeleted) {
+        newData.isDeleted = [...message.isDeleted]
+      }
+      return newData
+    })
+  }
+
+  searchMessengerData.value = updatedChats
+  triggerRef(searchMessengerData)
+}
+
 watch(newMessateSocketUpdate, (data) => {
   if (data.eventType === 'send-message') {
     handleNewMessage(data)
+    handleNewMessageSearchMessenger(data)
   } else if (data?.eventType === 'delete-message' && data?.isUpdatedLatestMessage) {
     handleUpdateDeleteMessage(data)
+    handleUpdateDeleteSearchMessenger(data)
   }
 })
 
@@ -281,6 +434,16 @@ watch(newReadNotificationSocketUpdate, (data) => {
     chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace data
     triggerRef(chats)
   }
+
+  const searchMessageUserIndex = markRaw(memoizedChatsCurrently.value)?.findIndex(chat => chat?.chatId === data?.chatId)
+  if (searchMessageUserIndex !== -1) {
+    searchMessengerData.value[searchMessageUserIndex] = {
+      ...searchMessengerData.value[searchMessageUserIndex],
+      unreadCount: data.unreadCount
+    }
+    searchMessengerData.value = markRaw([...searchMessengerData.value]) // gunakan markRaw karena hanya replace data
+    triggerRef(searchMessengerData)
+  }
 })
 </script>
 
@@ -288,7 +451,7 @@ watch(newReadNotificationSocketUpdate, (data) => {
   <ChatLayoutWrapper>
     <Header :scroller="scroller">
       <template #search>
-        <SearchMessenger v-model="searchValue" />
+        <SearchMessenger v-model="searchValue" :icon="loadingSearch ? 'pi-spin pi-spinner' : undefined" />
       </template>
     </Header>
     <ListChat>
@@ -301,16 +464,16 @@ watch(newReadNotificationSocketUpdate, (data) => {
         </div>
 
         <!-- no result search messenger -->
-        <NoSearchResult v-if="searchValue.trim() && searchMessengerData.length === 0" />
+        <NoSearchResult v-if="searchValue.trim() && !loadingSearch && searchMessengerData.length === 0" />
 
         <!-- chat list -->
-        <RecycleScroller v-if="!loadingChats && searchMessengerData.length > 0" ref="scroller" class="px-3 pb-3 flex-1"
-          :items="searchMessengerData" :item-size="64" key-field="chatId" v-slot="{ item }" :key="item?.chatId">
+        <RecycleScroller v-if="!loadingChats && memoizedChats.length > 0" ref="scroller" class="px-3 pb-3 flex-1"
+          :items="memoizedChatsCurrently" :item-size="64" key-field="chatId" v-slot="{ item }" :key="item?.chatId">
           <ChatItem :item="item" :key="item.chatId" />
         </RecycleScroller>
 
         <!-- no chats -->
-        <NoChats v-if="!loadingChats && !searchValue.trim() && searchMessengerData.length === 0" />
+        <NoChats v-if="!loadingChats && !searchValue.trim() && memoizedChats.length === 0" />
       </template>
     </ListChat>
   </ChatLayoutWrapper>

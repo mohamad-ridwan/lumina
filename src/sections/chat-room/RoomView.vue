@@ -385,8 +385,6 @@ onBeforeUnmount(() => {
 })
 
 const preventBackNavigation = () => {
-  setChatRoom({})
-  setChatRoomMessages([])
   handleResetConfirmDeleteMessage()
   if (chatRoomEventSource.value) {
     resetChatRoomEventSource()
@@ -401,6 +399,8 @@ const preventBackNavigation = () => {
   setTimeout(() => {
     history.pushState(null, "", window.location.href)
   }, 100)
+  setChatRoom({})
+  setChatRoomMessages([])
 }
 
 onMounted(() => {

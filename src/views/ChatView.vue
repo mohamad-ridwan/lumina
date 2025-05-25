@@ -14,7 +14,7 @@ const userStore = usersStore()
 const { profile } = storeToRefs(userStore)
 // chats store
 const chatStore = chatsStore()
-const { chats } = storeToRefs(chatStore)
+const { chats, searchMessengerData } = storeToRefs(chatStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleUpdateUsersTyping } = chatRoomStore
@@ -122,6 +122,16 @@ watch(userOfflineSocketUpdate, (data) => {
       chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace array
       triggerRef(chats)
     }
+
+    const searchMessageUserIndex = markRaw(searchMessengerData.value)?.slice()?.findIndex(chat => chat?.userIds.find(recipientId => recipientId === data.id))
+    if (searchMessageUserIndex !== -1) {
+      searchMessengerData.value[searchMessageUserIndex] = {
+        ...searchMessengerData.value[searchMessageUserIndex],
+        lastSeenTime: data.lastSeenTime
+      }
+      searchMessengerData.value = markRaw([...searchMessengerData.value]) // gunakan markRaw karena hanya replace array
+      triggerRef(searchMessengerData)
+    }
   }
 })
 
@@ -135,6 +145,16 @@ watch(userOnlineSocketUpdate, (data) => {
       }
       chats.value = markRaw([...chats.value]) // gunakan markRaw karena hanya replace array
       triggerRef(chats)
+    }
+
+    const searchMessageUserIndex = markRaw(searchMessengerData.value)?.slice()?.findIndex(chat => chat?.userIds.find(recipientId => recipientId === data.id))
+    if (searchMessageUserIndex !== -1) {
+      searchMessengerData.value[searchMessageUserIndex] = {
+        ...searchMessengerData.value[searchMessageUserIndex],
+        lastSeenTime: 'online'
+      }
+      searchMessengerData.value = markRaw([...searchMessengerData.value]) // gunakan markRaw karena hanya replace array
+      triggerRef(searchMessengerData)
     }
   }
 })

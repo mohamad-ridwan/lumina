@@ -1,10 +1,13 @@
 import { clientUrl } from '../apiBaseUrl'
 import { fetchData } from '../fetchData'
 
-export const fetchChats = async (userId, chatId) => {
+export const fetchChats = async (userId, chatId, search) => {
   let query = `?userId=${userId}`
   if (chatId) {
     query += `&chatId=${chatId}`
+  }
+  if (search) {
+    query += `&search=${search}`
   }
   const result = await fetchData(`${clientUrl}/chats${query}`)
   return result
