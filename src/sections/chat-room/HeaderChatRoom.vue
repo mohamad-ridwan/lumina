@@ -8,6 +8,7 @@ import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import calendar from 'dayjs/plugin/calendar'
+import VLazyImage from "v-lazy-image";
 
 // config depedencies
 dayjs.extend(relativeTime)
@@ -57,7 +58,10 @@ const profileInfo = computed(() => {
   }
   return {
     username: currentChat?.username,
-    image: currentChat?.image
+    image: currentChat?.image,
+    thumbnail: currentChat?.thumbnail,
+    imgCropped: currentChat?.imgCropped,
+    key: key += 1
   }
 })
 
@@ -137,7 +141,8 @@ watch(userProfileSocketUpdate, (data) => {
     data?.profile?.id === recipientId
   ) {
     chatRoom.value.username = data.profile.username
-    chatRoom.value.image = data.profile.image
+    chatRoom.value.imgCropped = data.profile.imgCropped
+    chatRoom.value.thumbnail = data.profile.thumbnail
   }
 })
 
@@ -156,8 +161,9 @@ watch(userProfileSocketUpdate, (data) => {
       size="large" icon-class="!text-lg" @click="handleBack" />
     <div class="flex items-center gap-3">
       <div class="relative">
-        <img :src="!profileInfo?.image ? chatRoom.image : profileInfo.image" alt="profile"
-          :class="`object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11`">
+        <v-lazy-image :src="!profileInfo?.imgCropped ? chatRoom?.image : profileInfo.imgCropped" alt="profile"
+          :src-placeholder="profileInfo?.thumbnail" class="object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11"
+          sizes="(max-width: 100px) 80px, 120px" />
         <div v-if="memoizedStatusUserOnline && memoizedStatusUserOnline === 'online'"
           class="absolute bottom-0.5 right-0">
           <div class="h-[11px] w-[11px] rounded-full bg-green-500 border-[1px] border-white"></div>
@@ -175,3 +181,14 @@ watch(userProfileSocketUpdate, (data) => {
     </div>
   </header>
 </template>
+
+<style scoped>
+.v-lazy-image {
+  filter: blur(10px);
+  transition: filter 0.7s;
+}
+
+.v-lazy-image-loaded {
+  filter: blur(0);
+}
+</style>

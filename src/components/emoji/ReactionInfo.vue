@@ -4,6 +4,7 @@ import { useChatRoomStore } from '@/stores/chat-room'
 import { usersStore } from '@/stores/users'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
+import VLazyImage from "v-lazy-image";
 
 const { reactions, profileId, reactionCurrently, messageId, wrapperClass } = defineProps(['reactions', 'profileId', 'reactionCurrently', 'messageId', 'wrapperClass'])
 
@@ -36,12 +37,14 @@ const images = computed(() => {
   return reactions.map((react, key) => {
     if (react.senderUserId === profileId) {
       return {
-        image: profile.value?.data?.image,
+        imgCropped: profile.value?.data?.imgCropped,
+        thumbnail: profile.value?.data?.thumbnail,
         key
       }
     }
     return {
-      image: chatRoom.value?.image,
+      imgCropped: chatRoom.value?.imgCropped,
+      thumbnail: chatRoom.value?.thumbnail,
       key
     }
   })
@@ -75,9 +78,21 @@ const submitReactionMessage = () => {
         <div v-for="react of emojis" class="text-[13px] rotate-180">{{ react.emoji }}</div>
       </div>
       <div class="flex items-center">
-        <img v-for="image of images" class="rounded-full h-4.5 w-4.5 object-cover border border-white rotate-180"
-          :class="image.key > 0 ? 'translate-x-[7px]' : ''" :src="image.image" />
+        <v-lazy-image v-for="image of images" :src="`${image?.imgCropped}`" :src-placeholder="image?.thumbnail"
+          class="rounded-full h-4.5 w-4.5 object-cover border border-white rotate-180"
+          sizes="(max-width: 20px) 15px, 22px" />
       </div>
     </button>
   </div>
 </template>
+
+<style scoped>
+.v-lazy-image {
+  filter: blur(10px);
+  transition: filter 0.7s;
+}
+
+.v-lazy-image-loaded {
+  filter: blur(0);
+}
+</style>
