@@ -810,7 +810,7 @@ onUnmounted(() => {
     <SkeletonMessages v-if="loadingMessages" />
 
     <DynamicScroller v-memo="[memoizedMessages]" v-if="!loadingMessages" id="scrollChatRoom" ref="scroller"
-      :items="memoizedMessages" :key-field="'messageId'" :min-item-size="300"
+      :items="memoizedMessages" :key-field="'messageId'" :min-item-size="400"
       class="flex-1 space-y-2 bg-[#f9fafb] !py-4 !px-2"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">
