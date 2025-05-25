@@ -172,7 +172,7 @@ watch(userProfileSocketUpdate, (data) => {
       <div class="flex flex-col">
         <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? chatRoom.username :
           profileInfo.username
-        }}</h2>
+          }}</h2>
         <span v-if="memoizedStatusUserOnline && memoizedStatusUserOnline !== 'online'"
           class="text-[11px] text-[#6b7280]">
           Last seen {{ lastSeenText }}
@@ -185,7 +185,7 @@ watch(userProfileSocketUpdate, (data) => {
 <style scoped>
 .v-lazy-image {
   filter: blur(10px);
-  transition: filter 0.7s;
+  transition: filter 0.3s;
 }
 
 .v-lazy-image-loaded {
