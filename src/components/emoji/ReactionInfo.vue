@@ -23,15 +23,18 @@ const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
 
+// const emojis = computed(() => {
+//   const map = new Map();
+//   reactions.forEach(react => {
+//     if (!map.has(react.emoji)) {
+//       map.set(react.emoji, react);
+//     }
+//   });
+//   return Array.from(map.values());
+// });
 const emojis = computed(() => {
-  const map = new Map();
-  reactions.forEach(react => {
-    if (!map.has(react.emoji)) {
-      map.set(react.emoji, react);
-    }
-  });
-  return Array.from(map.values());
-});
+  return [...new Map(reactions.map(r => [r.emoji, r])).values()]
+})
 
 const images = computed(() => {
   return reactions.map((react, key) => {
@@ -78,7 +81,8 @@ const submitReactionMessage = () => {
         <div v-for="react of emojis" class="text-[13px] rotate-180">{{ react.emoji }}</div>
       </div>
       <div class="flex items-center">
-        <v-lazy-image v-for="image of images" :src="`${image?.imgCropped}`" :src-placeholder="image?.thumbnail"
+        <v-lazy-image v-for="image of images" :key="image.key" :src="`${image?.imgCropped}`"
+          :src-placeholder="image?.thumbnail"
           class="rounded-full h-4.5 w-4.5 object-cover border border-white rotate-180"
           sizes="(max-width: 20px) 15px, 22px" />
       </div>
