@@ -36,6 +36,7 @@ const loadingNextChats = ref(false)
 const firstLoadChats = ref(true)
 const loadingSearch = ref(false)
 const isNextSearchMessengerData = ref(true)
+const isNextChatsOnResize = ref(true)
 
 // logic
 const memoizedChats = computed(() => chats.value)
@@ -119,12 +120,17 @@ onBeforeMount(() => {
   })
 })
 
-const handleGetNextChats = async (getNextSearchMessengerData) => {
-  if (loadingNextChats.value) return
+const handleGetNextChats = async (getNextSearchMessengerData, onResize) => {
+  if (loadingNextChats.value || (!isNextChatsOnResize.value && onResize)) return
   loadingNextChats.value = true
   const anchorChatId = memoizedChatsCurrently.value?.[memoizedChatsCurrently.value.length - 1]?.chatId
   if (!anchorChatId) return
   const chatsData = await fetchChats(profile.value?.data.id, anchorChatId, searchValue.value.trim() || undefined)
+  if (onResize && chatsData?.isNext === false) {
+    isNextChatsOnResize.value = false
+  } else if (onResize && chatsData?.isNext === true) {
+    isNextChatsOnResize.value = true
+  }
   if (!chatsData?.data?.length) {
     loadingNextChats.value = false
     return
@@ -163,14 +169,14 @@ const handleGetNextChats = async (getNextSearchMessengerData) => {
   }
 }
 
-const handleScroll = (getNextSearchMessengerData) => {
+const handleScroll = (getNextSearchMessengerData, onResize) => {
   const el = scroller.value?.$el
   if (!el) return
 
   // console.log(el.scrollTop, el.scrollHeight, el.clientHeight)
   if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
     // Scroll ke bawah
-    handleGetNextChats(getNextSearchMessengerData)
+    handleGetNextChats(getNextSearchMessengerData, onResize)
   }
 }
 
@@ -201,7 +207,7 @@ watch(scroller, (scroller) => {
   if (!el) return
 
   el.addEventListener('scroll', handleScroll)
-  window.addEventListener('resize', handleScroll)
+  window.addEventListener('resize', () => handleScroll(false, true))
 }, { once: true })
 
 let searchTimeout = null
