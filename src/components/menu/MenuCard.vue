@@ -62,6 +62,9 @@ const props = defineProps({
   isUseBtnToggle: {
     type: Boolean,
     default: true
+  },
+  itemDirection: {
+    type: String,
   }
 })
 const emits = defineEmits(['show', 'hide']);
@@ -88,8 +91,8 @@ const onHide = (event) => {
   <Menu :id="menuId" ref="menu" :model="props.items" :class="props.menuClass" popup @show="onShow" @hide="onHide"
     :style="props.menuStyle" :append-to="props.appendTo">
     <template #item="{ item }">
-      <button class="flex items-center gap-2 py-1.5 px-2.5 cursor-pointer w-full"><i v-if="item?.icon"
-          :class="['pi', item.icon, item.iconClass]"></i>
+      <button :dir="itemDirection" class="flex items-center gap-2 py-1.5 px-2.5 cursor-pointer w-full"><i
+          v-if="item?.icon" :class="['pi', item.icon, item.iconClass]"></i>
         <span :class="item.labelClass">{{ item.label }}</span></button>
     </template>
   </Menu>

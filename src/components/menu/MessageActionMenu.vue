@@ -45,11 +45,23 @@ const items = shallowRef([
   },
 ])
 
-const memoizedMenuStyle = computed(() => {
+// const memoizedMenuStyle = computed(() => {
+//   if (deviceCurrently.value === 'mobile') {
+//     return `margin-bottom: 40px; direction: ltr !important; rotate: 180deg !important; display: block !important; ${props.message.senderUserId === props.profileId ? '' : 'right: 0px;'}`
+//   }
+//   return
+// })
+const memoizedMenuClass = computed(() => {
   if (deviceCurrently.value === 'mobile') {
-    return `margin-bottom: 40px; direction: ltr; rotate: 180deg; display: block !important; ${props.message.senderUserId === props.profileId ? '' : 'right: 0px;'}`
+    const positionClass = props.message.senderUserId === props.profileId ? '' : 'right-0'
+    return [
+      'mb-10',         // margin-bottom: 40px
+      'rotate-180',    // rotate: 180deg
+      'block',// display: block
+      positionClass    // conditional right-0
+    ].join(' ')
   }
-  return
+  return ''
 })
 
 watch(props, (props) => {
@@ -103,12 +115,19 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col">
-    <MenuCard ref="menu" menu-class="!text-[13px] absolute top-6 !min-w-[100px] !flex"
-      :id="`overlay_menu_${props.message?.messageId}`" :items="items" :toggleMenu="toggle"
-      btnMenuIcon="pi pi-ellipsis-v" @show="onShow" @hide="onHide" :style="memoizedMenuStyle"
+    <MenuCard ref="menu" :menu-class="`!text-[13px] absolute top-6 !min-w-[100px] !flex ${memoizedMenuClass}`"
+      :items="items" :toggleMenu="toggle" btnMenuIcon="pi pi-ellipsis-v" @show="onShow" @hide="onHide"
       :append-to="deviceCurrently === 'desktop' ? 'body' : 'self'" btn-icon-class="pi pi-angle-up"
       btn-menu-class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]"
       :btn-menu-aria-controls="`overlay_menu_${props.message?.messageId}`" btn-menu-aria-haspopup="true"
-      :btn-menu-rounded="true" btn-menu-severity="secondary" btn-menu-aria-label="More" />
+      :btn-menu-rounded="true" btn-menu-severity="secondary" btn-menu-aria-label="More" item-direction="ltr" />
+
+    <!-- <MenuCard ref="menu" :menu-class="`!text-[13px] absolute top-6 !min-w-[100px] !flex ${memoizedMenuClass}`"
+      :id="`overlay_menu_${props.message?.messageId}`" :items="items" :toggleMenu="toggle"
+      btnMenuIcon="pi pi-ellipsis-v" @show="onShow" @hide="onHide"
+      :append-to="deviceCurrently === 'desktop' ? 'body' : 'self'" btn-icon-class="pi pi-angle-up"
+      btn-menu-class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]"
+      :btn-menu-aria-controls="`overlay_menu_${props.message?.messageId}`" btn-menu-aria-haspopup="true"
+      :btn-menu-rounded="true" btn-menu-severity="secondary" btn-menu-aria-label="More" item-direction="ltr" /> -->
   </div>
 </template>
