@@ -146,9 +146,9 @@ watch(() => item?.username, () => {
 </script>
 
 <template>
-  <ChatProfileSkeleton v-if="!item?.image || !item?.username" />
+  <ChatProfileSkeleton v-if="!item?.username" />
 
-  <ChatProfile v-if="item?.username && item?.image" :username="item?.username"
+  <ChatProfile v-if="item?.username" :username="item?.username"
     :text-message="item.latestMessage.textMessage || item.latestMessage?.document?.caption"
     @click="handleClickUser(profile?.data.id, item)" :unread-count="item.unreadCount[profile?.data.id]"
     :is-active="item.chatRoomId === memoizedChatRoomId" :image="item?.image" :status="item.lastSeenTime"
