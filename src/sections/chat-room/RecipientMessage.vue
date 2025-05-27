@@ -151,9 +151,9 @@ onMounted(() => {
         <!-- Reply view -->
         <div v-if="!messageDeleted && replyView" class="flex !text-black" :class="memoizedWrapperReplyViewClass">
           <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
-            @on-click="handleScrollToGoMessage(replyView?.messageId)" wrapper-style="direction: ltr; rotate: 180deg;"
-            wrapper-class="border-l-1 py-0.5" text-message-class="!text-[#6b7280]" username-class="text-xs text-start"
-            :document="replyView?.document" />
+            @on-click="handleScrollToGoMessage(replyView?.messageId, profileId)"
+            wrapper-style="direction: ltr; rotate: 180deg;" wrapper-class="border-l-1 py-0.5"
+            text-message-class="!text-[#6b7280]" username-class="text-xs text-start" :document="replyView?.document" />
         </div>
       </div>
     </MessageReaction>

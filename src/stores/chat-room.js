@@ -170,7 +170,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     }, 0)
   }
 
-  const handleScrollToGoMessage = async (messageId) => {
+  const handleScrollToGoMessage = async (messageId, profileId) => {
     handleResetActiveSelectReactions()
     resetActiveMessageMenu()
     const messageIndex = toRaw(chatRoomMessages.value).findIndex(
@@ -187,8 +187,15 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       handleResetGoingScrollToMessageId()
     } else {
       loadingScrollToGoMessageId.value = true
-      const resultMessageAround = await fetchMessagesAround(chatRoom.value?.chatRoomId, messageId)
-      if (resultMessageAround?.isErr || resultMessageAround?.total === 0) {
+      const resultMessageAround = await fetchMessagesAround(
+        chatRoom.value?.chatRoomId,
+        messageId,
+        profileId,
+      )
+      if (
+        (resultMessageAround?.isErr && resultMessageAround?.status !== 404) ||
+        resultMessageAround?.total === 0
+      ) {
         toast.add({ severity: 'error', summary: globalErrMessageAPI, life: 3000 })
       } else {
         clearTimeout(resetTriggerScrollToMessageIdIsDone)

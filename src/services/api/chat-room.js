@@ -1,9 +1,9 @@
 import { clientUrl } from '../apiBaseUrl'
 import { fetchData } from '../fetchData'
 
-export const fetchMessagesAround = async (chatRoomId, messageId) => {
+export const fetchMessagesAround = async (chatRoomId, messageId, profileId) => {
   const result = await fetchData(
-    `${clientUrl}/chat-room/messages/${chatRoomId}/message/${messageId}/around`,
+    `${clientUrl}/chat-room/messages/${chatRoomId}/message/${messageId}/around?profileId=${profileId}`,
     {
       method: 'GET',
       headers: {

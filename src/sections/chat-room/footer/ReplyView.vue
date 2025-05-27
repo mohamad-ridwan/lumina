@@ -55,7 +55,8 @@ watch(replyMessageData, (data) => {
       <ReplyViewCard :username-class="`${fromMessageUsername === 'You' ? 'text-[#2e74e8]' : 'text-black'} text-sm`"
         :wrapper-class="`${fromMessageUsername === 'You' ? 'border-l-[#2e74e8]' : 'border-l-black'} bg-[#F1F1F1] border-l-3 rounded-md py-1`"
         :text-message="replyMessageData?.textMessage" text-message-class="text-[#6b7280]"
-        :from-message-username="fromMessageUsername" @on-click="handleScrollToGoMessage(replyMessageData?.messageId)"
+        :from-message-username="fromMessageUsername"
+        @on-click="handleScrollToGoMessage(replyMessageData?.messageId, profileId)"
         :document="replyMessageData?.document" />
       <div class="flex justify-center h-[35px] w-[35px]">
         <Button icon="pi pi-times" class="!p-1 !bg-[#F1F1F1] !rounded-full !text-gray-500 hover:!bg-gray-200"
