@@ -39,6 +39,24 @@ const memoizedImage = computed(() => {
   return '/avatar.png'
 })
 
+const handleDeleteImage = async () => {
+  if (loadingUpdated.value || !profile.value?.data?.image) return
+  loadingUpdated.value = true
+  const profileUpdated = await fetchUpdateProfile({
+    id: profile.value?.data?.id,
+    isDeleteImage: true,
+  })
+  if (profileUpdated?.isErr) {
+    loadingUpdated.value = false
+    toast.add({ severity: 'error', summary: profileUpdated.message, life: 3000 });
+    return
+  }
+  toast.add({ severity: 'success', summary: profileUpdated.message, life: 3000 })
+  profile.value.data.imgCropped = null
+  profile.value.data.image = null
+  loadingUpdated.value = false
+}
+
 const items = [
   {
     label: 'See Photo', icon: 'pi-eye', command: () => {
@@ -49,10 +67,11 @@ const items = [
         })
       }
     },
-    disabled: !profile.value?.data?.image,
+    disabled: !profile.value?.data?.image || loadingUpdated.value,
   },
   {
     label: 'Upload Photo', icon: 'pi-folder-open', command: async () => {
+      if (loadingUpdated.value) return
       const file = await getUploadFile()
       if (file) {
         imgUploaded.value = {
@@ -62,7 +81,9 @@ const items = [
       }
     }
   },
-  { label: 'Delete Photo', icon: 'pi-trash', command: () => console.log('Delete Photo') }
+  {
+    label: 'Delete Photo', disabled: !profile.value?.data?.image || loadingUpdated.value, icon: 'pi-trash', command: handleDeleteImage
+  }
 ];
 
 const toggleMenu = (event) => {
