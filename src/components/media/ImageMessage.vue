@@ -1,10 +1,12 @@
 <script setup>
 import VLazyImage from "v-lazy-image";
 import { useChatRoomStore } from '@/stores/chat-room'
+import { storeToRefs } from "pinia";
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleSetActiveMediaData } = chatRoomStore
+const { activeMediaData } = storeToRefs(chatRoomStore)
 
 const { imgClass, info } = defineProps({
   imgClass: String,
@@ -12,7 +14,7 @@ const { imgClass, info } = defineProps({
 })
 
 const handleClickImg = () => {
-  handleSetActiveMediaData(info)
+  handleSetActiveMediaData({ ...info, key: activeMediaData?.value?.key ? activeMediaData?.value?.key + 1 : 1 })
 }
 </script>
 

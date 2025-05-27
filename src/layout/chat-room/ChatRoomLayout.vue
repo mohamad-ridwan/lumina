@@ -1,5 +1,5 @@
 <script setup>
-import ImageLightBox from '@/components/media/ImageLightBox.vue';
+import ImageLightBox from '@/components/media/MediaLightBox.vue';
 import ConfirmDeleteMessageModal from '@/components/modals/ConfirmDeleteMessageModal.vue';
 import MediaAttachmentPreview from '@/components/modals/MediaAttachmentPreview.vue';
 import MainBackground from '@/sections/chat-room/MainBackground.vue';

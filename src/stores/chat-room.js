@@ -76,6 +76,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const proccessSubmitAttachmentData = ref(null)
   const activeMediaData = ref(null)
   const usersTyping = shallowRef([])
+  const lightboxEl = ref(null)
+  const galleryInstance = ref(null)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -993,6 +995,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     proccessSubmitAttachmentData,
     activeMediaData,
     usersTyping,
+    lightboxEl,
+    galleryInstance,
     handleUpdateUsersTyping,
     handleSetActiveMediaData,
     handleResetActiveMediaData,

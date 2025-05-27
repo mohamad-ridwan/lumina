@@ -64,7 +64,9 @@ const {
   totalStreamsLength,
   totalStreamsChatRoomWorkerDones,
   stayScrollCurrently,
-  usersTyping
+  usersTyping,
+  lightboxEl,
+  galleryInstance
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -767,6 +769,9 @@ watch(totalStreamsLength, (length) => {
 })
 
 onUnmounted(() => {
+  galleryInstance.value?.destroy?.(true)
+  lightboxEl.value = null
+  galleryInstance.value = null
   loadingMessages.value = false
   setChatRoomMessages([])
   window.removeEventListener('popstate', preventBackNavigation)
