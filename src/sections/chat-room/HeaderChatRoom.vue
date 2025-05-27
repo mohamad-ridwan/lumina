@@ -161,9 +161,9 @@ watch(userProfileSocketUpdate, (data) => {
       size="large" icon-class="!text-lg" @click="handleBack" />
     <div class="flex items-center gap-3">
       <div class="relative">
-        <v-lazy-image :src="!profileInfo?.imgCropped ? chatRoom?.image : profileInfo.imgCropped" alt="profile"
-          :src-placeholder="profileInfo?.thumbnail" class="object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11"
-          sizes="(max-width: 100px) 80px, 120px" />
+        <v-lazy-image :src="!profileInfo?.imgCropped ? chatRoom?.image ?? '/avatar.png' : profileInfo.imgCropped"
+          alt="profile" :src-placeholder="profileInfo?.thumbnail"
+          class="object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11" sizes="(max-width: 100px) 80px, 120px" />
         <div v-if="memoizedStatusUserOnline && memoizedStatusUserOnline === 'online'"
           class="absolute bottom-0.5 right-0">
           <div class="h-[11px] w-[11px] rounded-full bg-green-500 border-[1px] border-white"></div>
@@ -172,7 +172,7 @@ watch(userProfileSocketUpdate, (data) => {
       <div class="flex flex-col">
         <h2 class="text-sm sm:text-lg font-semibold">{{ !profileInfo?.username ? chatRoom.username :
           profileInfo.username
-          }}</h2>
+        }}</h2>
         <span v-if="memoizedStatusUserOnline && memoizedStatusUserOnline !== 'online'"
           class="text-[11px] text-[#6b7280]">
           Last seen {{ lastSeenText }}

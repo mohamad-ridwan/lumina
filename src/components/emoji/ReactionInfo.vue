@@ -40,7 +40,7 @@ const images = computed(() => {
   return reactions.map((react, key) => {
     if (react.senderUserId === profileId) {
       return {
-        imgCropped: profile.value?.data?.imgCropped,
+        imgCropped: profile.value?.data?.imgCropped ?? '/avatar.png',
         thumbnail: profile.value?.data?.thumbnail,
         key
       }
