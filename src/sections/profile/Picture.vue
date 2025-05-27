@@ -1,6 +1,6 @@
 <script setup>
 import { usersStore } from '@/stores/users';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import MenuCard from '@/components/menu/MenuCard.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
@@ -57,7 +57,7 @@ const handleDeleteImage = async () => {
   loadingUpdated.value = false
 }
 
-const items = [
+const items = ref([
   {
     label: 'See Photo', icon: 'pi-eye', command: () => {
       if (profile.value?.data?.image) {
@@ -84,7 +84,14 @@ const items = [
   {
     label: 'Delete Photo', disabled: !profile.value?.data?.image || loadingUpdated.value, icon: 'pi-trash', command: handleDeleteImage
   }
-];
+])
+
+watch([profile, loadingUpdated], ([newProfile, newLoadingUpdated]) => {
+  if (newProfile) {
+    items.value[0].disabled = !newProfile.data?.image || newLoadingUpdated
+    items.value[2].disabled = !newProfile.data?.image || newLoadingUpdated
+  }
+})
 
 const toggleMenu = (event) => {
   if (loadingUpdated.value) return
