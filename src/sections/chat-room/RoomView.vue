@@ -38,7 +38,7 @@ const userStore = usersStore()
 const { profile, profileIdConnection } = storeToRefs(userStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
-const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, handleResetConfirmDeleteMessage, resetTotalStreamsLength, setDataStreamsToIndexedDB, handleResetAttachment, handleResetActiveMediaData } = chatRoomStore
+const { setChatRoomMessages, setChatRoom, resetChatRoomEventSource, handleSetAddNewMessageWorker, handleStopAddNewMessageWorker, handleStopGetChatRoomWorker, handleStopStreamsChatRoomWorker, resetAddNewMessageEventSource, handleGetMainMessagesOnScrollBottom, resetMainMessagesWorkerOnScrollBottom, resetMainMessagesEventSource, resetMainMessagesWorker, resetPaginationMessagesComparisonWorker, resetReplyMessageData, resetActiveMessageMenu, handleResetActiveSelectReactions, handleResetConfirmDeleteMessage, resetTotalStreamsLength, setDataStreamsToIndexedDB, handleResetAttachment, handleResetActiveMediaData, handleGetMediaOnSliderChange } = chatRoomStore
 const {
   chatRoom,
   chatRoomMessages,
@@ -66,7 +66,8 @@ const {
   stayScrollCurrently,
   usersTyping,
   lightboxEl,
-  galleryInstance
+  galleryInstance,
+  mediaGallery
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -769,9 +770,11 @@ watch(totalStreamsLength, (length) => {
 })
 
 onUnmounted(() => {
+  lightboxEl.value?.removeEventListener('lgBeforeSlide', handleGetMediaOnSliderChange)
   galleryInstance.value?.destroy?.(true)
   lightboxEl.value = null
   galleryInstance.value = null
+  mediaGallery.value = []
   loadingMessages.value = false
   setChatRoomMessages([])
   window.removeEventListener('popstate', preventBackNavigation)

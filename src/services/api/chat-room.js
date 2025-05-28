@@ -15,6 +15,20 @@ export const fetchMessagesAround = async (chatRoomId, messageId, profileId) => {
   return result
 }
 
+export const fetchMediaMessagesAround = async (chatRoomId, messageId, profileId) => {
+  const result = await fetchData(
+    `${clientUrl}/chat-room/media-messages/${chatRoomId}/message/${messageId}/around?profileId=${profileId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+
+  return result
+}
+
 export const fetchChatRoom = async (req) => {
   const result = await fetchData(`${clientUrl}/chat-room`, {
     method: 'POST',

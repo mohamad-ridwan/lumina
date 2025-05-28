@@ -1,5 +1,6 @@
 import {
   fetchChatRoom,
+  fetchMediaMessagesAround,
   fetchMessagesAround,
   fetchMessagesPagination,
 } from '@/services/api/chat-room'
@@ -7,7 +8,7 @@ import { general } from '@/helpers/general'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { nextTick, ref, shallowRef, toRaw, triggerRef } from 'vue'
+import { markRaw, nextTick, ref, shallowRef, toRaw, triggerRef } from 'vue'
 import AddNewMessageWorker from '@/services/workers/add-new-message-worker.js?worker'
 import GetChatRoomWorker from '@/services/workers/get-chat-room-worker.js?worker'
 import StreamsChatRoomWorker from '@/services/workers/streams-chat-room-worker.js?worker'
@@ -78,6 +79,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const usersTyping = shallowRef([])
   const lightboxEl = ref(null)
   const galleryInstance = ref(null)
+  const mediaGallery = shallowRef([])
+  const loadingGetMediaOnSliderChange = ref(false)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -112,8 +115,68 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     activeMediaData.value = null
   }
 
-  const handleSetActiveMediaData = (data) => {
+  const handleGetMediaOnSliderChange = async (event, profileId) => {
+    if (loadingGetMediaOnSliderChange.value) return
+    const { index, prevIndex } = event.detail
+
+    // Misal: paginasi saat hampir habis
+    if (index >= mediaGallery.value.length - 2 && activeMediaData.value?.messageId) {
+      const lastMediaItem = mediaGallery.value[mediaGallery.value.length - 1]
+      if (!lastMediaItem) return
+      loadingGetMediaOnSliderChange.value = true
+      const mediaResult = await fetchMediaMessagesAround(
+        chatRoom.value?.chatRoomId,
+        lastMediaItem?.messageId,
+        profileId,
+      )
+      if (mediaResult?.mediaMessages) {
+        const newMediaMessages = mediaResult?.mediaMessages || []
+
+        const existingIds = new Set(mediaGallery.value.map((item) => item.messageId))
+
+        const uniqueNewMessages = newMediaMessages.filter(
+          (item) => !existingIds.has(item.messageId),
+        )
+
+        mediaGallery.value.push(...uniqueNewMessages)
+        mediaGallery.value = [
+          ...mediaGallery.value.sort(
+            (a, b) => Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp),
+          ),
+        ]
+        triggerRef(mediaGallery)
+      }
+      loadingGetMediaOnSliderChange.value = false
+    }
+  }
+
+  const handleSetActiveMediaData = async (data) => {
     activeMediaData.value = data
+    // get media gallery
+    if (data?.messageId) {
+      const mediaResult = await fetchMediaMessagesAround(
+        chatRoom.value?.chatRoomId,
+        data?.messageId,
+        data?.profileId,
+      )
+      if (mediaResult?.mediaMessages) {
+        const newMediaMessages = mediaResult?.mediaMessages || []
+
+        const existingIds = new Set(mediaGallery.value.map((item) => item.messageId))
+
+        const uniqueNewMessages = newMediaMessages.filter(
+          (item) => !existingIds.has(item.messageId),
+        )
+
+        mediaGallery.value.push(...uniqueNewMessages)
+        mediaGallery.value = [
+          ...mediaGallery.value.sort(
+            (a, b) => Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp),
+          ),
+        ]
+        triggerRef(mediaGallery)
+      }
+    }
   }
 
   const handleSetAttachment = ({ type, file }) => {
@@ -752,6 +815,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     if (chatRoom.value?.chatId && chatRoom.value?.chatId === item?.chatId) {
       return
     }
+    mediaGallery.value = []
     totalStreamsChatRoomWorkerDones.value = 0
     setDataStreamsToIndexedDB(null)
     resetTotalStreamsLength()
@@ -1004,6 +1068,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     usersTyping,
     lightboxEl,
     galleryInstance,
+    mediaGallery,
+    handleGetMediaOnSliderChange,
     handleUpdateUsersTyping,
     handleSetActiveMediaData,
     handleResetActiveMediaData,

@@ -2,20 +2,40 @@
 import VLazyImage from "v-lazy-image";
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from "pinia";
+import { computed, markRaw, onBeforeMount, triggerRef } from "vue";
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleSetActiveMediaData } = chatRoomStore
-const { activeMediaData } = storeToRefs(chatRoomStore)
+const { activeMediaData, mediaGallery, chatRoomMessages } = storeToRefs(chatRoomStore)
 
-const { imgClass, info } = defineProps({
+const { imgClass, info, itemMessage } = defineProps({
   imgClass: String,
-  info: Object
+  info: Object,
+})
+
+const memoizedImageOnMediaGallery = computed(() => {
+  if (!mediaGallery.value) return null
+  return mediaGallery.value.findIndex(item => item?.messageId === info?.messageId)
 })
 
 const handleClickImg = () => {
   handleSetActiveMediaData({ ...info, key: activeMediaData?.value?.key ? activeMediaData?.value?.key + 1 : 1 })
 }
+
+// save image to media gallery
+onBeforeMount(() => {
+  if (memoizedImageOnMediaGallery.value === -1 || memoizedImageOnMediaGallery.value === null) {
+    const item = chatRoomMessages.value.find(msg => msg?.messageId === info?.messageId)
+    if (item) {
+      mediaGallery.value.push(item)
+      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => {
+        return Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp)
+      }))
+      triggerRef(mediaGallery)
+    }
+  }
+})
 </script>
 
 <template>
