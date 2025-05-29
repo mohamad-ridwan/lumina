@@ -245,6 +245,28 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     )
     const recipientId = chatRoom.value?.userIds?.find((id) => id !== profileId)
     if (messageIndex !== -1) {
+      const messageItemCurrently = toRaw(chatRoomMessages.value).find(
+        (msg) => msg?.messageId === messageId,
+      )
+      let isDeleted = false
+      if (messageItemCurrently?.isDeleted.length > 0) {
+        const isMeDelete = messageItemCurrently.isDeleted?.find(
+          (item) => item?.senderUserId === profileId,
+        )
+        const isSecondUserDelete = messageItemCurrently.isDeleted?.find(
+          (item) => item?.senderUserId !== profileId,
+        )
+        if (
+          (messageItemCurrently?.senderUserId === profileId && isMeDelete) ||
+          isSecondUserDelete?.deletionType === 'everyone'
+        ) {
+          isDeleted = true
+        }
+      }
+      if (isDeleted) {
+        return
+      }
+
       await nextTick()
       await nextTick()
       triggerRef(chatRoomMessages)
@@ -266,7 +288,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         resultMessageAround?.total === 0
       ) {
         toast.add({ severity: 'error', summary: globalErrMessageAPI, life: 3000 })
-      } else {
+      } else if (resultMessageAround?.total > 0) {
         clearTimeout(resetTriggerScrollToMessageIdIsDone)
         triggerScrollToMessageIdIsDone.value = true
         chatRoomMessages.value = resultMessageAround.messages.map((newMsg) => ({
