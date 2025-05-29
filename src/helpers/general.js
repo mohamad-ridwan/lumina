@@ -144,6 +144,28 @@ const blobToFile = (blob, filename) => {
   return file
 }
 
+const sortLatestMessages = (chats, profileId) => {
+  return chats.sort((a, b) => {
+    const aMsgs = a?.latestMessage ?? []
+    const bMsgs = b?.latestMessage ?? []
+
+    const aHasMessages = aMsgs.length > 0
+    const bHasMessages = bMsgs.length > 0
+
+    if (aHasMessages !== bHasMessages) {
+      return bHasMessages ? 1 : -1
+    }
+
+    const a_currentLatestMessage = aMsgs.find((msg) => msg?.userId === profileId)
+    const b_currentLatestMessage = bMsgs.find((msg) => msg?.userId === profileId)
+
+    const aTimestamp = Number(a_currentLatestMessage?.latestMessageTimestamp ?? 0)
+    const bTimestamp = Number(b_currentLatestMessage?.latestMessageTimestamp ?? 0)
+
+    return bTimestamp - aTimestamp
+  })
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -154,4 +176,5 @@ export const general = {
   getUploadFile,
   base64ToBlob,
   blobToFile,
+  sortLatestMessages,
 }

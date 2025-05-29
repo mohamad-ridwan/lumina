@@ -15,6 +15,9 @@ import NoSearchResult from './NoSearchResult.vue';
 import NoChats from './NoChats.vue';
 import ChatProfileSkeleton from '@/sections/chat/chat-item/ChatProfileSkeleton.vue';
 import { fetchChats } from '@/services/api/chats';
+import { general } from '@/helpers/general';
+
+const { sortLatestMessages } = general
 
 // store
 // profile store
@@ -354,13 +357,17 @@ const handleUpdateDeleteMessage = async (data) => {
     return
   }
   // Salin seluruh chats agar triggerRef bekerja
-  const updatedChats = [...chats.value]
+  let updatedChats = [...chats.value]
 
   if (!data?.latestMessage || data.latestMessage?.length === 0) {
     updatedChats[indexChat] = {
       ...updatedChats[indexChat],
       latestMessage: []
     }
+    updatedChats.sort((a, b) => {
+
+    })
+    updatedChats = sortLatestMessages(updatedChats, profile.value?.data?.id)
     chats.value = updatedChats
     triggerRef(chats)
     return
@@ -380,6 +387,8 @@ const handleUpdateDeleteMessage = async (data) => {
     })
   }
 
+  updatedChats = sortLatestMessages(updatedChats, profile.value?.data?.id)
+
   chats.value = updatedChats
   triggerRef(chats)
 }
@@ -390,13 +399,14 @@ const handleUpdateDeleteSearchMessenger = (data) => {
     return
   }
   // Salin seluruh chats agar triggerRef bekerja
-  const updatedChats = [...searchMessengerData.value]
+  let updatedChats = [...searchMessengerData.value]
 
   if (!data?.latestMessage || data.latestMessage?.length === 0) {
     updatedChats[indexChat] = {
       ...updatedChats[indexChat],
       latestMessage: []
     }
+    updatedChats = sortLatestMessages(updatedChats, profile.value?.data?.id)
     searchMessengerData.value = updatedChats
     triggerRef(searchMessengerData)
     return
@@ -415,6 +425,8 @@ const handleUpdateDeleteSearchMessenger = (data) => {
       return newData
     })
   }
+
+  updatedChats = sortLatestMessages(updatedChats, profile.value?.data?.id)
 
   searchMessengerData.value = updatedChats
   triggerRef(searchMessengerData)
