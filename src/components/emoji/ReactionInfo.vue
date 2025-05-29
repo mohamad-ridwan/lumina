@@ -93,7 +93,7 @@ const submitReactionMessage = () => {
 <style scoped>
 .v-lazy-image {
   filter: blur(4px);
-  transition: filter 0.2s;
+  transition: filter 0.1s;
 }
 
 .v-lazy-image-loaded {

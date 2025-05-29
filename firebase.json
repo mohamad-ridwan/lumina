@@ -5,10 +5,6 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
-        "source": "/cached-storage-files/**",
-        "destination": "/e-learning-rp.appspot.com/$1"
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }

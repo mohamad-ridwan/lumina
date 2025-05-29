@@ -187,7 +187,7 @@ const memoizedTypeMessageIcon = computed(() => {
 
 .v-lazy-image {
   filter: blur(3px);
-  transition: filter 0.3s;
+  transition: filter 0.1s;
 }
 
 .v-lazy-image-loaded {
