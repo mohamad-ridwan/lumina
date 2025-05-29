@@ -97,22 +97,24 @@ const openLightbox = async () => {
         ? item?.latestMessageTimestamp
           ? `<p class="text-sm text-gray-500">by ${item.username}</p>`
           : `<p class="text-sm text-gray-500">${item.username}</p>`
-        : ''
+        : '';
 
       return {
         src: item.url,
         thumb: item.thumbnail,
         subHtml: `
-      <div class="bg-black/70 p-4 rounded-lg max-w-full">
+      <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
+        <div class="flex flex-col max-h-[130px]">
         ${item.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
         ${username}
         ${item.latestMessageTimestamp
             ? `<p class="text-xs text-gray-400">${date(item.latestMessageTimestamp, item.hours)}</p>`
             : ''
           }
+            </div>
       </div>
     `,
-      }
+      };
     }),
     plugins: [lgThumbnail, lgZoom, lgVideo, lgAutoplay, lgFullscreen, lgHash, lgRotate],
     closable: true,
@@ -151,19 +153,21 @@ watch(media, async () => {
       ? item?.latestMessageTimestamp
         ? `<p class="text-sm text-gray-500">by ${item.username}</p>`
         : `<p class="text-sm text-gray-500">${item.username}</p>`
-      : ''
+      : '';
 
     return {
       src: item.url,
       thumb: item.thumbnail,
       subHtml: `
-      <div class="bg-black/70 p-4 rounded-lg max-w-full">
+      <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
+        <div class="flex flex-col max-h-[130px]">
         ${item.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
         ${username}
         ${item.latestMessageTimestamp
           ? `<p class="text-xs text-gray-400">${date(item.latestMessageTimestamp, item.hours)}</p>`
           : ''
         }
+            </div>
       </div>
     `,
     }
