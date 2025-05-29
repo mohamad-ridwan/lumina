@@ -124,10 +124,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       const lastMediaItem = mediaGallery.value[mediaGallery.value.length - 1]
       if (!lastMediaItem) return
       loadingGetMediaOnSliderChange.value = true
+      const recipientId = chatRoom.value?.userIds?.find((id) => id !== profileId)
       const mediaResult = await fetchMediaMessagesAround(
         chatRoom.value?.chatRoomId,
         lastMediaItem?.messageId,
         profileId,
+        recipientId,
       )
       if (mediaResult?.mediaMessages) {
         const newMediaMessages = mediaResult?.mediaMessages || []
@@ -154,10 +156,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     activeMediaData.value = data
     // get media gallery
     if (data?.messageId) {
+      const recipientId = chatRoom.value?.userIds?.find((id) => id !== data?.profileId)
       const mediaResult = await fetchMediaMessagesAround(
         chatRoom.value?.chatRoomId,
         data?.messageId,
         data?.profileId,
+        recipientId,
       )
       if (mediaResult?.mediaMessages) {
         const newMediaMessages = mediaResult?.mediaMessages || []
@@ -239,6 +243,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     const messageIndex = toRaw(chatRoomMessages.value).findIndex(
       (msg) => msg?.messageId === messageId,
     )
+    const recipientId = chatRoom.value?.userIds?.find((id) => id !== profileId)
     if (messageIndex !== -1) {
       await nextTick()
       await nextTick()
@@ -254,6 +259,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         chatRoom.value?.chatRoomId,
         messageId,
         profileId,
+        recipientId,
       )
       if (
         (resultMessageAround?.isErr && resultMessageAround?.status !== 404) ||

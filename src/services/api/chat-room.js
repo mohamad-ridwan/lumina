@@ -1,9 +1,9 @@
 import { clientUrl } from '../apiBaseUrl'
 import { fetchData } from '../fetchData'
 
-export const fetchMessagesAround = async (chatRoomId, messageId, profileId) => {
+export const fetchMessagesAround = async (chatRoomId, messageId, profileId, recipientId) => {
   const result = await fetchData(
-    `${clientUrl}/chat-room/messages/${chatRoomId}/message/${messageId}/around?profileId=${profileId}`,
+    `${clientUrl}/chat-room/messages/${chatRoomId}/message/${messageId}/around?profileId=${profileId}&recipientId=${recipientId}`,
     {
       method: 'GET',
       headers: {
@@ -15,9 +15,9 @@ export const fetchMessagesAround = async (chatRoomId, messageId, profileId) => {
   return result
 }
 
-export const fetchMediaMessagesAround = async (chatRoomId, messageId, profileId) => {
+export const fetchMediaMessagesAround = async (chatRoomId, messageId, profileId, recipientId) => {
   const result = await fetchData(
-    `${clientUrl}/chat-room/media-messages/${chatRoomId}/message/${messageId}/around?profileId=${profileId}`,
+    `${clientUrl}/chat-room/media-messages/${chatRoomId}/message/${messageId}/around?profileId=${profileId}&recipientId=${recipientId}`,
     {
       method: 'GET',
       headers: {

@@ -364,6 +364,19 @@ const handleUpdateDeleteMessage = async (newData) => {
     await nextTick()
     await nextTick()
     scroller.value.$refs.scroller.$forceUpdate(true)
+
+    // delete file from media if deleted is document
+    const mediaMessageIndex = mediaGallery.value.findIndex(media => media?.messageId === data?.messageId)
+    const isMeDelete = data?.isDeleted?.find(user => {
+      return user?.senderUserId === profileId.value
+    })
+    const isSecondUserDelete = data?.isDeleted?.find(user => user?.senderUserId !== profileId.value)?.deletionType === 'me'
+    if (mediaMessageIndex === -1 || (!isMeDelete?.senderUserId && isSecondUserDelete)) {
+      return
+    }
+    const mediaMessageId = mediaGallery.value.find(media => media?.messageId === data?.messageId)?.messageId
+    mediaGallery.value = mediaGallery.value.filter(msg => msg?.messageId !== mediaMessageId)
+    triggerRef(mediaGallery)
   }
 }
 
