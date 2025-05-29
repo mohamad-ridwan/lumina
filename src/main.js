@@ -107,15 +107,31 @@ app.use(router)
 app.mount('#app')
 
 // main.js
+// if ('serviceWorker' in navigator) {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker.register('/sw.js').then(
+//       (registration) => {
+//         console.log('SW registered:', registration)
+//       },
+//       (err) => {
+//         console.error('SW registration failed:', err)
+//       },
+//     )
+//   })
+// }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Daftarkan service worker.
+    // Path '/firebase-storage-sw.js' adalah lokasi file service worker Anda
+    // relatif dari root aplikasi. 'scope: /' berarti service worker
+    // mengontrol semua halaman di bawah root (seluruh aplikasi Anda).
     navigator.serviceWorker
-      .register('/sw.js')
+      .register('/firebase-storage-sw.js', { scope: '/' })
       .then((registration) => {
-        console.log('ServiceWorker registered: ', registration)
+        console.log('Service Worker registered with scope:', registration.scope)
       })
-      .catch((registrationError) => {
-        console.log('ServiceWorker registration failed: ', registrationError)
+      .catch((error) => {
+        console.error('Service Worker registration failed:', error)
       })
   })
 }
