@@ -249,7 +249,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         (msg) => msg?.messageId === messageId,
       )
       let isDeleted = false
-      if (messageItemCurrently?.isDeleted.length > 0) {
+      if (messageItemCurrently?.isDeleted?.length > 0) {
         const isMeDelete = messageItemCurrently.isDeleted?.find(
           (item) => item?.senderUserId === profileId,
         )
