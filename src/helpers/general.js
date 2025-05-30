@@ -184,10 +184,10 @@ const HTML_subHtmlOnCaptionMediaGallery = (item) => {
   return `
       <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
         <div class="flex flex-col max-h-[130px]">
-        ${item.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
+        ${item?.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
         ${HTML_usernameOnCaptionMediaGallery(item)}
         ${
-          item.latestMessageTimestamp
+          item?.latestMessageTimestamp
             ? `<p class="text-xs text-gray-400">${dateWithHours(item.latestMessageTimestamp, item.hours)}</p>`
             : ''
         }
