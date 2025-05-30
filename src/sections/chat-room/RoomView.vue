@@ -4,7 +4,7 @@ import FooterChatRoom from './footer/FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, onUpdated, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -848,7 +848,7 @@ onUnmounted(() => {
     <SkeletonMessages v-if="loadingMessages" />
 
     <DynamicScroller v-memo="[memoizedMessages]" v-if="!loadingMessages" id="scrollChatRoom" ref="scroller"
-      :items="memoizedMessages" :key-field="'messageId'" :min-item-size="10"
+      :items="memoizedMessages" :key-field="'messageId'" :min-item-size="30"
       class="flex-1 space-y-2 bg-[#f9fafb] !py-4 !px-2"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">

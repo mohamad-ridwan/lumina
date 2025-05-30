@@ -41,7 +41,7 @@ onBeforeMount(() => {
 <template>
   <div @click.stop="handleClickImg" class="cursor-pointer flex justify-center bg-gray-500/60 overflow-hidden"
     :class="imgClass">
-    <v-lazy-image :src="`${info?.url}`" :src-placeholder="info?.thumbnail"
+    <v-lazy-image :key="info?.messageId" :src="`${info?.url}`" :src-placeholder="info?.thumbnail"
       class="max-w-full max-h-[400px] rounded-sm rotate-180" sizes="(max-width: 320px) 280px, 440px" />
   </div>
 </template>

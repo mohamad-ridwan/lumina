@@ -8,7 +8,7 @@ const setHeader = (el) => {
 </script>
 
 <template>
-  <div :id="`${item.id}-${item.latestMessageTimestamp}`" :ref="setHeader" :data-timestamp="item.latestMessageTimestamp">
+  <div :key="item.id" :id="`${item.id}-${item.latestMessageTimestamp}`" :data-timestamp="item.latestMessageTimestamp">
     <slot />
   </div>
 </template>

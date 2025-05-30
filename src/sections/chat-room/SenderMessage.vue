@@ -27,60 +27,79 @@ const { activeMessageMenu, chatRoom, goingScrollToMessageId, activeSelectReactio
 const markMessageAsReadSocketUpdate = ref(null)
 const boxRef = ref(null)
 
-const messageDeleted = computed(() => {
-  if (!isDeleted || isDeleted?.length === 0) {
-    return null
+const messageComputedProps = computed(() => {
+  // messageDeleted
+  let messageDeleted = false
+  if (isDeleted && isDeleted.length > 0) {
+    messageDeleted = isDeleted.find((msg) => msg?.senderUserId === profileId)?.deletionType === 'everyone'
   }
-  return isDeleted.find(msg => msg?.senderUserId === profileId)?.deletionType === 'everyone'
-})
-const memoizedWrapperImageClass = computed(() => {
-  if (replyView) return ''
-  return document?.caption ? 'rounded-br-2xl rounded-bl-2xl rounded-tr-md rounded-tl-md' : 'rounded-2xl'
-})
-const memoizedTextMessage = computed(() => {
-  if (!messageDeleted.value) {
-    if (document?.caption) {
-      return document.caption
-    }
-    return textMessage
-  }
-  return '<span class="items-center flex gap-1"><i class="pi pi-ban !text-[13px]"></i> You deleted this message.</span>'
-})
-const memoizedBoxWrapperClass = computed(() => {
-  if (messageDeleted.value || !document) return 'p-2'
-  return ''
-})
-const memoizedReactionInfoClass = computed(() => {
-  if (!document) return 'pl-[2.5rem]'
-  return 'pl-[2.5rem] pr-2 pt-2'
-})
-const memoizedWrapperReplyViewClass = computed(() => {
-  if (!document) return 'pt-1.5'
-  return 'p-2'
-})
-const memoizedClassTextMessage = computed(() => {
-  if (!messageDeleted.value) {
-    if (document?.caption) {
-      return `px-2 pt-2 ${reactions?.length > 0 ? '' : 'pb-2'} text-white text-sm`
-    }
-    return 'text-white text-sm'
-  }
-  return 'text-[#DDD] italic text-xs'
-})
-const fromMessageUsername = computed(() => {
-  if (!replyView) return
-  if (replyView.senderUserId === profileId) {
-    return 'You'
-  } else {
-    return chatRoom.value.username
-  }
-})
 
-const reactionCurrently = computed(() => {
-  if (!reactions || reactions?.length === 0) {
-    return
+  // memoizedWrapperImageClass
+  const memoizedWrapperImageClass = replyView
+    ? ''
+    : document?.caption
+      ? 'rounded-br-2xl rounded-bl-2xl rounded-tr-md rounded-tl-md'
+      : 'rounded-2xl'
+
+  // memoizedTextMessage
+  let memoizedTextMessage = ''
+  if (!messageDeleted) {
+    if (document?.caption) {
+      memoizedTextMessage = document.caption
+    } else {
+      memoizedTextMessage = textMessage
+    }
+  } else {
+    memoizedTextMessage = '<span class="items-center flex gap-1"><i class="pi pi-ban !text-[13px]"></i> You deleted this message.</span>'
   }
-  return reactions.find(react => react?.senderUserId === profileId)
+
+  // memoizedBoxWrapperClass
+  const memoizedBoxWrapperClass = messageDeleted || !document ? 'p-2' : ''
+
+  // memoizedReactionInfoClass
+  const memoizedReactionInfoClass = !document ? 'pl-[2.5rem]' : 'pl-[2.5rem] pr-2 pt-2'
+
+  // memoizedWrapperReplyViewClass
+  const memoizedWrapperReplyViewClass = !document ? 'pt-1.5' : 'p-2'
+
+  // memoizedClassTextMessage
+  let memoizedClassTextMessage = ''
+  if (!messageDeleted) {
+    if (document?.caption) {
+      memoizedClassTextMessage = `px-2 pt-2 ${reactions?.length > 0 ? '' : 'pb-2'} text-white text-sm`
+    } else {
+      memoizedClassTextMessage = 'text-white text-sm'
+    }
+  } else {
+    memoizedClassTextMessage = 'text-[#DDD] italic text-xs'
+  }
+
+  // fromMessageUsername
+  let fromMessageUsername = undefined
+  if (replyView) {
+    if (replyView.senderUserId === profileId) {
+      fromMessageUsername = 'You'
+    } else {
+      fromMessageUsername = chatRoom.value.username
+    }
+  }
+
+  // reactionCurrently
+  const reactionCurrently = reactions && reactions.length > 0
+    ? reactions.find((react) => react?.senderUserId === profileId)
+    : undefined
+
+  return {
+    messageDeleted,
+    memoizedWrapperImageClass,
+    memoizedTextMessage,
+    memoizedBoxWrapperClass,
+    memoizedReactionInfoClass,
+    memoizedWrapperReplyViewClass,
+    memoizedClassTextMessage,
+    fromMessageUsername,
+    reactionCurrently,
+  }
 })
 
 const timeOutActiveReactions = () => {
@@ -123,46 +142,49 @@ watch(markMessageAsReadSocketUpdate, (data) => {
 
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2" @click.stop="closeMenu">
-    <MessageReaction :message-deleted="!messageDeleted" wrapper-class="justify-end" :message-id="messageId"
-      :profile-id="profileId" :reaction-currently="reactionCurrently">
+    <MessageReaction :message-deleted="!messageComputedProps.messageDeleted" wrapper-class="justify-end"
+      :message-id="messageId" :profile-id="profileId" :reaction-currently="messageComputedProps.reactionCurrently">
       <div ref="boxRef"
         class="group bg-[#2e74e8] rounded-2xl max-w-[65%] md:max-w-[350px] self-end flex flex-col relative"
-        :class="memoizedBoxWrapperClass" style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"
+        :class="messageComputedProps.memoizedBoxWrapperClass" style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05)"
         @click.stop="toggleBoxMessage">
-        <!-- ⬇️ Tambahkan di sini overlay -->
         <MessageHighlightOverlay :trigger="goingScrollToMessageId === messageId" />
 
-        <!-- Button muncul saat hover -->
         <div
           :class="`absolute left-0 bottom-[2px] p-1 ${activeMessageMenu === messageId ? 'flex' : 'hidden group-hover:flex'} z-[1]`">
-          <MessageActionMenu :message-deleted="messageDeleted"
+          <MessageActionMenu :message-deleted="messageComputedProps.messageDeleted"
             :message="{ textMessage, messageId, messageType, senderUserId, document }" :profile-id="profileId"
             :is-deleted="isDeleted" />
         </div>
-        <!-- Reaction Info -->
-        <ReactionInfo v-if="!messageDeleted && reactions?.length > 0" :reactions="reactions" :profile-id="profileId"
-          :reaction-currently="reactionCurrently" :message-id="messageId" :wrapper-class="memoizedReactionInfoClass" />
-        <p class="rotate-180" style="direction: ltr;" :class="memoizedClassTextMessage" v-html="memoizedTextMessage">
-        </p>
-        <!-- MEDIA -->
-        <ImageMessage v-if="document?.type && !messageDeleted"
-          :info="{ url: document.url, thumbnail: document?.thumbnail, caption: document?.caption, username: 'You', latestMessageTimestamp: Number(latestMessageTimestamp), hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm'), messageId, profileId }"
-          :img-class="memoizedWrapperImageClass" />
-        <!-- Reply view -->
-        <div v-if="!messageDeleted && replyView" class="flex !text-white" :class="memoizedWrapperReplyViewClass">
-          <ReplyViewCard :from-message-username="fromMessageUsername" :text-message="replyView?.textMessage"
-            @on-click="handleScrollToGoMessage(replyView?.messageId, profileId)"
+        <ReactionInfo v-if="!messageComputedProps.messageDeleted && reactions?.length > 0" :reactions="reactions"
+          :profile-id="profileId" :reaction-currently="messageComputedProps.reactionCurrently" :message-id="messageId"
+          :wrapper-class="messageComputedProps.memoizedReactionInfoClass" />
+        <p class="rotate-180" style="direction: ltr" :class="messageComputedProps.memoizedClassTextMessage"
+          v-html="messageComputedProps.memoizedTextMessage"></p>
+        <ImageMessage v-if="document?.type && !messageComputedProps.messageDeleted" :info="{
+          url: document.url,
+          thumbnail: document?.thumbnail,
+          caption: document?.caption,
+          username: 'You', // username di sini tetap 'You' sesuai aslinya
+          latestMessageTimestamp: Number(latestMessageTimestamp),
+          hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm'),
+          messageId,
+          profileId,
+        }" :img-class="messageComputedProps.memoizedWrapperImageClass" />
+        <div v-if="!messageComputedProps.messageDeleted && replyView" class="flex !text-white"
+          :class="messageComputedProps.memoizedWrapperReplyViewClass">
+          <ReplyViewCard :from-message-username="messageComputedProps.fromMessageUsername"
+            :text-message="replyView?.textMessage" @on-click="handleScrollToGoMessage(replyView?.messageId, profileId)"
             wrapper-style="direction: ltr; rotate: 180deg;" wrapper-class="border-l-1 py-0.5"
             text-message-class="!text-[#EEE]" username-class="text-xs" :document="replyView?.document" />
         </div>
       </div>
     </MessageReaction>
-    <!-- Status dan waktu -->
     <div class="flex flex-row-reverse items-center gap-1 pl-1" style="direction: ltr;">
       <span class="text-xs text-[#111827] self-end rotate-180">
         {{ dayjs(Number(latestMessageTimestamp)).format('HH.mm') }}
       </span>
-      <div v-if="!messageDeleted" class="relative flex items-center">
+      <div v-if="!messageComputedProps.messageDeleted" class="relative flex items-center">
         <i
           :class="`pi pi-check !text-[11px] ${status === 'UNREAD' ? 'text-gray-400' : 'text-[#2e74e8]'} rotate-180`"></i>
         <i
