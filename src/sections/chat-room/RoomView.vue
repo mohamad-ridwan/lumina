@@ -24,21 +24,13 @@ import SkeletonMessages from './SkeletonMessages.vue';
 import { fetchMessagesPagination } from '@/services/api/chat-room';
 import { general } from '@/helpers/general';
 import WrapperSetHeaderTimes from '@/components/WrapperSetHeaderTimes.vue';
-import lightGallery from 'lightgallery'
-import lgThumbnail from 'lightgallery/plugins/thumbnail';
-import lgZoom from 'lightgallery/plugins/zoom';
-import lgVideo from 'lightgallery/plugins/video'
-import lgAutoplay from 'lightgallery/plugins/autoplay'
-import lgFullscreen from 'lightgallery/plugins/fullscreen'
-import lgHash from 'lightgallery/plugins/hash'
-import lgRotate from 'lightgallery/plugins/rotate'
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(weekOfYear);
 dayjs.extend(weekday);
 
-const { sortByTimestamp, removeDuplicates, messageMatching, formatDate } = general
+const { sortByTimestamp, removeDuplicates, messageMatching, formatDate, dateWithHours, captionMediaGallery, mediaGalleryData, HTML_usernameOnCaptionMediaGallery, HTML_subHtmlOnCaptionMediaGallery, } = general
 
 // store
 // profile store
@@ -335,29 +327,13 @@ const handleUpdateReactions = async (newData) => {
   }
 }
 
-function forceUpdateCaption(index, media, date) {
+function forceUpdateCaption(index, media) {
   const currentItem = media[index]
-  const username = currentItem?.username
-    ? currentItem?.latestMessageTimestamp
-      ? `<p class="text-sm text-gray-500">by ${currentItem.username}</p>`
-      : `<p class="text-sm text-gray-500">${currentItem.username}</p>`
-    : ''
-
-  const newSubHtml = `
-    <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
-      <div class="flex flex-col max-h-[130px]">
-        ${currentItem.caption ? `<h4 class="text-base text-white">${currentItem.caption}</h4>` : ''}
-        ${username}
-        ${currentItem.latestMessageTimestamp
-      ? `<p class="text-xs text-gray-400">${date(currentItem.latestMessageTimestamp, currentItem.hours)}</p>`
-      : ''}
-      </div>
-    </div>`
 
   // Update caption into the DOM
   const subHtmlContainer = document.querySelector('.lg-sub-html')
   if (subHtmlContainer) {
-    subHtmlContainer.innerHTML = newSubHtml
+    subHtmlContainer.innerHTML = HTML_subHtmlOnCaptionMediaGallery(currentItem)
   }
 }
 
@@ -412,51 +388,11 @@ const handleUpdateDeleteMessage = async (newData) => {
     mediaGallery.value = mediaGallery.value.filter(msg => msg?.messageId !== mediaMessageId)
     triggerRef(mediaGallery)
     if (galleryInstance.value) {
-      const date = (latestMessageTimestamp, hours) => {
-        if (!latestMessageTimestamp) return ''
-        const itemDate = dayjs(Number(latestMessageTimestamp)).startOf('day')
-        return `${formatDate(itemDate)} at ${hours}`
-      }
-
-      const media = mediaGallery.value.map(item => {
-        const username = item?.senderUserId === profileId.value ? 'You' : chatRoom.value?.username
-        return {
-          url: item.document.url,
-          thumbnail: item.document.url,
-          caption: item.document.caption,
-          username: username,
-          latestMessageTimestamp: Number(item.latestMessageTimestamp),
-          hours: dayjs(Number(item.latestMessageTimestamp)).format('HH.mm'),
-          messageId: item.messageId,
-        }
-      })
+      const media = mediaGalleryData(mediaGallery.value, profileId.value, chatRoom.value?.username)
       const nextIndex = mediaMessageIndex >= mediaGallery.value.length ? mediaGallery.value.length - 1 : mediaMessageIndex
-      galleryInstance.value.updateSlides(media.map(item => {
-        const username = item?.username
-          ? item?.latestMessageTimestamp
-            ? `<p class="text-sm text-gray-500">by ${item.username}</p>`
-            : `<p class="text-sm text-gray-500">${item.username}</p>`
-          : '';
-
-        return {
-          src: item.url,
-          thumb: item.thumbnail,
-          subHtml: `
-        <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
-          <div class="flex flex-col max-h-[130px]">
-          ${item.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
-          ${username}
-          ${item.latestMessageTimestamp
-              ? `<p class="text-xs text-gray-400">${date(item.latestMessageTimestamp, item.hours)}</p>`
-              : ''
-            }
-              </div>
-        </div>
-      `,
-        }
-      }), nextIndex)
+      galleryInstance.value.updateSlides(captionMediaGallery(media), nextIndex)
       await nextTick()
-      forceUpdateCaption(nextIndex, media, date)
+      forceUpdateCaption(nextIndex, media, dateWithHours)
     }
   }
 }

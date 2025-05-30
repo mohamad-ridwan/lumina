@@ -3,7 +3,7 @@
 import { useChatRoomStore } from '@/stores/chat-room'
 import VLazyImage from "v-lazy-image";
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, watch } from 'vue'
+import { computed, nextTick, toRaw, watch } from 'vue'
 // import VueEasyLightbox from 'vue-easy-lightbox'
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
@@ -40,7 +40,7 @@ dayjs.extend(isYesterday);
 dayjs.extend(weekOfYear);
 dayjs.extend(weekday);
 
-const { formatDate } = general
+const { captionMediaGallery, mediaGalleryData } = general
 
 // profile store
 const userStore = usersStore()
@@ -60,18 +60,7 @@ const media = computed(() => {
   if (!activeMediaData.value) return []
   // return [activeMediaData.value.url]
   if (activeMediaData.value?.messageId && mediaGallery.value.length > 0) {
-    return mediaGallery.value.map(item => {
-      const username = item?.senderUserId === profileId.value ? 'You' : chatRoom.value?.username
-      return {
-        url: item.document.url,
-        thumbnail: item.document.url,
-        caption: item.document.caption,
-        username: username,
-        latestMessageTimestamp: Number(item.latestMessageTimestamp),
-        hours: dayjs(Number(item.latestMessageTimestamp)).format('HH.mm'),
-        messageId: item.messageId,
-      }
-    })
+    return mediaGalleryData(mediaGallery.value, profileId.value, chatRoom.value?.username)
   }
   return [activeMediaData.value]
 })
@@ -82,40 +71,11 @@ const media = computed(() => {
 //   return `${formatDate(itemDate)} at ${activeMediaData.value.hours}`
 // })
 
-const date = (latestMessageTimestamp, hours) => {
-  if (!latestMessageTimestamp) return ''
-  const itemDate = dayjs(Number(latestMessageTimestamp)).startOf('day')
-  return `${formatDate(itemDate)} at ${hours}`
-}
-
 const openLightbox = async () => {
   // if (galleryInstance.value) return
   galleryInstance.value = lightGallery(lightboxEl.value, {
     dynamic: true,
-    dynamicEl: media.value.map(item => {
-      const username = item?.username
-        ? item?.latestMessageTimestamp
-          ? `<p class="text-sm text-gray-500">by ${item.username}</p>`
-          : `<p class="text-sm text-gray-500">${item.username}</p>`
-        : '';
-
-      return {
-        src: item.url,
-        thumb: item.thumbnail,
-        subHtml: `
-      <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
-        <div class="flex flex-col max-h-[130px]">
-        ${item.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
-        ${username}
-        ${item.latestMessageTimestamp
-            ? `<p class="text-xs text-gray-400">${date(item.latestMessageTimestamp, item.hours)}</p>`
-            : ''
-          }
-            </div>
-      </div>
-    `,
-      };
-    }),
+    dynamicEl: captionMediaGallery(toRaw(media.value)),
     plugins: [lgThumbnail, lgZoom, lgVideo, lgAutoplay, lgFullscreen, lgHash, lgRotate],
     closable: true,
     closeOnTap: true,
@@ -148,30 +108,7 @@ watch(lightboxEl, async () => {
 watch(media, async () => {
   if (!galleryInstance.value) return
   await nextTick()
-  galleryInstance.value.refresh(media.value.map(item => {
-    const username = item?.username
-      ? item?.latestMessageTimestamp
-        ? `<p class="text-sm text-gray-500">by ${item.username}</p>`
-        : `<p class="text-sm text-gray-500">${item.username}</p>`
-      : '';
-
-    return {
-      src: item.url,
-      thumb: item.thumbnail,
-      subHtml: `
-      <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
-        <div class="flex flex-col max-h-[130px]">
-        ${item.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
-        ${username}
-        ${item.latestMessageTimestamp
-          ? `<p class="text-xs text-gray-400">${date(item.latestMessageTimestamp, item.hours)}</p>`
-          : ''
-        }
-            </div>
-      </div>
-    `,
-    }
-  }))
+  galleryInstance.value.refresh(captionMediaGallery(toRaw(media.value)))
 })
 </script>
 

@@ -166,6 +166,60 @@ const sortLatestMessages = (chats, profileId) => {
   })
 }
 
+const dateWithHours = (latestMessageTimestamp, hours) => {
+  if (!latestMessageTimestamp) return ''
+  const itemDate = dayjs(Number(latestMessageTimestamp)).startOf('day')
+  return `${formatDate(itemDate)} at ${hours}`
+}
+
+const HTML_usernameOnCaptionMediaGallery = (currentItem) => {
+  return currentItem?.username
+    ? currentItem?.latestMessageTimestamp
+      ? `<p class="text-sm text-gray-500">by ${currentItem.username}</p>`
+      : `<p class="text-sm text-gray-500">${currentItem.username}</p>`
+    : ''
+}
+
+const HTML_subHtmlOnCaptionMediaGallery = (item) => {
+  return `
+      <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
+        <div class="flex flex-col max-h-[130px]">
+        ${item.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
+        ${HTML_usernameOnCaptionMediaGallery(item)}
+        ${
+          item.latestMessageTimestamp
+            ? `<p class="text-xs text-gray-400">${dateWithHours(item.latestMessageTimestamp, item.hours)}</p>`
+            : ''
+        }
+            </div>
+      </div>
+    `
+}
+
+const captionMediaGallery = (media) => {
+  return media.map((item) => {
+    return {
+      src: item.url,
+      thumb: item.thumbnail,
+      subHtml: HTML_subHtmlOnCaptionMediaGallery(item),
+    }
+  })
+}
+const mediaGalleryData = (mediaGallery, profileId, recipientUsername) => {
+  return mediaGallery.map((item) => {
+    const username = item?.senderUserId === profileId ? 'You' : recipientUsername
+    return {
+      url: item.document.url,
+      thumbnail: item.document.url,
+      caption: item.document.caption,
+      username: username,
+      latestMessageTimestamp: Number(item.latestMessageTimestamp),
+      hours: dayjs(Number(item.latestMessageTimestamp)).format('HH.mm'),
+      messageId: item.messageId,
+    }
+  })
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -177,4 +231,9 @@ export const general = {
   base64ToBlob,
   blobToFile,
   sortLatestMessages,
+  dateWithHours,
+  captionMediaGallery,
+  mediaGalleryData,
+  HTML_usernameOnCaptionMediaGallery,
+  HTML_subHtmlOnCaptionMediaGallery,
 }
