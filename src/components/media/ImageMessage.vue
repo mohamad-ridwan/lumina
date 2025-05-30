@@ -49,7 +49,7 @@ onBeforeMount(() => {
 <style scoped>
 .v-lazy-image {
   filter: blur(10px);
-  transition: filter 0.1s;
+  transition: filter 0.6s;
 }
 
 .v-lazy-image-loaded {
