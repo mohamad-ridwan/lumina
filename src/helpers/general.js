@@ -5,6 +5,7 @@ import isToday from 'dayjs/plugin/isToday'
 import isYesterday from 'dayjs/plugin/isYesterday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekday from 'dayjs/plugin/weekday'
+import imageCompression from 'browser-image-compression'
 
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
@@ -220,6 +221,26 @@ const mediaGalleryData = (mediaGallery, profileId, recipientUsername) => {
   })
 }
 
+async function compressedFile(files) {
+  // console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
+  // console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+
+  const options = {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+  }
+  try {
+    const compressedFile = await imageCompression(files, options)
+    // console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+    // console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+
+    return compressedFile
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -236,4 +257,5 @@ export const general = {
   mediaGalleryData,
   HTML_usernameOnCaptionMediaGallery,
   HTML_subHtmlOnCaptionMediaGallery,
+  compressedFile,
 }

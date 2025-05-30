@@ -25,7 +25,7 @@ dayjs.extend(weekOfYear)
 dayjs.extend(weekday)
 
 const { uploadFileToFirebase } = firebaseUtils
-const { formatDate } = general
+const { formatDate, compressedFile } = general
 
 // profile store
 const userStore = usersStore()
@@ -115,7 +115,9 @@ const onFormSubmit = async () => {
     proccessSubmitAttachmentData.value.latestMessage.replyView = toRaw(replyMessageData.value)
   }
 
-  uploadFileToFirebase(memoizedAttachments.value.file, `lumina/${filePath}`)
+  const fileCompressed = await compressedFile(memoizedAttachments.value.file)
+
+  uploadFileToFirebase(fileCompressed?.type ? fileCompressed : memoizedAttachments.value.file, `lumina/${filePath}`)
     .then(async (url) => {
       proccessSubmitAttachmentData.value.latestMessage.document.url = url
       socket.emit('sendMessage', {

@@ -17,7 +17,7 @@ const { profile } = storeToRefs(userStore)
 const chatRoomStore = useChatRoomStore()
 const { handleSetActiveMediaData } = chatRoomStore
 
-const { getUploadFile, base64ToBlob, blobToFile } = general
+const { getUploadFile, base64ToBlob, blobToFile, compressedFile } = general
 
 const menuRef = ref(null)
 const loadingUpdated = ref(false)
@@ -106,11 +106,14 @@ const handleSubmit = async (url) => {
   if (loadingUpdated.value) return
   loadingUpdated.value = true
 
+  const fileImgOriginal = imgUploaded.value.image
   const blob = base64ToBlob(url)
   const file = blobToFile(blob, 'profile.jpg')
+  const fileCompressedImgCropped = await compressedFile(file)
+  const fileCompressedImgOriginal = await compressedFile(fileImgOriginal)
   const imgResult = await Promise.all([
-    uploadFileToFirebase(file, 'lumina/images'),
-    uploadFileToFirebase(imgUploaded.value.image, 'lumina/images')
+    uploadFileToFirebase(fileCompressedImgCropped?.type ? fileCompressedImgCropped : file, 'lumina/images'),
+    uploadFileToFirebase(fileCompressedImgOriginal?.type ? fileCompressedImgOriginal : fileImgOriginal, 'lumina/images')
   ])
   const urlCroppedImage = imgResult[0]
   const urlImage = imgResult[1]
