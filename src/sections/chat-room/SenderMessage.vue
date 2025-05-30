@@ -36,10 +36,12 @@ const messageComputedProps = computed(() => {
 
   // memoizedWrapperImageClass
   const memoizedWrapperImageClass = replyView
-    ? ''
+    ? document?.caption
+      ? 'rounded-md'
+      : reactions?.length > 0 ? 'rounded-md' : 'rounded-tr-2xl rounded-tl-2xl rounded-br-md rounded-bl-md'
     : document?.caption
       ? 'rounded-br-2xl rounded-bl-2xl rounded-tr-md rounded-tl-md'
-      : 'rounded-2xl'
+      : reactions?.length > 0 ? 'rounded-tr-md rounded-tl-md rounded-br-2xl rounded-bl-2xl' : 'rounded-2xl'
 
   // memoizedTextMessage
   let memoizedTextMessage = ''
