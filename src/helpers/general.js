@@ -241,6 +241,25 @@ async function compressedFile(files) {
   }
 }
 
+function computeSafePosition(x, y, menuWidth = 120, menuHeight = 100) {
+  const padding = 8
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+
+  let left = x
+  let top = y
+
+  if (x + menuWidth > vw - padding) {
+    left = vw - menuWidth - padding
+  }
+
+  if (y + menuHeight > vh - padding) {
+    top = vh - menuHeight - padding
+  }
+
+  return { top: Math.floor(top), left: Math.floor(left) }
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -258,4 +277,5 @@ export const general = {
   HTML_usernameOnCaptionMediaGallery,
   HTML_subHtmlOnCaptionMediaGallery,
   compressedFile,
+  computeSafePosition,
 }

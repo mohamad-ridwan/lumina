@@ -2,7 +2,7 @@
 import VLazyImage from "v-lazy-image";
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from "pinia";
-import { computed, markRaw, onBeforeMount, triggerRef } from "vue";
+import { computed, markRaw, onBeforeMount, onMounted, triggerRef } from "vue";
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
@@ -36,13 +36,15 @@ onBeforeMount(() => {
     }
   }
 })
+
 </script>
 
 <template>
-  <div @click.stop="handleClickImg" class="cursor-pointer flex justify-center bg-gray-500/60 overflow-hidden"
-    :class="imgClass">
+  <div @contextmenu.prevent @click.prevent.stop="handleClickImg"
+    class="cursor-pointer flex justify-center bg-gray-500/60 overflow-hidden" :class="imgClass">
     <v-lazy-image :key="info?.messageId" :src="`${info?.url}`" :src-placeholder="info?.thumbnail"
-      class="max-w-full max-h-[400px] rounded-sm rotate-180" sizes="(max-width: 320px) 280px, 440px" />
+      class="max-w-full max-h-[400px] rounded-sm rotate-180 image-media" draggable="false"
+      sizes="(max-width: 320px) 280px, 440px" />
   </div>
 </template>
 
@@ -54,5 +56,13 @@ onBeforeMount(() => {
 
 .v-lazy-image-loaded {
   filter: blur(0);
+}
+
+.image-media {
+  -webkit-user-select: none;
+  /* Safari / iOS */
+  user-select: none;
+  -webkit-touch-callout: none;
+  /* Disable long-press menu on iOS */
 }
 </style>

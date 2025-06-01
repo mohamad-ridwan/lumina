@@ -8,7 +8,7 @@ import { general } from '@/helpers/general'
 import { clientUrl } from '@/services/apiBaseUrl'
 import { socket } from '@/services/socket/socket'
 import { defineStore } from 'pinia'
-import { markRaw, nextTick, ref, shallowRef, toRaw, triggerRef } from 'vue'
+import { nextTick, ref, shallowRef, toRaw, triggerRef } from 'vue'
 import AddNewMessageWorker from '@/services/workers/add-new-message-worker.js?worker'
 import GetChatRoomWorker from '@/services/workers/get-chat-room-worker.js?worker'
 import StreamsChatRoomWorker from '@/services/workers/streams-chat-room-worker.js?worker'
@@ -81,6 +81,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const galleryInstance = ref(null)
   const mediaGallery = shallowRef([])
   const loadingGetMediaOnSliderChange = ref(false)
+  const typeDevice = ref(null)
+  const resetKeyModalReactions = ref(false)
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -330,8 +332,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     activeMessageMenu.value = null
   }
 
-  const handleActiveMessageMenu = (messageId) => {
-    activeMessageMenu.value = messageId
+  const handleActiveMessageMenu = (data) => {
+    activeMessageMenu.value = data
   }
 
   const resetReplyMessageData = () => {
@@ -1097,6 +1099,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     lightboxEl,
     galleryInstance,
     mediaGallery,
+    typeDevice,
+    resetKeyModalReactions,
     handleGetMediaOnSliderChange,
     handleUpdateUsersTyping,
     handleSetActiveMediaData,

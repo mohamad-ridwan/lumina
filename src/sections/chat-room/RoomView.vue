@@ -67,7 +67,8 @@ const {
   usersTyping,
   lightboxEl,
   galleryInstance,
-  mediaGallery
+  mediaGallery,
+  resetKeyModalReactions,
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -713,6 +714,10 @@ const handleScroll = () => {
   scrollStop()
 }
 
+const handleScrollComponent = () => {
+  resetKeyModalReactions.value = true
+}
+
 watch(loadingMessages, async (loading) => {
   if (loading) return
 
@@ -847,8 +852,8 @@ onUnmounted(() => {
 
     <SkeletonMessages v-if="loadingMessages" />
 
-    <DynamicScroller v-memo="[memoizedMessages]" v-if="!loadingMessages" id="scrollChatRoom" ref="scroller"
-      :items="memoizedMessages" :key-field="'messageId'" :min-item-size="30"
+    <DynamicScroller @scroll="handleScrollComponent" v-memo="[memoizedMessages]" v-if="!loadingMessages"
+      id="scrollChatRoom" ref="scroller" :items="memoizedMessages" :key-field="'messageId'" :min-item-size="30"
       class="flex-1 space-y-2 bg-[#f9fafb] !py-4 !px-2"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">
@@ -859,19 +864,20 @@ onUnmounted(() => {
             <DateHeader :date="formatDate(Number(item?.latestMessageTimestamp))" />
           </div>
           <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
-            <SenderMessage v-if="item?.messageType && item.senderUserId === profile.data.id"
-              :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
-              :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
-              :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId"
-              :reactions="item?.reactions" :is-deleted="item?.isDeleted" :document="item?.document" />
+            <SenderMessage v-if="item?.messageType && item.senderUserId === profile.data.id" :key="item?.messageId"
+              v-memo="[item?.messageId]" :text-message="item.textMessage"
+              :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :message-id="item.messageId"
+              :message-type="item.messageType" :sender-user-id="item.senderUserId" :reply-view="item?.replyView"
+              :profile-id="profileId" :reactions="item?.reactions" :is-deleted="item?.isDeleted"
+              :document="item?.document" />
           </WrapperSetHeaderTimes>
           <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
-            <RecipientMessage v-if="item?.messageType && item.senderUserId !== profile.data.id"
-              :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
-              :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
-              :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
-              :reply-view="item?.replyView" :profile-id="profileId" :reactions="item?.reactions"
-              :is-deleted="item?.isDeleted" :document="item?.document" />
+            <RecipientMessage v-if="item?.messageType && item.senderUserId !== profile.data.id" :key="item?.messageId"
+              v-memo="[item?.messageId]" :text-message="item.textMessage"
+              :latest-message-timestamp="item.latestMessageTimestamp" :status="item.status" :chat-id="memoizedChatId"
+              :chat-room-id="memoizedChatRoomId" :message-id="item.messageId" :message-type="item.messageType"
+              :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId"
+              :reactions="item?.reactions" :is-deleted="item?.isDeleted" :document="item?.document" />
           </WrapperSetHeaderTimes>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />

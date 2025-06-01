@@ -15,9 +15,12 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@floating-ui/vue": "^1.1.6",
     "@primeuix/themes": "^1.0.0",
     "@primevue/forms": "^4.3.3",
     "@tailwindcss/vite": "^4.0.17",
+    "@vueuse/components": "^13.3.0",
+    "@vueuse/core": "^13.3.0",
     "browser-image-compression": "^2.0.2",
     "dayjs": "^1.11.13",
     "firebase": "^11.6.1",

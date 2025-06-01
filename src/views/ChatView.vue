@@ -1,4 +1,5 @@
 <script setup>
+import { general } from '@/helpers/general';
 import ChatRoomLayout from '@/layout/chat-room/ChatRoomLayout.vue';
 import ChatLayout from '@/layout/chat/ChatLayout.vue';
 import ProfileLayoutWrapper from '@/layout/profile/ProfileLayoutWrapper.vue';
@@ -9,6 +10,8 @@ import { usersStore } from '@/stores/users';
 import { storeToRefs } from 'pinia';
 import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, shallowRef, triggerRef, watch } from 'vue';
 
+const { deviceDetector } = general
+
 // store
 const userStore = usersStore()
 const { profile } = storeToRefs(userStore)
@@ -18,7 +21,7 @@ const { chats, searchMessengerData } = storeToRefs(chatStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleUpdateUsersTyping } = chatRoomStore
-const { usersTyping } = storeToRefs(chatRoomStore)
+const { usersTyping, typeDevice } = storeToRefs(chatRoomStore)
 
 // state
 const userOnlineSocketUpdate = shallowRef({
@@ -41,8 +44,15 @@ const typingStopSocketUpdate = shallowRef({
 const profileId = computed(() => profile.value?.data.id)
 const memoizedChats = computed(() => chats.value)
 
+const handleDeviceDetector = () => {
+  typeDevice.value = deviceDetector()
+}
+
 // hooks rendering
 onMounted(() => {
+  handleDeviceDetector()
+  window.addEventListener('resize', handleDeviceDetector)
+
   socket.on('typing-start', (data) => {
     typingStartSocketUpdate.value = {
       ...data,
@@ -161,6 +171,7 @@ watch(userOnlineSocketUpdate, (data) => {
 
 onUnmounted(() => {
   usersTyping.value = []
+  window.removeEventListener('resize', handleDeviceDetector)
 })
 </script>
 

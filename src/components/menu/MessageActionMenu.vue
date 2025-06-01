@@ -1,17 +1,18 @@
 <script setup>
-import { ref, defineProps, onUnmounted, computed, onBeforeMount, shallowRef, triggerRef, watch } from 'vue'
+import { ref, defineProps, onUnmounted, computed, onBeforeMount, shallowRef, triggerRef, watch, toRefs } from 'vue'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { general } from '@/helpers/general'
 import MenuCard from './MenuCard.vue'
+import { Button } from 'primevue'
 
 // store
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleActiveMessageMenu, resetActiveMessageMenu, handleSetReplyMessageData, handleSetConfirmDeleteMessage, handleResetActiveSelectReactions } = chatRoomStore
-const { activeMessageMenu, chatRoom } = storeToRefs(chatRoomStore)
+const { activeMessageMenu, chatRoom, typeDevice, resetKeyModalReactions } = storeToRefs(chatRoomStore)
 
-const { deviceDetector } = general
+const { deviceDetector, computeSafePosition } = general
 
 const props = defineProps({
   message: Object,
@@ -20,8 +21,12 @@ const props = defineProps({
   messageDeleted: Boolean
 })
 
+const { messageDeleted, message } = toRefs(props)
+
 const menu = ref(null)
 const deviceCurrently = ref(null)
+const mobileBtnMenuRef = ref(null)
+const currentPositionMobileBtnMenu = ref({ top: '', left: '' })
 const items = shallowRef([
   {
     label: 'Reply',
@@ -51,21 +56,34 @@ const items = shallowRef([
 //   }
 //   return
 // })
-const memoizedMenuClass = computed(() => {
-  if (deviceCurrently.value === 'mobile') {
-    const positionClass = props.message.senderUserId === props.profileId ? '' : 'right-0'
-    return [
-      'mb-10',         // margin-bottom: 40px
-      'rotate-180',    // rotate: 180deg
-      'block',// display: block
-      positionClass    // conditional right-0
-    ].join(' ')
+
+const memoizedDataComputed = computed(() => {
+  const mobilePosition = `top: ${computeSafePosition(currentPositionMobileBtnMenu.value.left, currentPositionMobileBtnMenu.value.top).top}px !important; inset-inline-start: ${computeSafePosition(currentPositionMobileBtnMenu.value.left, currentPositionMobileBtnMenu.value.top).left}px !important;`
+
+  const memoizedMenuClass = () => {
+    if (deviceCurrently.value === 'mobile') {
+      const positionClass = props.message.senderUserId === props.profileId ? '' : 'right-0'
+      return [
+        'mb-10',         // margin-bottom: 40px
+        '!rotate-0',    // rotate: 180deg
+        'block',// display: block
+        positionClass,
+      ].join(' ')
+    }
+    return ''
   }
-  return ''
+
+  const isDesktop = typeDevice.value === 'desktop'
+
+  return {
+    memoizedMenuClass: memoizedMenuClass(),
+    isDesktop,
+    mobilePosition: !isDesktop ? mobilePosition : undefined,
+  }
 })
 
-watch(props, (props) => {
-  if (props.messageDeleted) {
+watch([messageDeleted, activeMessageMenu], ([isDeleted]) => {
+  if (isDeleted && activeMessageMenu?.value?.messageId === message.value?.messageId) {
     items.value = items.value.filter(menu => menu.label !== 'Reply')
     triggerRef(items)
   }
@@ -73,13 +91,35 @@ watch(props, (props) => {
 
 const toggle = (event) => {
   menu.value.menu.toggle(event)
-  if (activeMessageMenu.value === props.message.messageId) {
+  if (activeMessageMenu.value?.messageId === props.message.messageId) {
     resetActiveMessageMenu()
   } else {
-    handleActiveMessageMenu(props.message.messageId)
+    handleActiveMessageMenu({ messageId: props.message.messageId })
   }
   event.stopPropagation()
 }
+const toggleMobileMenu = async (event) => {
+  menu.value.menu.toggle(event)
+}
+
+watch(activeMessageMenu, (newMenu) => {
+  if (newMenu?.x !== undefined && newMenu?.messageId === message.value?.messageId && deviceDetector() === 'mobile') {
+    const syntheticClickEvent = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    })
+    if (mobileBtnMenuRef.value) {
+      const top = Math.floor(newMenu.y)
+      const left = Math.floor(newMenu.x)
+      currentPositionMobileBtnMenu.value = {
+        top: top,
+        left: left
+      }
+      mobileBtnMenuRef.value.$el.dispatchEvent(syntheticClickEvent)
+    }
+  }
+})
 
 const handleResetMenu = () => {
   setTimeout(() => {
@@ -94,7 +134,9 @@ const onHide = () => {
 }
 
 const onShow = () => {
-  handleActiveMessageMenu(props.message.messageId)
+  if (deviceDetector() === 'desktop') {
+    handleActiveMessageMenu({ messageId: props.message.messageId })
+  }
 }
 
 const checkDevice = () => {
@@ -111,23 +153,38 @@ onBeforeMount(() => {
 onUnmounted(() => {
   clearInterval(checkDevice)
 })
+
+watch(typeDevice, (newDevice, oldDevice) => {
+  if (oldDevice && newDevice !== oldDevice) {
+    resetActiveMessageMenu()
+    handleResetActiveSelectReactions()
+    if (menu.value?.menu) {
+      menu.value.menu.hide()
+      currentPositionMobileBtnMenu.value = {
+        top: '',
+        left: ''
+      }
+    }
+  }
+})
+
+watch(resetKeyModalReactions, (reset) => {
+  if (deviceDetector() === 'mobile' && reset) {
+    menu.value?.menu?.hide()
+  }
+})
 </script>
 
 <template>
   <div class="flex flex-col">
-    <MenuCard ref="menu" :menu-class="`!text-[13px] absolute top-6 !min-w-[100px] !flex ${memoizedMenuClass}`"
-      :items="items" :toggleMenu="toggle" btnMenuIcon="pi pi-ellipsis-v" @show="onShow" @hide="onHide"
-      :append-to="deviceCurrently === 'desktop' ? 'body' : 'self'" btn-icon-class="pi pi-angle-up"
+    <Button ref="mobileBtnMenuRef" class="!hidden" @click="toggleMobileMenu"></Button>
+    <MenuCard :key="props.message?.messageId" ref="menu"
+      :menu-class="`!text-[13px] absolute !min-w-[100px] !max-w-fit !flex ${memoizedDataComputed.memoizedMenuClass}`"
+      :menu-style="memoizedDataComputed.mobilePosition" :items="items" :toggleMenu="toggle"
+      btnMenuIcon="pi pi-ellipsis-v" @show="onShow" @hide="onHide" :is-use-btn-toggle="memoizedDataComputed.isDesktop"
+      :append-to="deviceCurrently === 'desktop' ? 'body' : 'body'" btn-icon-class="pi pi-angle-up"
       btn-menu-class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]"
       :btn-menu-aria-controls="`overlay_menu_${props.message?.messageId}`" btn-menu-aria-haspopup="true"
       :btn-menu-rounded="true" btn-menu-severity="secondary" btn-menu-aria-label="More" item-direction="ltr" />
-
-    <!-- <MenuCard ref="menu" :menu-class="`!text-[13px] absolute top-6 !min-w-[100px] !flex ${memoizedMenuClass}`"
-      :id="`overlay_menu_${props.message?.messageId}`" :items="items" :toggleMenu="toggle"
-      btnMenuIcon="pi pi-ellipsis-v" @show="onShow" @hide="onHide"
-      :append-to="deviceCurrently === 'desktop' ? 'body' : 'self'" btn-icon-class="pi pi-angle-up"
-      btn-menu-class="!rounded-md !h-5 !w-4 !text-white !bg-[#7d8494] !border-[0.3px]"
-      :btn-menu-aria-controls="`overlay_menu_${props.message?.messageId}`" btn-menu-aria-haspopup="true"
-      :btn-menu-rounded="true" btn-menu-severity="secondary" btn-menu-aria-label="More" item-direction="ltr" /> -->
   </div>
 </template>

@@ -91,9 +91,27 @@ const onHide = (event) => {
   <Menu :id="menuId" ref="menu" :model="props.items" :class="props.menuClass" popup @show="onShow" @hide="onHide"
     :style="props.menuStyle" :append-to="props.appendTo">
     <template #item="{ item }">
-      <button :dir="itemDirection" class="flex items-center gap-2 py-1.5 px-2.5 cursor-pointer w-full"><i
-          v-if="item?.icon" :class="['pi', item.icon, item.iconClass]"></i>
+      <button @contextmenu.prevent :dir="itemDirection"
+        class="flex items-center gap-2 py-1.5 px-2.5 cursor-pointer w-full btn-user-select"><i v-if="item?.icon"
+          :class="['pi', item.icon, item.iconClass]"></i>
         <span :class="item.labelClass">{{ item.label }}</span></button>
     </template>
   </Menu>
 </template>
+
+<style scoped>
+.btn-user-select {
+  user-select: none;
+  /* Mencegah pemilihan teks */
+  -webkit-user-select: none;
+  /* Kompatibilitas untuk Safari/iOS */
+  -moz-user-select: none;
+  /* Kompatibilitas untuk Firefox */
+  -ms-user-select: none;
+  /* Kompatibilitas untuk IE/Edge */
+
+  touch-action: manipulation;
+  /* Memungkinkan scroll normal, tapi melumpuhkan double-tap zoom */
+  /* Jika Anda benar-benar ingin menghentikan scroll, gunakan: touch-action: none; */
+}
+</style>
