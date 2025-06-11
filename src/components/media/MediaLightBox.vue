@@ -116,10 +116,18 @@ watch(media, async () => {
   <!-- <vue-easy-lightbox :visible="visible" :imgs="images" :index="0" @hide="onHide" /> -->
 
   <div ref="lightboxEl" class="hidden">
-    <a v-for="(item, index) in media" :key="index" :href="item.url" :data-sub-html="item.caption">
-      <v-lazy-image :src="`${item?.url}`" :src-placeholder="item?.thumbnail" class="max-w-full max-h-[400px]"
-        sizes="(max-width: 320px) 280px, 440px" />
-    </a>
+    <template v-for="(item, index) in media" :key="index">
+      <a v-if="item.type === 'image'" :href="item.url" :data-sub-html="item.caption">
+        <v-lazy-image :src="item.url" :src-placeholder="item.thumbnail" class="max-w-full max-h-[400px]"
+          sizes="(max-width: 320px) 280px, 440px" />
+      </a>
+      <a v-else-if="item.type === 'video'" :href="item.url" :data-sub-html="item.caption" data-lg-size="1280-720"
+        :data-video="JSON.stringify({ source: [{ src: item.url, type: 'video/mp4' }], poster: item.videoThumbnail })"
+        :data-poster="item.videoThumbnail">
+        <v-lazy-image :src="item.videoThumbnail" :src-placeholder="item.videoThumbnail" class="max-w-full max-h-[400px]"
+          sizes="(max-width: 320px) 280px, 440px" />
+      </a>
+    </template>
   </div>
 
   <!-- <div v-if="visible"

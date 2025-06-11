@@ -82,8 +82,8 @@ const memoizedDataComputed = computed(() => {
   }
 })
 
-watch([messageDeleted, activeMessageMenu], ([isDeleted]) => {
-  if (isDeleted && activeMessageMenu?.value?.messageId === message.value?.messageId) {
+watch([messageDeleted, activeMessageMenu, message], ([isDeleted, newActiveMessageMenu, newMessage]) => {
+  if ((isDeleted && activeMessageMenu?.value?.messageId === message.value?.messageId) || (newMessage?.document?.type === 'video' && (newMessage?.document?.isCancelled || !newMessage?.document?.isProgressDone))) {
     items.value = items.value.filter(menu => menu.label !== 'Reply')
     triggerRef(items)
   }

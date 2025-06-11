@@ -83,6 +83,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const loadingGetMediaOnSliderChange = ref(false)
   const typeDevice = ref(null)
   const resetKeyModalReactions = ref(false)
+  const videoMessageProgress = shallowRef([])
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -187,7 +188,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
   const handleSetAttachment = ({ type, file }) => {
     let newAttachment = null
-    if (type === 'image') {
+    if (type) {
       newAttachment = {
         type,
         file,
@@ -651,7 +652,12 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       return
     }
 
-    if (!latestMessage) {
+    // stop video on progress
+    if (
+      !latestMessage ||
+      (latestMessage?.document?.isProgressDone === false &&
+        latestMessage?.senderUserId !== profileId)
+    ) {
       return
     }
 
@@ -1075,6 +1081,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     showScrollDownButton,
     loadingMessagesPagination,
     isStartIndex,
+    loadingAddNewMessageEventSource,
     bufferNewMessages,
     loadingMainMessagesOnScrollBottom,
     bufferNewMessagesOnScrollBottom,
@@ -1101,6 +1108,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     mediaGallery,
     typeDevice,
     resetKeyModalReactions,
+    videoMessageProgress,
+    triggerScrollToMessageIdIsDone,
     handleGetMediaOnSliderChange,
     handleUpdateUsersTyping,
     handleSetActiveMediaData,
@@ -1135,6 +1144,5 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     setChatRoom,
     handleReadMessage,
     handleStopGetChatRoomWorker,
-    loadingAddNewMessageEventSource,
   }
 })

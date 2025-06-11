@@ -13,6 +13,7 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, toRefs, watch } from 'vue'
 import { general } from '@/helpers/general'
 import { constant } from '@/utils/constant'
+import VideoMessage from '@/components/media/VideoMessage.vue'
 
 dayjs.extend(localizedFormat)
 
@@ -201,8 +202,9 @@ const handleMessageTouchEnd = () => {
 
 <template>
   <div class="flex flex-col-reverse items-end gap-1 pb-2 message-wrapper" @contextmenu.prevent @click.stop="closeMenu">
-    <MessageReaction :message-deleted="!messageComputedProps.messageDeleted" wrapper-class="justify-end"
-      :message-id="messageId" :profile-id="profileId" :reaction-currently="messageComputedProps.reactionCurrently">
+    <MessageReaction :document="document" :message-deleted="!messageComputedProps.messageDeleted"
+      wrapper-class="justify-end" :message-id="messageId" :profile-id="profileId"
+      :reaction-currently="messageComputedProps.reactionCurrently">
       <div :key="messageId" ref="boxRef"
         class="group bg-[#2e74e8] rounded-2xl max-w-[65%] md:max-w-[350px] self-end flex flex-col relative"
         :class="messageComputedProps.memoizedBoxWrapperClass" style="box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05)"
@@ -221,7 +223,8 @@ const handleMessageTouchEnd = () => {
           :wrapper-class="messageComputedProps.memoizedReactionInfoClass" />
         <p class="rotate-180" style="direction: ltr" :class="messageComputedProps.memoizedClassTextMessage"
           v-html="messageComputedProps.memoizedTextMessage"></p>
-        <ImageMessage v-if="document?.type && !messageComputedProps.messageDeleted" :info="{
+        <!-- MEDIA -->
+        <ImageMessage v-if="document?.type === 'image' && !messageComputedProps.messageDeleted" :info="{
           url: document?.url,
           thumbnail: document?.thumbnail,
           caption: document?.caption,
@@ -231,6 +234,20 @@ const handleMessageTouchEnd = () => {
           messageId: messageId,
           profileId: profileId,
         }" :img-class="messageComputedProps.memoizedWrapperImageClass" />
+        <VideoMessage v-if="document?.type === 'video' && !messageComputedProps.messageDeleted"
+          :video-class="messageComputedProps.memoizedWrapperImageClass" :info="{
+            url: document?.url,
+            thumbnail: document?.thumbnail,
+            caption: document?.caption,
+            progress: document?.progress,
+            isProgressDone: document?.isProgressDone,
+            isCancelled: document?.isCancelled,
+            username: 'You',
+            latestMessageTimestamp: Number(latestMessageTimestamp),
+            hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm'),
+            messageId: messageId,
+            profileId: profileId,
+          }" />
         <div v-if="!messageComputedProps.messageDeleted && replyView" class="flex !text-white"
           :class="messageComputedProps.memoizedWrapperReplyViewClass">
           <ReplyViewCard :from-message-username="messageComputedProps.fromMessageUsername"
@@ -245,10 +262,12 @@ const handleMessageTouchEnd = () => {
         {{ dayjs(Number(latestMessageTimestamp)).format('HH.mm') }}
       </span>
       <div v-if="!messageComputedProps.messageDeleted" class="relative flex items-center">
-        <i
+        <i v-if="(!document || document?.progress === undefined) || (document?.isProgressDone && !document?.isCancelled)"
           :class="`pi pi-check !text-[11px] ${status === 'UNREAD' ? 'text-gray-400' : 'text-[#2e74e8]'} rotate-180`"></i>
-        <i
+        <i v-if="(!document || document?.progress === undefined) || (document?.isProgressDone && !document?.isCancelled)"
           :class="`pi pi-check !text-[11px] !absolute right-[3px] ${status === 'UNREAD' ? 'text-gray-400' : 'text-[#2e74e8]'} rotate-180`"></i>
+        <i v-if="(document && document?.progress !== undefined) && (!document?.isProgressDone || document?.isCancelled)"
+          :class="`pi pi-clock !text-[11px] text-gray-400 rotate-180`"></i>
       </div>
     </div>
   </div>

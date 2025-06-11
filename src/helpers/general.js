@@ -6,6 +6,8 @@ import isYesterday from 'dayjs/plugin/isYesterday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekday from 'dayjs/plugin/weekday'
 import imageCompression from 'browser-image-compression'
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
@@ -199,45 +201,105 @@ const HTML_subHtmlOnCaptionMediaGallery = (item) => {
 
 const captionMediaGallery = (media) => {
   return media.map((item) => {
-    return {
+    let data = {
       src: item.url,
       thumb: item.thumbnail,
       subHtml: HTML_subHtmlOnCaptionMediaGallery(item),
     }
+    if (item.type === 'image') {
+      return data
+    } else if (item.type === 'video') {
+      return {
+        thumb: item.videoThumbnail,
+        video: {
+          source: [
+            {
+              ...data,
+              poster: item.thumbnail,
+              type: 'video/mp4', // Pastikan MIME type ini benar
+            },
+          ],
+          poster: item.thumbnail, // Gambar poster untuk video
+          attributes: { preload: true, controls: true },
+        },
+      }
+    }
+    return {}
   })
 }
 const mediaGalleryData = (mediaGallery, profileId, recipientUsername) => {
   return mediaGallery.map((item) => {
     const username = item?.senderUserId === profileId ? 'You' : recipientUsername
-    return {
+    let data = {
       url: item.document.url,
       thumbnail: item.document.url,
+      videoThumbnail: item.document.thumbnail,
       caption: item.document.caption,
       username: username,
       latestMessageTimestamp: Number(item.latestMessageTimestamp),
       hours: dayjs(Number(item.latestMessageTimestamp)).format('HH.mm'),
       messageId: item.messageId,
+      type: item.document.type,
     }
+    return data
   })
 }
 
-async function compressedFile(files) {
+async function compressedFile(files, type) {
   // console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
   // console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
 
-  const options = {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 1920,
-    useWebWorker: true,
-  }
-  try {
-    const compressedFile = await imageCompression(files, options)
-    // console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
-    // console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+  if (type === 'image') {
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    }
+    try {
+      const compressedFile = await imageCompression(files, options)
+      // console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+      // console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
 
-    return compressedFile
-  } catch (error) {
-    console.log(error)
+      return compressedFile
+    } catch (error) {
+      console.log(error)
+    }
+  } else if (type === 'video') {
+    try {
+      const ffmpeg = new FFmpeg({ log: true })
+      ffmpeg.on('progress', ({ progress, time }) => {
+        console.log('progress:', `${progress * 100} % (transcoded time: ${time / 1000000} s)`)
+      })
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        // workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
+      })
+      await ffmpeg.writeFile('input.mp4', await fetchFile(URL.createObjectURL(files)))
+      await ffmpeg.exec([
+        '-i',
+        'input.mp4',
+        '-c:v',
+        'libx264',
+        '-preset',
+        'ultrafast', // Paling cepat
+        '-crf',
+        '32', // Kualitas lebih rendah, ukuran sangat kecil, proses sangat cepat
+        '-vf',
+        'scale=640:-1', // Resolusi sangat dikurangi
+        '-r',
+        '15', // Frame rate dikurangi
+        '-c:a',
+        'copy',
+        'output.mp4',
+      ])
+      const data = await ffmpeg.readFile('output.mp4')
+      const videoBlob = new Blob([data.buffer], { type: 'video/mp4' })
+      return videoBlob
+    } catch (err) {
+      console.log(err)
+    }
   }
 }
 
@@ -260,6 +322,105 @@ function computeSafePosition(x, y, menuWidth = 120, menuHeight = 100) {
   return { top: Math.floor(top), left: Math.floor(left) }
 }
 
+const createArrayBuffer = async (file) => {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      const arrayBuffer = reader.result
+      resolve({
+        file,
+        buffer: arrayBuffer,
+      })
+    }
+
+    reader.readAsArrayBuffer(file)
+  })
+}
+
+// src/composables/useThumbnailGenerator.js
+import { ref } from 'vue'
+
+function useThumbnailGenerator() {
+  const thumbnailUrl = ref(null)
+  const loading = ref(false)
+  const error = ref(null)
+
+  /**
+   * Membuat thumbnail dari Blob URL video.
+   * @param {string} videoBlobUrl - Blob URL dari video.
+   * @param {number} positionSeconds - Posisi waktu (dalam detik) untuk mengambil frame thumbnail.
+   * @param {number} width - Lebar thumbnail yang diinginkan (px). Tinggi akan dihitung secara proporsional.
+   * @returns {Promise<string|null>} Data URL thumbnail atau null jika gagal.
+   */
+  const generateThumbnail = (videoBlobUrl, positionSeconds = 5, width = 300) => {
+    loading.value = true
+    error.value = null
+    thumbnailUrl.value = null
+
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video')
+      video.src = videoBlobUrl
+      video.crossOrigin = 'anonymous' // Penting jika video dari domain berbeda (meskipun Blob URL biasanya tidak masalah)
+      video.preload = 'metadata' // Hanya load metadata, bukan seluruh video
+
+      video.onloadedmetadata = () => {
+        video.currentTime = positionSeconds // Setel waktu ke posisi yang diinginkan
+      }
+
+      video.onseeked = () => {
+        // Pastikan video sudah siap di frame yang tepat
+        const canvas = document.createElement('canvas')
+        const aspectRatio = video.videoWidth / video.videoHeight
+        canvas.width = width
+        canvas.height = width / aspectRatio
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          const errMsg = 'Failed to get 2D canvas context.'
+          console.error(errMsg)
+          error.value = errMsg
+          loading.value = false
+          return reject(errMsg)
+        }
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8) // Format JPEG, kualitas 80%
+
+        thumbnailUrl.value = dataUrl
+        loading.value = false
+        resolve(dataUrl)
+
+        // Opsional: Hapus elemen video setelah selesai
+        video.remove()
+        canvas.remove()
+      }
+
+      video.onerror = (e) => {
+        const errMsg = `Error loading video: ${e.message || 'Unknown error'}`
+        console.error(errMsg, e)
+        error.value = errMsg
+        loading.value = false
+        reject(errMsg)
+        video.remove()
+      }
+
+      // Jika video sudah terisi, pastikan event onloadedmetadata tidak terlewat
+      if (video.readyState >= 1) {
+        // HAVE_METADATA or more
+        video.onloadedmetadata()
+      }
+    })
+  }
+
+  return {
+    videoThumbnailUrl: thumbnailUrl,
+    loading,
+    error,
+    generateThumbnail,
+  }
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -278,4 +439,6 @@ export const general = {
   HTML_subHtmlOnCaptionMediaGallery,
   compressedFile,
   computeSafePosition,
+  createArrayBuffer,
+  useThumbnailGenerator,
 }

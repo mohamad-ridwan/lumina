@@ -4,7 +4,7 @@ import FooterChatRoom from './footer/FooterChatRoom.vue';
 import HeaderChatRoom from './HeaderChatRoom.vue';
 import SenderMessage from './SenderMessage.vue';
 import RecipientMessage from './RecipientMessage.vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, onUpdated, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue';
 import { socket } from '@/services/socket/socket';
 // import SpamMessage from '@/spam-message/SpamMessage.vue'
 import { useChatRoomStore } from '@/stores/chat-room';
@@ -24,13 +24,14 @@ import SkeletonMessages from './SkeletonMessages.vue';
 import { fetchMessagesPagination } from '@/services/api/chat-room';
 import { general } from '@/helpers/general';
 import WrapperSetHeaderTimes from '@/components/WrapperSetHeaderTimes.vue';
+import { generateRandomId } from '@/helpers/generateRandomId';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(weekOfYear);
 dayjs.extend(weekday);
 
-const { sortByTimestamp, removeDuplicates, messageMatching, formatDate, dateWithHours, captionMediaGallery, mediaGalleryData, HTML_usernameOnCaptionMediaGallery, HTML_subHtmlOnCaptionMediaGallery, } = general
+const { sortByTimestamp, removeDuplicates, messageMatching, formatDate, dateWithHours, captionMediaGallery, mediaGalleryData, HTML_usernameOnCaptionMediaGallery, HTML_subHtmlOnCaptionMediaGallery, base64ToBlob } = general
 
 // store
 // profile store
@@ -69,6 +70,8 @@ const {
   galleryInstance,
   mediaGallery,
   resetKeyModalReactions,
+  videoMessageProgress,
+  triggerScrollToMessageIdIsDone
 } = storeToRefs(chatRoomStore)
 
 // state
@@ -84,6 +87,8 @@ const scrollTimeout = shallowRef(null)
 const scrollTimeOutDateHeader = shallowRef(null)
 const typingBubbleEl = ref(null)
 const newMessageUpdate = ref(null)
+const videoMessageProgressUpdate = ref(null)
+const videoMessageProgressDoneUpdate = ref(null)
 
 // logic
 const memoizedChatRoomId = computed(() => {
@@ -456,6 +461,148 @@ onUnmounted(() => {
   }
 })
 
+onMounted(() => {
+  socket.on('video-message-progress', (message) => {
+    videoMessageProgressUpdate.value = message
+  })
+})
+
+onMounted(() => {
+  socket.on('video-message-progress-done', (message) => {
+    videoMessageProgressDoneUpdate.value = message
+  })
+})
+
+watch(videoMessageProgressUpdate, (newMessage) => {
+  if (newMessage.latestMessage.senderUserId === profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && chatRoomMessages.value.some(msg => msg?.messageId === newMessage.latestMessage.messageId)) {
+    const messageIndex = videoMessageProgress.value.findIndex(msg => msg?.latestMessage.messageId === newMessage.latestMessage.messageId)
+    if (messageIndex === -1) {
+      videoMessageProgress.value.push(newMessage)
+      videoMessageProgress.value = [...videoMessageProgress.value]
+    } else {
+      videoMessageProgress.value[messageIndex] = newMessage
+      videoMessageProgress.value = [...videoMessageProgress.value]
+    }
+    triggerRef(videoMessageProgress)
+  }
+})
+
+watch(videoMessageProgress, (newVideo) => {
+  if (newVideo.length > 0) {
+    const currentVideo = newVideo.find(msg => msg?.chatRoomId === memoizedChatRoomId.value)
+    if (!currentVideo) {
+      return
+    }
+    const indexVideoMessage = chatRoomMessages.value.findIndex(msg => msg?.messageId === currentVideo.latestMessage.messageId)
+    if (indexVideoMessage !== -1) {
+      let newMessage = chatRoomMessages.value[indexVideoMessage]
+      newMessage.document = {
+        ...chatRoomMessages.value[indexVideoMessage].document,
+        progress: currentVideo.latestMessage.document.progress,
+        isProgressDone: false,
+        isCancelled: false
+      }
+      chatRoomMessages.value[indexVideoMessage] = newMessage
+      triggerRef(chatRoomMessages)
+    }
+  }
+})
+
+watch(videoMessageProgressDoneUpdate, async (newMessage) => {
+  if (newMessage.latestMessage.senderUserId === profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && chatRoomMessages.value.some(msg => msg?.messageId === newMessage.latestMessage.messageId)) {
+    const messageIndex = videoMessageProgress.value.findIndex(msg => msg?.latestMessage.messageId === newMessage.latestMessage.messageId)
+    if (messageIndex !== -1) {
+      const indexVideoMessage = chatRoomMessages.value.findIndex(msg => msg?.messageId === newMessage.latestMessage.messageId)
+      if (indexVideoMessage !== -1) {
+        let newMessageItem = chatRoomMessages.value[indexVideoMessage]
+        newMessageItem.document = {
+          ...chatRoomMessages.value[indexVideoMessage].document,
+          progress: 100,
+          isProgressDone: newMessage.latestMessage.document.isProgressDone,
+          isCancelled: newMessage.latestMessage.document.isCancelled,
+          url: newMessage.latestMessage.document.url,
+          // thumbnail: newMessage.thumbnail
+        }
+        chatRoomMessages.value[indexVideoMessage] = newMessageItem
+        triggerRef(chatRoomMessages)
+      }
+      videoMessageProgress.value = [...videoMessageProgress.value.filter(msg => msg?.latestMessage.messageId !== newMessage.latestMessage.messageId)]
+      triggerRef(videoMessageProgress)
+    }
+  } else if (newMessage.latestMessage.senderUserId !== profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && !newMessage.latestMessage.document.isCancelled) {
+    let newData = {}
+
+    const { latestMessage } = newMessage
+
+    newData = {
+      ...latestMessage,
+      id: latestMessage.messageId,
+      chatRoomId: chatRoom.value?.chatRoomId,
+      chatId: chatRoom.value?.chatId,
+    }
+    if (newData?.replyView) {
+      newData.replyView = toRaw(newData.replyView)
+    }
+
+    const currentHeaderToday = toRaw(chatRoomMessages.value).find((msg) => {
+      const itemDate = dayjs(Number(msg?.latestMessageTimestamp)).startOf('day')
+      return formatDate(itemDate) === 'Today'
+    })
+
+    const isNeedHeaderTime = !currentHeaderToday
+
+    if (
+      !triggerScrollToMessageIdIsDone.value &&
+      !loadingMainMessagesOnScrollBottom.value &&
+      !showScrollDownButton.value &&
+      !loadingMessagesPagination.value &&
+      isStartIndex.value
+    ) {
+      if (isNeedHeaderTime) {
+        const headerId = generateRandomId(15)
+        chatRoomMessages.value = removeDuplicates(
+          [
+            {
+              isHeader: true,
+              id: headerId,
+              messageId: headerId,
+              senderUserId: newData.senderUserId,
+              timeId: newData.timeId,
+              chatId: newData.chatId,
+              chatRoomId: newData.chatRoomId,
+              latestMessageTimestamp: Number(newData.latestMessageTimestamp),
+            },
+            ...chatRoomMessages.value,
+          ],
+          'messageId',
+        ).sort(sortByTimestamp)
+
+        triggerRef(chatRoomMessages)
+      }
+
+      chatRoomMessages.value = removeDuplicates(
+        [
+          {
+            ...newData,
+          },
+          ...chatRoomMessages.value,
+        ],
+        'messageId',
+      ).sort(sortByTimestamp)
+
+      if (toRaw(chatRoomMessages.value).length > ITEMS_PER_PAGE) {
+        await nextTick()
+        chatRoomMessages.value = chatRoomMessages.value.slice(0, -1)
+      }
+
+      if (newData?.senderUserId === profileId) {
+        scroller.value.$refs.scroller.$forceUpdate(true)
+        scroller.value.scrollToItem(0)
+      }
+    }
+  }
+})
+
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
 
@@ -816,6 +963,7 @@ onUnmounted(() => {
   scroller.value = null
   showScrollDownButton.value = false
   totalStreamsChatRoomWorkerDones.value = 0
+  videoMessageProgress.value = []
   handleResetActiveMediaData()
   handleResetAttachment()
   handleStopGetChatRoomWorker()

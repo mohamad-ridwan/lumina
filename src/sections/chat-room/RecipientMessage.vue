@@ -2,6 +2,7 @@
 import MessageReaction from '@/components/emoji/MessageReaction.vue'
 import ReactionInfo from '@/components/emoji/ReactionInfo.vue'
 import ImageMessage from '@/components/media/ImageMessage.vue'
+import VideoMessage from '@/components/media/VideoMessage.vue'
 import MessageActionMenu from '@/components/menu/MessageActionMenu.vue'
 import MessageHighlightOverlay from '@/components/overlay/MessageHighlightOverlay.vue'
 import ReplyViewCard from '@/components/ReplyViewCard.vue'
@@ -226,7 +227,7 @@ const handleTouchEndLongPress = () => {
 
 <template>
   <div class="flex flex-col-reverse gap-1 pb-2 message-wrapper" @contextmenu.prevent @click.stop="closeMenu">
-    <MessageReaction :message-deleted="!messageComputedProps.messageDeleted"
+    <MessageReaction :document="document" :message-deleted="!messageComputedProps.messageDeleted"
       wrapper-class="justify-end flex-row-reverse" :message-id="messageId" :profile-id="profileId"
       :reaction-currently="messageComputedProps.reactionCurrently">
       <div :key="messageId" ref="boxRef" @touchstart.stop="handleBoxTouchStart" @touchend.stop="handleTouchEndLongPress"
@@ -247,7 +248,7 @@ const handleTouchEndLongPress = () => {
           :wrapper-class="messageComputedProps.memoizedReactionInfoClass" />
         <p class="text-start rotate-180" style="direction: ltr" :class="messageComputedProps.memoizedClassTextMessage"
           v-html="messageComputedProps.memoizedTextMessage"></p>
-        <ImageMessage v-if="document?.type && !messageComputedProps.messageDeleted" :info="{
+        <ImageMessage v-if="document?.type === 'image' && !messageComputedProps.messageDeleted" :info="{
           url: document?.url,
           thumbnail: document?.thumbnail,
           caption: document?.caption,
@@ -257,6 +258,20 @@ const handleTouchEndLongPress = () => {
           messageId,
           profileId,
         }" :img-class="messageComputedProps.memoizedWrapperImageClass" />
+        <VideoMessage v-if="document?.type === 'video' && !messageComputedProps.messageDeleted"
+          :video-class="messageComputedProps.memoizedWrapperImageClass" :info="{
+            url: document?.url,
+            thumbnail: document?.thumbnail,
+            caption: document?.caption,
+            progress: document?.progress,
+            isProgressDone: document?.isProgressDone,
+            isCancelled: document?.isCancelled,
+            username: 'You',
+            latestMessageTimestamp: Number(latestMessageTimestamp),
+            hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm'),
+            messageId,
+            profileId
+          }" />
         <div v-if="!messageComputedProps.messageDeleted && replyView" class="flex !text-black"
           :class="messageComputedProps.memoizedWrapperReplyViewClass">
           <ReplyViewCard :from-message-username="messageComputedProps.fromMessageUsername"

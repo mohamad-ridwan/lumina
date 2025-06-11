@@ -89,7 +89,11 @@ const formattedTextMessage = computed(() => {
     return isDeleted.value
   }
   if (!latestMessageCurrently.value?.document) return latestMessageCurrently.value?.textMessage?.replace(/<br\s*\/?>/gi, ' ');
-  if (!latestMessageCurrently.value?.document?.caption && latestMessageCurrently.value?.document?.type === 'image') return 'Photo'
+  if (!latestMessageCurrently.value?.document?.caption && latestMessageCurrently.value?.document?.type === 'image') {
+    return 'Photo'
+  }else if(!latestMessageCurrently.value?.document?.caption && latestMessageCurrently.value?.document?.type === 'video'){
+    return 'Video'
+  }
   if (latestMessageCurrently.value?.document?.caption) return latestMessageCurrently.value.document.caption
 });
 

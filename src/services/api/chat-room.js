@@ -1,6 +1,15 @@
 import { clientUrl } from '../apiBaseUrl'
 import { fetchData } from '../fetchData'
 
+export const uploadVideoMessage = async (formData) => {
+  const result = await fetchData(`${clientUrl}/chat-room/upload-video-message`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  return result
+}
+
 export const fetchMessagesAround = async (chatRoomId, messageId, profileId, recipientId) => {
   const result = await fetchData(
     `${clientUrl}/chat-room/messages/${chatRoomId}/message/${messageId}/around?profileId=${profileId}&recipientId=${recipientId}`,

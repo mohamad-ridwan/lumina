@@ -27,10 +27,10 @@ const toggleMenu = (event) => {
   menu.value.menu.toggle(event)
 }
 
-const onSelectPhoto = async () => {
-  const file = await getUploadFile('image/*')
+const onSelectFile = async (fileType = 'image/*', attachmentType = 'image') => {
+  const file = await getUploadFile(fileType)
   if (file) {
-    handleSetAttachment({ type: 'image', file })
+    handleSetAttachment({ type: attachmentType, file })
   }
 }
 
@@ -39,15 +39,15 @@ const attachmentItems = computed(() => [
   {
     label: 'Photo',
     icon: 'pi pi-image',
-    command: onSelectPhoto,
+    command: onSelectFile,
     disabled: isUploading.value
   },
-  // {
-  //   label: 'Video',
-  //   icon: 'pi pi-video',
-  //   command: () => console.log('Kirim Video'),
-  //   disabled: isUploading.value
-  // },
+  {
+    label: 'Video',
+    icon: 'pi pi-video',
+    command: () => onSelectFile('video/*', 'video'),
+    disabled: isUploading.value
+  },
   // {
   //   label: 'File',
   //   icon: 'pi pi-file',

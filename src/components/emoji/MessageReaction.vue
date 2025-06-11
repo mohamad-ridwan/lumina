@@ -4,11 +4,11 @@ import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { Button, Menu } from 'primevue'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 
-const { wrapperClass, messageId, profileId, reactionCurrently, messageDeleted } = defineProps(['wrapperClass', 'messageId', 'profileId', 'reactionCurrently', 'messageDeleted'])
+const { wrapperClass, messageId, profileId, reactionCurrently, messageDeleted, document } = defineProps(['wrapperClass', 'messageId', 'profileId', 'reactionCurrently', 'messageDeleted', 'document'])
 
 const { deviceDetector, computeSafePosition } = general
 
@@ -41,13 +41,23 @@ const messageComputed = computed(() => {
   const memoizedChatId = chatRoom.value?.chatId
   const isDesktop = typeDevice.value === 'desktop'
 
+  const activeEmoji = () => {
+    if (document?.isCancelled !== undefined && document.isCancelled) {
+      return false
+    }
+    if (messageDeleted) {
+      return true
+    }
+  }
+
   return {
     isActiveMenu,
     isActiveMoreEmoji,
     memoizedChatRoomId,
     memoizedChatId,
     isDesktop,
-    mobilePosition
+    mobilePosition,
+    activeEmoji: activeEmoji()
   }
 })
 
@@ -224,7 +234,7 @@ watch(resetKeyModalReactions, (reset) => {
 <template>
   <div :class="`group/emoji flex w-full items-center relative gap-1.5 ${wrapperClass}`" @click="onTouchStart">
     <!-- Tombol emoji -->
-    <Button v-if="messageDeleted" icon="pi pi-face-smile" text rounded size="small"
+    <Button v-if="messageComputed.activeEmoji" icon="pi pi-face-smile" text rounded size="small"
       :class="`${!messageComputed.isDesktop ? '!hidden' : 'flex'} !w-7 !h-7 items-center justify-center absolute ${messageComputed.isActiveMenu ? 'opacity-100' : 'opacity-0'} group-hover/emoji:opacity-100 !bg-[#A1A1A1] shadow border rotate-180 !text-white`"
       @click.stop="toggleEmojiMenu" ref="emojiButtonRef" />
 

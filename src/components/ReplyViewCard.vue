@@ -17,8 +17,10 @@ const memoizedTextMessage = computed(() => {
   <div :class="`w-full flex items-start justify-between gap-2 pl-2 cursor-pointer ${wrapperClass}`"
     :style="wrapperStyle" @click="emits('onClick')">
     <div class="flex items-center gap-2">
-      <div v-if="document?.type === 'image'">
-        <v-lazy-image :src="`${document?.url}`" alt="reply" :src-placeholder="document?.thumbnail"
+      <div v-if="document?.type === 'image' || document?.type === 'video'">
+        <v-lazy-image
+          :src="`${document?.type === 'image' ? document?.url : document?.type === 'video' ? document.thumbnail : ''}`"
+          alt="reply" :src-placeholder="document.type === 'image' ? document?.thumbnail : undefined"
           class="h-10 w-15 max-w-full object-contain rounded-sm" sizes="(max-width: 60px) 40px, 60px" />
       </div>
       <div class="flex flex-col w-full pr-2">
