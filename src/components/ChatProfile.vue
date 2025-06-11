@@ -1,6 +1,6 @@
 <script setup>
 import { Button } from 'primevue';
-import { computed } from 'vue';
+import { computed, ref, toRefs } from 'vue';
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -15,16 +15,20 @@ dayjs.extend(weekday);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 
-const { textMessage, username, fontSizeUsername, imgSize, heightContainer, unreadCount, isActive, image, status, isTyping, document, latestMessage, profileId, thumbnail, imgCropped } = defineProps(['textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document', 'latestMessage', 'profileId', 'thumbnail', 'imgCropped'])
+const props = defineProps(['textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document', 'latestMessage', 'profileId', 'thumbnail', 'imgCropped'])
 
 const emits = defineEmits(['click'])
+
+const { textMessage, username, fontSizeUsername, imgSize, heightContainer, unreadCount, isActive, image, status, isTyping, document, latestMessage, profileId, thumbnail, imgCropped } = toRefs(props)
+
+const isErrorImage = ref(false)
 
 const handleClick = () => {
   emits('click')
 }
 
 const latestMessageCurrently = computed(() => {
-  const currentLatestMessage = latestMessage?.find(msg => msg?.userId === profileId)
+  const currentLatestMessage = latestMessage.value?.find(msg => msg?.userId === profileId.value)
   if (!currentLatestMessage) {
     return
   }
@@ -55,10 +59,13 @@ const formattedDate = computed(() => {
 });
 
 const memoizedImage = computed(() => {
-  if (!imgCropped && image) {
-    return image
-  } else if (imgCropped) {
-    return imgCropped
+  if (!imgCropped.value && image.value) {
+    return image.value
+  } else if (imgCropped.value) {
+    if (isErrorImage.value && thumbnail.value) {
+      return thumbnail.value
+    }
+    return imgCropped.value
   }
   return '/avatar.png'
 })
@@ -71,9 +78,9 @@ const isDeleted = computed(() => {
   if (!deletedEveryone) {
     return
   }
-  if (deletedEveryone?.senderUserId === profileId) {
+  if (deletedEveryone?.senderUserId === profileId.value) {
     return 'You deleted this message.'
-  } else if (deletedEveryone?.senderUserId !== profileId) {
+  } else if (deletedEveryone?.senderUserId !== profileId.value) {
     return 'Message has been deleted.'
   }
   return
@@ -81,7 +88,7 @@ const isDeleted = computed(() => {
 
 const fromMe = computed(() => {
   if (!latestMessageCurrently.value) return false
-  return latestMessageCurrently.value?.senderUserId === profileId ? true : false
+  return latestMessageCurrently.value?.senderUserId === profileId.value ? true : false
 })
 
 const formattedTextMessage = computed(() => {
@@ -91,7 +98,7 @@ const formattedTextMessage = computed(() => {
   if (!latestMessageCurrently.value?.document) return latestMessageCurrently.value?.textMessage?.replace(/<br\s*\/?>/gi, ' ');
   if (!latestMessageCurrently.value?.document?.caption && latestMessageCurrently.value?.document?.type === 'image') {
     return 'Photo'
-  }else if(!latestMessageCurrently.value?.document?.caption && latestMessageCurrently.value?.document?.type === 'video'){
+  } else if (!latestMessageCurrently.value?.document?.caption && latestMessageCurrently.value?.document?.type === 'video') {
     return 'Video'
   }
   if (latestMessageCurrently.value?.document?.caption) return latestMessageCurrently.value.document.caption
@@ -110,6 +117,10 @@ const memoizedTypeMessageIcon = computed(() => {
     return 'pi pi-file'
   }
 })
+
+const handleImageError = () => {
+  isErrorImage.value = true
+}
 </script>
 
 <template>
@@ -125,7 +136,8 @@ const memoizedTypeMessageIcon = computed(() => {
         <div :class="`${imgSize ?? 'w-12 sm:w-14'}`">
           <div :class="`relative ${imgSize ?? 'h-12 w-12 sm:h-14 sm:w-14'}`">
             <v-lazy-image :src="memoizedImage" alt="profile" :src-placeholder="thumbnail"
-              class="object-cover rounded-full h-full w-full" sizes="(max-width: 60px) 40px, 80px" />
+              class="object-cover rounded-full h-full w-full" sizes="(max-width: 60px) 40px, 80px"
+              @error="handleImageError" />
             <div v-if="status === 'online'" class="absolute bottom-0.5 right-0">
               <div class="h-[12px] w-[12px] rounded-full bg-green-500 border-[1px] border-white"></div>
             </div>
@@ -190,7 +202,7 @@ const memoizedTypeMessageIcon = computed(() => {
 }
 
 .v-lazy-image {
-  filter: blur(3px);
+  filter: blur(2px);
   transition: filter 0.1s;
 }
 

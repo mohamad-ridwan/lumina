@@ -4,7 +4,6 @@ import { useChatRoomStore } from '@/stores/chat-room'
 import { usersStore } from '@/stores/users'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
-import VLazyImage from "v-lazy-image";
 import ImageUserReactionInfo from './ImageUserReactionInfo.vue'
 
 const { reactions, profileId, reactionCurrently, messageId, wrapperClass } = defineProps(['reactions', 'profileId', 'reactionCurrently', 'messageId', 'wrapperClass'])
@@ -89,14 +88,3 @@ const submitReactionMessage = () => {
     </button>
   </div>
 </template>
-
-<style scoped>
-.v-lazy-image {
-  filter: blur(4px);
-  transition: filter 0.1s;
-}
-
-.v-lazy-image-loaded {
-  filter: blur(0);
-}
-</style>

@@ -20,11 +20,11 @@ const currentImageUrl = ref(props.info?.url);
 
 const memoizedImageOnMediaGallery = computed(() => {
   if (!mediaGallery.value) return null
-  return mediaGallery.value.findIndex(item => item?.messageId === info?.messageId)
+  return mediaGallery.value.findIndex(item => item?.messageId === props.info?.messageId)
 })
 
 const handleClickImg = () => {
-  handleSetActiveMediaData({ ...info, key: activeMediaData?.value?.key ? activeMediaData?.value?.key + 1 : 1 })
+  handleSetActiveMediaData({ ...props.info, key: activeMediaData?.value?.key ? activeMediaData?.value?.key + 1 : 1 })
 }
 
 const handleImageError = () => {
@@ -36,7 +36,7 @@ const handleImageError = () => {
 // save image to media gallery
 onBeforeMount(() => {
   if (memoizedImageOnMediaGallery.value === -1 || memoizedImageOnMediaGallery.value === null) {
-    const item = chatRoomMessages.value.find(msg => msg?.messageId === info?.messageId)
+    const item = chatRoomMessages.value.find(msg => msg?.messageId === props.info?.messageId)
     if (item) {
       mediaGallery.value.push(item)
       mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => {

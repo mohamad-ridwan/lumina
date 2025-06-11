@@ -97,6 +97,12 @@ function handleBack() {
   setChatRoom({})
 }
 
+const handleImageError = () => {
+  if (chatRoom.value.thumbnail) {
+    chatRoom.value.imgCropped = chatRoom.value.thumbnail
+  }
+}
+
 // hooks rendering
 onMounted(() => {
   intervalId = setInterval(() => {
@@ -163,7 +169,8 @@ watch(userProfileSocketUpdate, (data) => {
       <div class="relative">
         <v-lazy-image :src="!profileInfo?.imgCropped ? chatRoom?.image ?? '/avatar.png' : profileInfo.imgCropped"
           alt="profile" :src-placeholder="profileInfo?.thumbnail"
-          class="object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11" sizes="(max-width: 100px) 80px, 120px" />
+          class="object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11" sizes="(max-width: 100px) 80px, 120px"
+          @error="handleImageError" />
         <div v-if="memoizedStatusUserOnline && memoizedStatusUserOnline === 'online'"
           class="absolute bottom-0.5 right-0">
           <div class="h-[11px] w-[11px] rounded-full bg-green-500 border-[1px] border-white"></div>
@@ -184,7 +191,7 @@ watch(userProfileSocketUpdate, (data) => {
 
 <style scoped>
 .v-lazy-image {
-  filter: blur(10px);
+  filter: blur(2px);
   transition: filter 0.1s;
 }
 
