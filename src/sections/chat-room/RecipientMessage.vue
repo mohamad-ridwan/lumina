@@ -248,17 +248,21 @@ const handleTouchEndLongPress = () => {
           :wrapper-class="messageComputedProps.memoizedReactionInfoClass" />
         <p class="text-start rotate-180" style="direction: ltr" :class="messageComputedProps.memoizedClassTextMessage"
           v-html="messageComputedProps.memoizedTextMessage"></p>
-        <ImageMessage v-if="document?.type === 'image' && !messageComputedProps.messageDeleted" :info="{
-          url: document?.url,
-          thumbnail: document?.thumbnail,
-          caption: document?.caption,
-          username: chatRoom.username,
-          latestMessageTimestamp: Number(latestMessageTimestamp),
-          hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm'),
-          messageId,
-          profileId,
-        }" :img-class="messageComputedProps.memoizedWrapperImageClass" />
-        <VideoMessage v-if="document?.type === 'video' && !messageComputedProps.messageDeleted"
+        <ImageMessage
+          v-memo="[document?.url, messageComputedProps.messageDeleted, messageComputedProps.memoizedWrapperImageClass]"
+          v-if="document?.type === 'image' && !messageComputedProps.messageDeleted" :info="{
+            url: document?.url,
+            thumbnail: document?.thumbnail,
+            caption: document?.caption,
+            username: chatRoom.username,
+            latestMessageTimestamp: Number(latestMessageTimestamp),
+            hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm'),
+            messageId,
+            profileId,
+          }" :img-class="messageComputedProps.memoizedWrapperImageClass" />
+        <VideoMessage
+          v-memo="[document?.url, messageComputedProps.messageDeleted, document?.progress, document?.isProgressDone, document?.isCancelled]"
+          v-if="document?.type === 'video' && !messageComputedProps.messageDeleted"
           :video-class="messageComputedProps.memoizedWrapperImageClass" :info="{
             url: document?.url,
             thumbnail: document?.thumbnail,

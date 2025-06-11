@@ -1,15 +1,31 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, toRefs, watch } from 'vue'
 import VLazyImage from "v-lazy-image";
 
-const { usernameClass, fromMessageUsername, wrapperClass, textMessage, textMessageClass, wrapperStyle, document } = defineProps(['usernameClass', 'fromMessageUsername', 'wrapperClass', 'textMessage', 'textMessageClass', 'wrapperStyle', 'document'])
+const props = defineProps(['usernameClass', 'fromMessageUsername', 'wrapperClass', 'textMessage', 'textMessageClass', 'wrapperStyle', 'document'])
+
+const { usernameClass, fromMessageUsername, wrapperClass, textMessage, textMessageClass, wrapperStyle, document } = toRefs(props)
 
 const emits = defineEmits(['onClick'])
+
+const currentImageUrl = ref(document.value?.url);
 
 const memoizedTextMessage = computed(() => {
   if (!document) return textMessage
   if (document?.caption) return document.caption
 })
+
+const handleImageError = () => {
+  if (document.value?.thumbnail) {
+    currentImageUrl.value = document.value.thumbnail
+  }
+}
+
+watch(document.value?.url, (newUrl) => {
+  if (document.value?.type === 'image') {
+    currentImageUrl.value = newUrl
+  }
+});
 
 </script>
 
@@ -19,9 +35,10 @@ const memoizedTextMessage = computed(() => {
     <div class="flex items-center gap-2">
       <div v-if="document?.type === 'image' || document?.type === 'video'">
         <v-lazy-image
-          :src="`${document?.type === 'image' ? document?.url : document?.type === 'video' ? document.thumbnail : ''}`"
+          :src="`${document?.type === 'image' ? currentImageUrl : document?.type === 'video' ? document.thumbnail : ''}`"
           alt="reply" :src-placeholder="document.type === 'image' ? document?.thumbnail : undefined"
-          class="h-10 w-15 max-w-full object-contain rounded-sm" sizes="(max-width: 60px) 40px, 60px" />
+          class="h-10 w-15 max-w-full object-contain rounded-sm" sizes="(max-width: 60px) 40px, 60px"
+          @error="handleImageError" />
       </div>
       <div class="flex flex-col w-full pr-2">
         <h1 :class="`${usernameClass} font-semibold flex`">
@@ -35,7 +52,7 @@ const memoizedTextMessage = computed(() => {
 
 <style scoped>
 .v-lazy-image {
-  filter: blur(10px);
+  filter: blur(1px);
   transition: filter 0.1s;
 }
 

@@ -2,17 +2,21 @@
 import VLazyImage from "v-lazy-image";
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from "pinia";
-import { computed, markRaw, onBeforeMount, onMounted, triggerRef } from "vue";
+import { computed, markRaw, onBeforeMount, ref, toRefs, triggerRef, watch } from "vue";
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleSetActiveMediaData } = chatRoomStore
 const { activeMediaData, mediaGallery, chatRoomMessages } = storeToRefs(chatRoomStore)
 
-const { imgClass, info, itemMessage } = defineProps({
+const props = defineProps({
   imgClass: String,
   info: Object,
 })
+
+const { imgClass, info, itemMessage } = toRefs(props)
+
+const currentImageUrl = ref(props.info?.url);
 
 const memoizedImageOnMediaGallery = computed(() => {
   if (!mediaGallery.value) return null
@@ -21,6 +25,12 @@ const memoizedImageOnMediaGallery = computed(() => {
 
 const handleClickImg = () => {
   handleSetActiveMediaData({ ...info, key: activeMediaData?.value?.key ? activeMediaData?.value?.key + 1 : 1 })
+}
+
+const handleImageError = () => {
+  if (info.value?.thumbnail) {
+    currentImageUrl.value = info.value?.thumbnail
+  }
 }
 
 // save image to media gallery
@@ -37,14 +47,18 @@ onBeforeMount(() => {
   }
 })
 
+watch(info.value?.url, (newInfo) => {
+  currentImageUrl.value = newInfo.url;
+});
+
 </script>
 
 <template>
   <div @contextmenu.prevent @click.prevent.stop="handleClickImg"
     class="cursor-pointer flex justify-center bg-gray-500/60 overflow-hidden" :class="imgClass">
-    <v-lazy-image :key="info?.messageId" :src="`${info?.url}`" :src-placeholder="info?.thumbnail"
+    <v-lazy-image :key="info?.messageId" :src="currentImageUrl" :src-placeholder="info?.thumbnail"
       class="max-w-full max-h-[400px] rounded-sm rotate-180 image-media" draggable="false"
-      sizes="(max-width: 320px) 280px, 440px" />
+      sizes="(max-width: 320px) 280px, 440px" @error="handleImageError" />
   </div>
 </template>
 

@@ -5,6 +5,7 @@ import { usersStore } from '@/stores/users'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import VLazyImage from "v-lazy-image";
+import ImageUserReactionInfo from './ImageUserReactionInfo.vue'
 
 const { reactions, profileId, reactionCurrently, messageId, wrapperClass } = defineProps(['reactions', 'profileId', 'reactionCurrently', 'messageId', 'wrapperClass'])
 
@@ -81,10 +82,9 @@ const submitReactionMessage = () => {
         <div v-for="react of emojis" class="text-[13px] rotate-180">{{ react.emoji }}</div>
       </div>
       <div class="flex items-center">
-        <v-lazy-image v-for="image of images" :key="image.key" :src="`${image?.imgCropped}`"
-          :src-placeholder="image?.thumbnail"
-          class="rounded-full h-4.5 w-4.5 object-cover border border-white rotate-180"
-          sizes="(max-width: 20px) 15px, 22px" />
+        <template v-for="image of images" :key="image.key">
+          <ImageUserReactionInfo :image="image" />
+        </template>
       </div>
     </button>
   </div>
