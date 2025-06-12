@@ -42,7 +42,7 @@ const messageComputed = computed(() => {
   const isDesktop = typeDevice.value === 'desktop'
 
   const activeEmoji = () => {
-    if (document?.isCancelled !== undefined && document.isCancelled) {
+    if ((document?.isProgressDone !== undefined && !document?.isProgressDone) || (document?.isCancelled !== undefined && document.isCancelled)) {
       return false
     }
     if (messageDeleted) {
