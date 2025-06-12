@@ -11,8 +11,8 @@ const emits = defineEmits(['onClick'])
 const currentImageUrl = ref(document.value?.url);
 
 const memoizedTextMessage = computed(() => {
-  if (!document) return textMessage
-  if (document?.caption) return document.caption
+  if (!document.value) return textMessage.value
+  if (document.value?.caption) return document.value.caption
 })
 
 const handleImageError = () => {
