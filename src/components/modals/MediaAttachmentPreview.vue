@@ -204,7 +204,7 @@ watch([isVisible, formMessage], ([isVisible, formMessage]) => {
 </script>
 
 <template>
-  <Dialog v-model:visible="isVisible" modal header="1 Media"
+  <Dialog v-model:visible="isVisible" modal header="Media View"
     :style="{ width: '100%', maxWidth: '300px', minWidth: '300px' }" :dismissableMask="true" class="!bg-[#f9fafb]"
     @hide="handleResetAttachment">
     <div class="flex flex-col items-center gap-4 pb-1">

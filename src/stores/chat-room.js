@@ -83,7 +83,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const loadingGetMediaOnSliderChange = ref(false)
   const typeDevice = ref(null)
   const resetKeyModalReactions = ref(false)
-  const videoMessageProgress = shallowRef([])
+  const mediaMessageProgress = shallowRef([])
 
   const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
     general
@@ -1108,7 +1108,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
     mediaGallery,
     typeDevice,
     resetKeyModalReactions,
-    videoMessageProgress,
+    mediaMessageProgress,
     triggerScrollToMessageIdIsDone,
     handleGetMediaOnSliderChange,
     handleUpdateUsersTyping,
