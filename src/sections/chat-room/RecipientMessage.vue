@@ -261,7 +261,7 @@ const handleTouchEndLongPress = () => {
             profileId,
           }" :img-class="messageComputedProps.memoizedWrapperImageClass" />
         <VideoMessage
-          v-memo="[document?.url, messageComputedProps.messageDeleted, document?.progress, document?.isProgressDone, document?.isCancelled]"
+          v-memo="[document?.url, messageComputedProps.messageDeleted, document?.progress, document?.isProgressDone, document?.isCancelled, messageComputedProps.memoizedWrapperImageClass]"
           v-if="document?.type === 'video' && !messageComputedProps.messageDeleted"
           :video-class="messageComputedProps.memoizedWrapperImageClass" :info="{
             url: document?.url,
