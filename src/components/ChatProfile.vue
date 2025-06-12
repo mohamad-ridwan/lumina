@@ -2,11 +2,14 @@
 import { Button } from 'primevue';
 import { computed, ref, toRefs } from 'vue';
 import dayjs from 'dayjs'
+import 'dayjs/locale/id'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import relativeTime from 'dayjs/plugin/relativeTime';
 import weekday from 'dayjs/plugin/weekday';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import VLazyImage from "v-lazy-image";
 
 dayjs.extend(localizedFormat)
@@ -14,6 +17,10 @@ dayjs.extend(relativeTime);
 dayjs.extend(weekday);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+dayjs.tz.setDefault('Asia/Jakarta')
 
 const props = defineProps(['textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document', 'latestMessage', 'profileId', 'thumbnail', 'imgCropped'])
 

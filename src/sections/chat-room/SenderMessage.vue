@@ -8,7 +8,14 @@ import ReplyViewCard from '@/components/ReplyViewCard.vue'
 import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
 import dayjs from 'dayjs'
+import 'dayjs/locale/id'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
+import relativeTime from 'dayjs/plugin/relativeTime';
+import weekday from 'dayjs/plugin/weekday';
+import isToday from 'dayjs/plugin/isToday';
+import isYesterday from 'dayjs/plugin/isYesterday';
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, toRefs, watch } from 'vue'
 import { general } from '@/helpers/general'
@@ -16,6 +23,14 @@ import { constant } from '@/utils/constant'
 import VideoMessage from '@/components/media/VideoMessage.vue'
 
 dayjs.extend(localizedFormat)
+dayjs.extend(relativeTime);
+dayjs.extend(weekday);
+dayjs.extend(isToday);
+dayjs.extend(isYesterday);
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+dayjs.tz.setDefault('Asia/Jakarta')
 
 // props
 const props = defineProps(['textMessage', 'latestMessageTimestamp', 'status', 'messageId', 'messageType', 'senderUserId', 'replyView', 'profileId', 'reactions', 'isDeleted', 'document'])

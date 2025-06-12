@@ -15,6 +15,8 @@ import isToday from 'dayjs/plugin/isToday'
 import isYesterday from 'dayjs/plugin/isYesterday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekday from 'dayjs/plugin/weekday'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import AttachmentMenu from '@/components/menu/AttachmentMenu.vue';
 import { fetchMessagesPagination } from '@/services/api/chat-room';
 
@@ -22,6 +24,10 @@ dayjs.extend(isToday)
 dayjs.extend(isYesterday)
 dayjs.extend(weekOfYear)
 dayjs.extend(weekday)
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+dayjs.tz.setDefault("Asia/Jakarta");
 
 const { formatDate } = general
 
