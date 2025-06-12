@@ -3,7 +3,7 @@
 import { useChatRoomStore } from '@/stores/chat-room'
 import VLazyImage from "v-lazy-image";
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, toRaw, watch } from 'vue'
+import { computed, nextTick, toRaw, triggerRef, watch } from 'vue'
 // import VueEasyLightbox from 'vue-easy-lightbox'
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
@@ -62,7 +62,7 @@ const media = computed(() => {
   if (activeMediaData.value?.messageId && mediaGallery.value.length > 0) {
     return mediaGalleryData(mediaGallery.value, profileId.value, chatRoom.value?.username)
   }
-  return [activeMediaData.value]
+  return [{ ...activeMediaData.value, type: 'image' }]
 })
 
 // const date = computed(() => {
@@ -93,6 +93,16 @@ const openLightbox = async () => {
   galleryInstance.value.openGallery(imageIndex)
 }
 
+const handleImageError = (item) => {
+  const mediaIndex = mediaGallery.value.findIndex(msg => msg?.messageId === item?.messageId)
+  if (mediaIndex !== -1 && item?.videoThumbnail) {
+    mediaGallery.value[mediaIndex].document.url = item.videoThumbnail
+    mediaGallery.value[mediaIndex].document.thumbnail = item.videoThumbnail
+    mediaGallery.value = [...mediaGallery.value]
+    triggerRef(mediaGallery)
+  }
+}
+
 watch(activeMediaData, (data) => {
   if (data) {
     openLightbox()
@@ -117,9 +127,9 @@ watch(media, async () => {
 
   <div ref="lightboxEl" class="hidden">
     <template v-for="(item, index) in media" :key="index">
-      <a v-if="item.type === 'image'" :href="item.url" :data-sub-html="item.caption">
+      <a v-if="item.type === 'image'" :href="item.url" :data-sub-html="item.caption" :data-src="item.url">
         <v-lazy-image :src="item.url" :src-placeholder="item.thumbnail" class="max-w-full max-h-[400px]"
-          sizes="(max-width: 320px) 280px, 440px" />
+          sizes="(max-width: 320px) 280px, 440px" @error="() => handleImageError(item)" />
       </a>
       <a v-else-if="item.type === 'video'" :href="item.url" :data-sub-html="item.caption" data-lg-size="1280-720"
         :data-video="JSON.stringify({ source: [{ src: item.url, type: 'video/mp4' }], poster: item.videoThumbnail })"

@@ -142,6 +142,13 @@ const handleSubmit = async (url) => {
   profile.value.data.image = urlImage
   loadingUpdated.value = false
 }
+
+const handleImageError = () => {
+  if (profile.value.data?.thumbnail) {
+    profile.value.data.imgCropped = profile.value.data?.thumbnail
+    profile.value.data.image = profile.value.data?.thumbnail
+  }
+}
 </script>
 
 <template>
@@ -150,7 +157,7 @@ const handleSubmit = async (url) => {
     <div class="relative group h-[150px] w-[150px] rounded-full overflow-hidden">
       <img :src="memoizedImage" alt="Profile Image"
         :class="`h-full w-full object-cover ${loadingUpdated ? 'cursor-not-allowed' : 'cursor-pointer'}`"
-        @click="toggleMenu" />
+        @click="toggleMenu" @error="handleImageError" />
       <div
         :class="`absolute inset-0 bg-black/60 flex flex-col justify-center items-center text-white ${!loadingUpdated ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'} transition-opacity duration-300 pointer-events-none`">
         <div v-if="!loadingUpdated" class="flex flex-col justify-center items-center gap-1">

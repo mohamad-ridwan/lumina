@@ -951,12 +951,15 @@ watch(totalStreamsLength, (length) => {
   }
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   lightboxEl.value?.removeEventListener('lgBeforeSlide', handleGetMediaOnSliderChange)
   galleryInstance.value?.destroy?.(true)
   lightboxEl.value = null
   galleryInstance.value = null
   mediaGallery.value = []
+})
+
+onUnmounted(() => {
   loadingMessages.value = false
   setChatRoomMessages([])
   window.removeEventListener('popstate', preventBackNavigation)

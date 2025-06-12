@@ -30,6 +30,11 @@ const handleClickImg = () => {
 const handleImageError = () => {
   if (info.value?.thumbnail) {
     currentImageUrl.value = info.value?.thumbnail
+    if (memoizedImageOnMediaGallery.value !== -1) {
+      mediaGallery.value[memoizedImageOnMediaGallery.value].document.url = info.value?.thumbnail
+      mediaGallery.value = [...mediaGallery.value]
+      triggerRef(mediaGallery)
+    }
   }
 }
 

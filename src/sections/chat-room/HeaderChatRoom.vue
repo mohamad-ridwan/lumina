@@ -4,7 +4,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { chatsStore } from '@/stores/chats';
 import { storeToRefs } from 'pinia';
 import { Button } from 'primevue';
-import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onBeforeMount, onMounted, onUnmounted, ref, triggerRef, watch } from 'vue';
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import calendar from 'dayjs/plugin/calendar'
@@ -98,8 +98,14 @@ function handleBack() {
 }
 
 const handleImageError = () => {
-  if (chatRoom.value.thumbnail) {
-    chatRoom.value.imgCropped = chatRoom.value.thumbnail
+  const indexChat = chats.value.findIndex(chat => chat?.chatId === memoizedChatId.value)
+  if (indexChat !== -1) {
+    chatRoom.value.imgCropped = chats.value[indexChat].thumbnail
+    if (indexChat !== -1) {
+      chats.value[indexChat].imgCropped = chats.value[indexChat].thumbnail
+      chats.value = [...chats.value]
+      triggerRef(chats)
+    }
   }
 }
 
@@ -167,7 +173,7 @@ watch(userProfileSocketUpdate, (data) => {
       size="large" icon-class="!text-lg" @click="handleBack" />
     <div class="flex items-center gap-3">
       <div class="relative">
-        <v-lazy-image :src="!profileInfo?.imgCropped ? chatRoom?.image ?? '/avatar.png' : profileInfo.imgCropped"
+        <v-lazy-image :src="!profileInfo?.imgCropped ? chatRoom?.imgCropped ?? '/avatar.png' : profileInfo.imgCropped"
           alt="profile" :src-placeholder="profileInfo?.thumbnail"
           class="object-cover rounded-full h-10 w-10 sm:h-11 sm:w-11" sizes="(max-width: 100px) 80px, 120px"
           @error="handleImageError" />
