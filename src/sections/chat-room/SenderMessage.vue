@@ -240,11 +240,15 @@ const handleMessageTouchEnd = () => {
           v-html="messageComputedProps.memoizedTextMessage"></p>
         <!-- MEDIA -->
         <ImageMessage
-          v-memo="[document?.url, messageComputedProps.messageDeleted, messageComputedProps.memoizedWrapperImageClass]"
+          v-memo="[document?.url, messageComputedProps.messageDeleted, document?.progress, document?.isProgressDone, document?.isCancelled, messageComputedProps.memoizedWrapperImageClass]"
           v-if="document?.type === 'image' && !messageComputedProps.messageDeleted" :info="{
             url: document?.url,
             thumbnail: document?.thumbnail,
             caption: document?.caption,
+            progress: document?.progress,
+            isProgressDone: document?.isProgressDone,
+            isCancelled: document?.isCancelled,
+            dimension: document?.dimension,
             username: 'You',
             latestMessageTimestamp: Number(latestMessageTimestamp),
             hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm'),
@@ -252,7 +256,7 @@ const handleMessageTouchEnd = () => {
             profileId: profileId,
           }" :img-class="messageComputedProps.memoizedWrapperImageClass" />
         <VideoMessage
-          v-memo="[document?.url, messageComputedProps.messageDeleted, document?.progress, document?.isProgressDone, document?.isCancelled, messageComputedProps.memoizedWrapperImageClass]"
+          v-memo="[document?.url, document?.poster, messageComputedProps.messageDeleted, document?.progress, document?.isProgressDone, document?.isCancelled, messageComputedProps.memoizedWrapperImageClass]"
           v-if="document?.type === 'video' && !messageComputedProps.messageDeleted"
           :video-class="messageComputedProps.memoizedWrapperImageClass" :info="{
             url: document?.url,
@@ -261,6 +265,7 @@ const handleMessageTouchEnd = () => {
             progress: document?.progress,
             isProgressDone: document?.isProgressDone,
             isCancelled: document?.isCancelled,
+            poster: document?.poster,
             username: 'You',
             latestMessageTimestamp: Number(latestMessageTimestamp),
             hours: dayjs(Number(latestMessageTimestamp)).format('HH.mm'),

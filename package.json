@@ -15,9 +15,6 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
-    "@ffmpeg/core": "^0.12.10",
-    "@ffmpeg/ffmpeg": "^0.12.15",
-    "@ffmpeg/util": "^0.12.2",
     "@floating-ui/vue": "^1.1.6",
     "@primeuix/themes": "^1.0.0",
     "@primevue/forms": "^4.3.3",

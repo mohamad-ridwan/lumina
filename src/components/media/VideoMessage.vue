@@ -3,6 +3,7 @@ import { ref, watch, computed, onBeforeMount, triggerRef, markRaw, toRefs } from
 import { CircleProgressBar } from 'circle-progress.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
+import VLazyImage from "v-lazy-image";
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
@@ -16,7 +17,9 @@ const props = defineProps({
 
 const { videoClass, info, itemMessage } = toRefs(props)
 
-const videoPlayer = ref(null)
+// const videoPlayer = ref(null)
+
+const currentPoster = ref(props.info?.poster);
 
 const memoizedVideoMediaGallery = computed(() => {
   if (!mediaGallery.value) return null
@@ -54,13 +57,31 @@ watch(() => [info.value?.isProgressDone, info.value?.isCancelled], ([isProgressD
     }
   }
 })
+
+const handleImageError = () => {
+  if (info.value?.thumbnail) {
+    currentPoster.value = info.value?.thumbnail
+    if (messageComputed.value.memoizedImageOnMediaGallery !== -1) {
+      mediaGallery.value[messageComputed.value.memoizedImageOnMediaGallery].document.poster = info.value?.thumbnail
+      mediaGallery.value = [...mediaGallery.value]
+      triggerRef(mediaGallery)
+    }
+  }
+}
+
+watch(() => info.value?.poster, (newPoster) => {
+  currentPoster.value = newPoster
+});
 </script>
 
 <template>
   <div @contextmenu.prevent @click.prevent.stop="handleClickVideo"
     class="cursor-pointer flex justify-center items-center bg-gray-500/60 overflow-hidden relative" :class="videoClass">
-    <video v-if="info?.thumbnail" ref="videoPlayer" :src="info?.url" :poster="info?.thumbnail"
-      class="w-full h-auto rotate-180" playsinline></video>
+    <!-- <video v-if="info?.thumbnail" ref="videoPlayer" :src="info?.url" :poster="info?.thumbnail"
+      class="w-full h-auto rotate-180" playsinline></video> -->
+    <v-lazy-image :key="info?.messageId" :src="currentPoster" :src-placeholder="info?.thumbnail"
+      class="rounded-sm rotate-180 image-media" draggable="false" :sizes="`(max-width: 320px) 220px, 400px`"
+      @error="handleImageError" />
 
     <div class="absolute h-13 w-13 rounded-full flex justify-center items-center bg-black/60 rotate-180">
       <i class="pi pi-play-circle !text-2xl text-white"></i>
@@ -104,6 +125,15 @@ watch(() => [info.value?.isProgressDone, info.value?.isCancelled], ([isProgressD
 </template>
 
 <style scoped>
+.v-lazy-image {
+  filter: blur(10px);
+  transition: filter 0.6s;
+}
+
+.v-lazy-image-loaded {
+  filter: blur(0);
+}
+
 /* Gaya dasar untuk progress bar */
 input[type="range"] {
   -webkit-appearance: none;

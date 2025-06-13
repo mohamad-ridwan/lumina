@@ -66,3 +66,23 @@
 .p-dialog-content {
   padding: 0 !important;
 }
+
+.lg-prev {
+  position: fixed !important;
+  top: 43% !important;
+}
+
+.lg-next {
+  position: fixed !important;
+  top: 43% !important;
+}
+
+.lg-video-cont {
+  height: 100% !important;
+}
+
+.lg-sub-html {
+  padding-top: 0px !important;
+  margin: 0 auto !important;
+  max-width: 720px !important;
+}

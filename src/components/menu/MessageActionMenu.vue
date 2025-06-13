@@ -82,8 +82,20 @@ const memoizedDataComputed = computed(() => {
   }
 })
 
+watch(() => [message.value?.document?.isProgressDone, message.value?.document?.isCancelled, message.value?.document?.progress], ([isProgressDone, isCancelled, progress], [oldIsProgressDone, oldIsCancelled, oldProgress]) => {
+  if ((oldProgress !== 100) && (isProgressDone && !isCancelled)) {
+    items.value.unshift({
+      label: 'Reply',
+      command: () => {
+        handleSetReplyMessageData(props.message)
+      }
+    })
+    triggerRef(items)
+  }
+})
+
 watch([messageDeleted, activeMessageMenu, message], ([isDeleted, newActiveMessageMenu, newMessage]) => {
-  if ((isDeleted && activeMessageMenu?.value?.messageId === message.value?.messageId) || (newMessage?.document?.type === 'video' && (newMessage?.document?.isCancelled || !newMessage?.document?.isProgressDone))) {
+  if ((isDeleted && activeMessageMenu?.value?.messageId === message.value?.messageId) || (newMessage?.document?.progress !== undefined && (newMessage?.document?.isCancelled || !newMessage?.document?.isProgressDone))) {
     items.value = items.value.filter(menu => menu.label !== 'Reply')
     triggerRef(items)
   }

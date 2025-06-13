@@ -462,19 +462,19 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
-  socket.on('video-message-progress', (message) => {
+  socket.on('media-message-progress', (message) => {
     mediaMessageProgressUpdate.value = message
   })
 })
 
 onMounted(() => {
-  socket.on('video-message-progress-done', (message) => {
+  socket.on('media-message-progress-done', (message) => {
     mediaMessageProgressDoneUpdate.value = message
   })
 })
 
-const handleUpdateVideoMessageProgress = (newMessage) => {
-  if (newMessage.latestMessage.senderUserId === profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && chatRoomMessages.value.some(msg => msg?.messageId === newMessage.latestMessage.messageId && newMessage.latestMessage?.document?.type === 'video')) {
+const handleUpdateMediaMessageProgress = (newMessage) => {
+  if (newMessage.latestMessage.senderUserId === profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && chatRoomMessages.value.some(msg => msg?.messageId === newMessage.latestMessage.messageId)) {
     const messageIndex = mediaMessageProgress.value.findIndex(msg => msg?.latestMessage.messageId === newMessage.latestMessage.messageId)
     if (messageIndex === -1) {
       mediaMessageProgress.value.push(newMessage)
@@ -488,10 +488,10 @@ const handleUpdateVideoMessageProgress = (newMessage) => {
 }
 
 watch(mediaMessageProgressUpdate, (newMessage) => {
-  handleUpdateVideoMessageProgress(newMessage)
+  handleUpdateMediaMessageProgress(newMessage)
 })
 
-const handleVideoMessageProgress = (newVideo) => {
+const handleMediaMessageProgress = (newVideo) => {
   if (newVideo.length > 0) {
     const currentVideo = newVideo.find(msg => msg?.chatRoomId === memoizedChatRoomId.value)
     if (!currentVideo) {
@@ -513,10 +513,10 @@ const handleVideoMessageProgress = (newVideo) => {
 }
 
 watch(mediaMessageProgress, (newVideo) => {
-  handleVideoMessageProgress(newVideo)
+  handleMediaMessageProgress(newVideo)
 })
 
-const handleVideoMessageProgressDone = async (newMessage) => {
+const handleMediaMessageProgressDone = async (newMessage) => {
   if (newMessage.latestMessage.senderUserId === profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && chatRoomMessages.value.some(msg => msg?.messageId === newMessage.latestMessage.messageId)) {
     const messageIndex = mediaMessageProgress.value.findIndex(msg => msg?.latestMessage.messageId === newMessage.latestMessage.messageId)
     if (messageIndex !== -1) {
@@ -530,6 +530,9 @@ const handleVideoMessageProgressDone = async (newMessage) => {
           isCancelled: newMessage.latestMessage.document.isCancelled,
           url: newMessage.latestMessage.document.url,
           // thumbnail: newMessage.thumbnail
+        }
+        if (newMessage.latestMessage.document?.poster) {
+          newMessageItem.document.poster = newMessage.latestMessage.document?.poster
         }
         chatRoomMessages.value[indexVideoMessage] = newMessageItem
         triggerRef(chatRoomMessages)
@@ -614,7 +617,7 @@ const handleVideoMessageProgressDone = async (newMessage) => {
 }
 
 watch(mediaMessageProgressDoneUpdate, (newMessage) => {
-  handleVideoMessageProgressDone(newMessage)
+  handleMediaMessageProgressDone(newMessage)
 })
 
 onBeforeUnmount(() => {

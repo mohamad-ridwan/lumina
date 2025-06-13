@@ -109,8 +109,8 @@ const handleSubmit = async (url) => {
   const fileImgOriginal = imgUploaded.value.image
   const blob = base64ToBlob(url)
   const file = blobToFile(blob, 'profile.jpg')
-  const fileCompressedImgCropped = await compressedFile(file)
-  const fileCompressedImgOriginal = await compressedFile(fileImgOriginal)
+  const fileCompressedImgCropped = await compressedFile(file, 'image', 200, 1)
+  const fileCompressedImgOriginal = await compressedFile(fileImgOriginal, 'image', 1200, 1)
   const imgResult = await Promise.all([
     uploadFileToFirebase(fileCompressedImgCropped?.type ? fileCompressedImgCropped : file, 'lumina/images'),
     uploadFileToFirebase(fileCompressedImgOriginal?.type ? fileCompressedImgOriginal : fileImgOriginal, 'lumina/images')

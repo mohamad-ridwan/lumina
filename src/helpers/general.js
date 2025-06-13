@@ -8,8 +8,6 @@ import weekday from 'dayjs/plugin/weekday'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import imageCompression from 'browser-image-compression'
-import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
@@ -190,14 +188,27 @@ const HTML_usernameOnCaptionMediaGallery = (currentItem) => {
 }
 
 const HTML_subHtmlOnCaptionMediaGallery = (item) => {
+  // return `
+  //     <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
+  //       <div class="flex flex-col max-h-[130px]">
+  //       ${item?.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
+  //       ${HTML_usernameOnCaptionMediaGallery(item)}
+  //       ${
+  //         item?.latestMessageTimestamp
+  //           ? `<p class="text-xs text-gray-400">${dateWithHours(item.latestMessageTimestamp, item.hours)}</p>`
+  //           : ''
+  //       }
+  //           </div>
+  //     </div>
+  //   `
   return `
-      <div class="absolute bottom-26 left-4 right-4 overflow-y-auto bg-black/70 p-4 rounded-lg max-w-full">
-        <div class="flex flex-col max-h-[130px]">
-        ${item?.caption ? `<h4 class="text-base text-white">${item.caption}</h4>` : ''}
+      <div class="left-4 right-4 overflow-y-auto bg-black/70 p-2 rounded-lg max-w-full">
+        <div class="flex flex-col max-h-[80px]">
+        ${item?.caption ? `<p class="text-base text-white">${item.caption}</p>` : ''}
         ${HTML_usernameOnCaptionMediaGallery(item)}
         ${
           item?.latestMessageTimestamp
-            ? `<p class="text-xs text-gray-400">${dateWithHours(item.latestMessageTimestamp, item.hours)}</p>`
+            ? `<p class="text-[13px] text-gray-400">${dateWithHours(item.latestMessageTimestamp, item.hours)}</p>`
             : ''
         }
             </div>
@@ -216,16 +227,17 @@ const captionMediaGallery = (media) => {
       return data
     } else if (item.type === 'video') {
       return {
-        thumb: item.videoThumbnail,
+        thumb: item?.poster ?? item.videoThumbnail,
+        subHtml: HTML_subHtmlOnCaptionMediaGallery(item),
         video: {
           source: [
             {
               ...data,
-              poster: item.thumbnail,
+              poster: item?.poster ?? item.thumbnail,
               type: 'video/mp4', // Pastikan MIME type ini benar
             },
           ],
-          poster: item.thumbnail, // Gambar poster untuk video
+          poster: item?.poster ?? item.thumbnail, // Gambar poster untuk video
           attributes: { preload: true, controls: true },
         },
       }
@@ -240,6 +252,7 @@ const mediaGalleryData = (mediaGallery, profileId, recipientUsername) => {
       url: item.document.url,
       thumbnail: item.document.url,
       videoThumbnail: item.document.thumbnail,
+      poster: item.document?.poster,
       caption: item.document.caption,
       username: username,
       latestMessageTimestamp: Number(item.latestMessageTimestamp),
@@ -251,14 +264,15 @@ const mediaGalleryData = (mediaGallery, profileId, recipientUsername) => {
   })
 }
 
-async function compressedFile(files, type) {
+async function compressedFile(files, type, maxWidthOrHeight = 5, initialQuality = 0) {
   // console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
   // console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
 
   if (type === 'image') {
     const options = {
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1920,
+      maxSizeMB: 0.1,
+      maxWidthOrHeight,
+      initialQuality,
       useWebWorker: true,
     }
     try {
@@ -269,42 +283,6 @@ async function compressedFile(files, type) {
       return compressedFile
     } catch (error) {
       console.log(error)
-    }
-  } else if (type === 'video') {
-    try {
-      const ffmpeg = new FFmpeg({ log: true })
-      ffmpeg.on('progress', ({ progress, time }) => {
-        console.log('progress:', `${progress * 100} % (transcoded time: ${time / 1000000} s)`)
-      })
-      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-        // workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
-      })
-      await ffmpeg.writeFile('input.mp4', await fetchFile(URL.createObjectURL(files)))
-      await ffmpeg.exec([
-        '-i',
-        'input.mp4',
-        '-c:v',
-        'libx264',
-        '-preset',
-        'ultrafast', // Paling cepat
-        '-crf',
-        '32', // Kualitas lebih rendah, ukuran sangat kecil, proses sangat cepat
-        '-vf',
-        'scale=640:-1', // Resolusi sangat dikurangi
-        '-r',
-        '15', // Frame rate dikurangi
-        '-c:a',
-        'copy',
-        'output.mp4',
-      ])
-      const data = await ffmpeg.readFile('output.mp4')
-      const videoBlob = new Blob([data.buffer], { type: 'video/mp4' })
-      return videoBlob
-    } catch (err) {
-      console.log(err)
     }
   }
 }
@@ -359,7 +337,7 @@ function useThumbnailGenerator() {
    * @param {number} width - Lebar thumbnail yang diinginkan (px). Tinggi akan dihitung secara proporsional.
    * @returns {Promise<string|null>} Data URL thumbnail atau null jika gagal.
    */
-  const generateThumbnail = (videoBlobUrl, positionSeconds = 5, width = 300) => {
+  const generateThumbnail = (videoBlobUrl, positionSeconds = 1, width = 300) => {
     loading.value = true
     error.value = null
     thumbnailUrl.value = null
@@ -391,7 +369,7 @@ function useThumbnailGenerator() {
         }
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8) // Format JPEG, kualitas 80%
+        const dataUrl = canvas.toDataURL('image/jpeg', 0) // Format JPEG, kualitas 80%
 
         thumbnailUrl.value = dataUrl
         loading.value = false
@@ -427,6 +405,64 @@ function useThumbnailGenerator() {
   }
 }
 
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result) // result berisi string base64
+    reader.onerror = reject
+    reader.readAsDataURL(blob) // Konversi ke base64 string (DataURL format)
+  })
+}
+
+const loadImage = async (src) =>
+  new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = (...args) => reject(args)
+    img.src = src
+  })
+
+const getImageData = (image) => {
+  const canvas = document.createElement('canvas')
+  canvas.width = image.width
+  canvas.height = image.height
+  const context = canvas.getContext('2d')
+  context.drawImage(image, 0, 0)
+  return context.getImageData(0, 0, image.width, image.height)
+}
+
+function createSuperSmallThumbnail(file) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 20
+      canvas.height = 20 * (img.height / img.width)
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.5)
+    }
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+function getImageDimensionsFromBlob(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob)
+    const img = new Image()
+
+    img.onload = () => {
+      const width = img.naturalWidth
+      const height = img.naturalHeight
+      URL.revokeObjectURL(url)
+      resolve({ width, height })
+    }
+
+    img.onerror = reject
+    img.src = url
+  })
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -447,4 +483,9 @@ export const general = {
   computeSafePosition,
   createArrayBuffer,
   useThumbnailGenerator,
+  blobToBase64,
+  loadImage,
+  getImageData,
+  createSuperSmallThumbnail,
+  getImageDimensionsFromBlob,
 }

@@ -6,8 +6,6 @@ import { useToast } from "primevue/usetoast";
 import { useChatRoomStore } from '@/stores/chat-room'
 import { storeToRefs } from 'pinia'
 import { Form } from '@primevue/forms';
-import { firebaseUtils } from '@/services/firebase/firebaseUtils';
-import { socket } from '@/services/socket/socket';
 import { generateRandomId } from '@/helpers/generateRandomId';
 import { usersStore } from '@/stores/users';
 import { general } from '@/helpers/general';
@@ -17,16 +15,16 @@ import isToday from 'dayjs/plugin/isToday'
 import isYesterday from 'dayjs/plugin/isYesterday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekday from 'dayjs/plugin/weekday'
-import { fetchMessagesPagination, uploadVideoMessage } from '@/services/api/chat-room';
+import { fetchMessagesPagination, uploadMediaMessage } from '@/services/api/chat-room';
 import { triggerRef } from 'vue';
+import { useImgThumbnailGenerator } from '@/hooks/useImgThumbnailGenerator';
 
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
 dayjs.extend(weekOfYear)
 dayjs.extend(weekday)
 
-const { uploadFileToFirebase } = firebaseUtils
-const { formatDate, compressedFile, useThumbnailGenerator } = general
+const { formatDate, compressedFile, useThumbnailGenerator, getImageDimensionsFromBlob } = general
 
 const toast = useToast();
 
@@ -39,10 +37,12 @@ const { handleResetAttachment, resetReplyMessageData, triggerSendMessage } = cha
 const { attachments, formMessage, replyMessageData, chatRoom, chatRoomMessages, proccessSubmitAttachmentData, isStartIndex, scroller } = storeToRefs(chatRoomStore)
 
 const { videoThumbnailUrl, loading: loadingVideoThumbnail, error, generateThumbnail } = useThumbnailGenerator()
+const { thumbnail: imgThumbnail, loading: loadingImgThumbnail, error: errImgThumbnail, generateThumbnail: generateImgThumbnail } = useImgThumbnailGenerator()
 const isVisible = ref(false)
 const formInput = ref({
   caption: ''
 })
+const dimensionFile = ref({ height: null, width: null })
 
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
 const memoizedChatId = computed(() => chatRoom.value.chatId);
@@ -74,19 +74,31 @@ const isNeedHeaderDate = computed(() => {
   return headerCurrently ? false : true
 })
 
+const handleImgThumbnail = async () => {
+  const dimension = await getImageDimensionsFromBlob(memoizedAttachments.value.file)
+  const fileCompressed = await compressedFile(memoizedAttachments.value.file, memoizedAttachments.value.type)
+  generateImgThumbnail(fileCompressed)
+  dimensionFile.value = {
+    height: dimension.height,
+    width: dimension.width
+  }
+}
+
 watch(memoizedAttachments, (data) => {
   if (data?.file) {
     isVisible.value = true
     if (data.type === 'video') {
       generateThumbnail(data.previewUrl)
+    } else if (data.type === 'image') {
+      handleImgThumbnail()
     }
   } else {
     isVisible.value = false
   }
 })
 
-watch(error, (error) => {
-  if (error) {
+watch(() => [error.value, errImgThumbnail.value], ([error, errImgThumbnail]) => {
+  if (error || errImgThumbnail) {
     toast.add({ severity: 'error', summary: 'An error occurred. Please try again.', life: 3000 });
     isVisible.value = false
     handleResetAttachment()
@@ -149,33 +161,36 @@ const onFormSubmit = async () => {
     proccessSubmitAttachmentData.value.latestMessage.replyView = toRaw(replyMessageData.value)
   }
 
-  if (memoizedAttachments.value.type === 'video') {
+  if (memoizedAttachments.value.type === 'video' || memoizedAttachments.value.type === 'image') {
     proccessSubmitAttachmentData.value.latestMessage.document.progress = 0
     proccessSubmitAttachmentData.value.latestMessage.document.isProgressDone = false
     proccessSubmitAttachmentData.value.latestMessage.document.isCancelled = false
-    proccessSubmitAttachmentData.value.latestMessage.document.thumbnail = videoThumbnailUrl.value
+    proccessSubmitAttachmentData.value.latestMessage.document.thumbnail = memoizedAttachments.value.type === 'video' ? videoThumbnailUrl.value : imgThumbnail.value
+    if (memoizedAttachments.value.type === 'image') {
+      proccessSubmitAttachmentData.value.latestMessage.document.dimension = dimensionFile.value
+    }
     const formData = new FormData();
-    formData.append('videoFile', memoizedAttachments.value.file);
+    formData.append('file', memoizedAttachments.value.file);
     formData.append('message', JSON.stringify(proccessSubmitAttachmentData.value))
-    uploadVideoMessage(formData)
-    socket.emit('sendMessage', {
-      ...toRaw(proccessSubmitAttachmentData.value)
-    })
+    // socket.emit('sendMessage', {
+    //   ...toRaw(proccessSubmitAttachmentData.value)
+    // })
+    uploadMediaMessage(formData)
     proccessSubmitAttachmentData.value = null
     await scrollToBottom()
   } else if (memoizedAttachments.value.type === 'image') {
-    const fileCompressed = await compressedFile(memoizedAttachments.value.file, memoizedAttachments.value.type)
+    // const fileCompressed = await compressedFile(memoizedAttachments.value.file, memoizedAttachments.value.type)
 
-    uploadFileToFirebase(fileCompressed?.type ? fileCompressed : memoizedAttachments.value.file, `lumina/${filePath}`)
-      .then(async (url) => {
-        proccessSubmitAttachmentData.value.latestMessage.document.url = url
-        socket.emit('sendMessage', {
-          ...toRaw(proccessSubmitAttachmentData.value)
-        })
-        proccessSubmitAttachmentData.value = null
+    // uploadFileToFirebase(fileCompressed?.type ? fileCompressed : memoizedAttachments.value.file, `lumina/${filePath}`)
+    //   .then(async (url) => {
+    //     proccessSubmitAttachmentData.value.latestMessage.document.url = url
+    //     socket.emit('sendMessage', {
+    //       ...toRaw(proccessSubmitAttachmentData.value)
+    //     })
+    //     proccessSubmitAttachmentData.value = null
 
-        await scrollToBottom()
-      })
+    //     await scrollToBottom()
+    //   })
   }
   formInput.value.caption = ''
   resetReplyMessageData()
@@ -200,6 +215,12 @@ watch([isVisible, formMessage], ([isVisible, formMessage]) => {
   if (formMessage.textMessage) {
     formInput.value.caption = formMessage.textMessage
   }
+  if (!isVisible) {
+    dimensionFile.value = {
+      width: null,
+      height: null
+    }
+  }
 }, { immediate: true })
 </script>
 
@@ -223,7 +244,7 @@ watch([isVisible, formMessage], ([isVisible, formMessage]) => {
           <Textarea v-model="formInput.caption" rows="1" cols="20"
             class="!text-[13px] flex-1 rounded-l-md px-2 pt-2 pb-4 !bg-transparent min-h-[38px] max-h-[150px] w-full !overflow-y-auto !border-none !shadow-none"
             placeholder="Add a caption..." name="caption" :autoResize="true" @keydown="handleTextareaKeydown" />
-          <Button :disabled="loadingVideoThumbnail" icon="pi pi-send" aria-label="Send Message"
+          <Button :disabled="loadingImgThumbnail || loadingVideoThumbnail" icon="pi pi-send" aria-label="Send Message"
             class="!rounded-full !bg-[#2e74e8] hover:!bg-[#2e74e8] !h-[32px] !w-[32px] justify-center items-center flex cursor-pointer !text-white !outline-none !border-none !p-0"
             size="large" icon-class="!text-[12px] !mr-0.5 !mt-0.5" type="submit" />
         </Form>
