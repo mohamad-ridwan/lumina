@@ -8,7 +8,7 @@ const { usernameClass, fromMessageUsername, wrapperClass, textMessage, textMessa
 
 const emits = defineEmits(['onClick'])
 
-const currentImageUrl = ref(document.value?.url);
+const currentImageUrl = ref(document.value?.type === 'image' ? document.value?.url : document.value?.poster);
 
 const memoizedTextMessage = computed(() => {
   if (!document.value) return textMessage.value
@@ -21,9 +21,11 @@ const handleImageError = () => {
   }
 }
 
-watch(document.value?.url, (newUrl) => {
-  if (document.value?.type === 'image') {
+watch(() => [document.value?.url, document.value?.poster], ([newUrl, poster]) => {
+  if (document.value?.type === 'image' && newUrl) {
     currentImageUrl.value = newUrl
+  } else if (document.value?.type === 'video' && poster) {
+    currentImageUrl.value = poster
   }
 });
 
@@ -34,9 +36,8 @@ watch(document.value?.url, (newUrl) => {
     :style="wrapperStyle" @click="emits('onClick')">
     <div class="flex items-center gap-2">
       <div v-if="document?.type === 'image' || document?.type === 'video'">
-        <v-lazy-image
-          :src="`${document?.type === 'image' ? currentImageUrl : document?.type === 'video' ? document.thumbnail : ''}`"
-          alt="reply" :src-placeholder="document.type === 'image' ? document?.thumbnail : undefined"
+        <v-lazy-image :src="currentImageUrl" alt="reply"
+          :src-placeholder="document.type === 'image' ? document?.thumbnail : undefined"
           class="h-10 w-15 max-w-full object-contain rounded-sm" sizes="(max-width: 60px) 40px, 60px"
           @error="handleImageError" />
       </div>
