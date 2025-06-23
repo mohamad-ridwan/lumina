@@ -85,8 +85,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
   const resetKeyModalReactions = ref(false)
   const mediaMessageProgress = shallowRef([])
 
-  const { createNewMessages, sortByTimestamp, removeDuplicates, messageMatching, formatDate } =
-    general
+  const {
+    createNewMessages,
+    sortByTimestamp,
+    removeDuplicates,
+    messageMatching,
+    formatDate,
+    sortLatestGalleryMessages,
+  } = general
   const { deleteChatRoomById } = chatRoomDB
 
   const toast = useToast()
@@ -145,9 +151,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
         mediaGallery.value.push(...uniqueNewMessages)
         mediaGallery.value = [
-          ...mediaGallery.value.sort(
-            (a, b) => Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp),
-          ),
+          ...mediaGallery.value.sort((a, b) => sortLatestGalleryMessages(a, b, profileId)),
         ]
         triggerRef(mediaGallery)
       }
@@ -177,9 +181,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
         mediaGallery.value.push(...uniqueNewMessages)
         mediaGallery.value = [
-          ...mediaGallery.value.sort(
-            (a, b) => Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp),
-          ),
+          ...mediaGallery.value.sort((a, b) => sortLatestGalleryMessages(a, b, data?.profileId)),
         ]
         triggerRef(mediaGallery)
       }
@@ -598,7 +600,14 @@ export const useChatRoomStore = defineStore('chat-room', () => {
 
     const latestMessage = newMessage?.latestMessage?.find((msg) => msg.userId === profileId)
 
-    if (newMessage?.isHeader) {
+    if (
+      (newMessage?.isHeader && newMessage?.isFromMedia && newMessage?.senderUserId === profileId) ||
+      (newMessage?.isHeader &&
+        newMessage?.isFromMedia &&
+        newMessage?.recipientProfileId === profileId &&
+        newMessage?.completionTimeId) ||
+      (newMessage?.isHeader && !newMessage?.isFromMedia)
+    ) {
       newData = {
         ...newMessage,
         id: newMessage.messageId,
@@ -633,7 +642,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
         chatRoomMessages.value = removeDuplicates(
           [newData, ...chatRoomMessages.value],
           'messageId',
-        ).sort(sortByTimestamp)
+          profileId,
+        ).sort((a, b) => sortByTimestamp(a, b, profileId))
 
         if (toRaw(chatRoomMessages.value).length > ITEMS_PER_PAGE) {
           await nextTick()
@@ -701,7 +711,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
       isStartIndex.value
     ) {
       if (isNeedHeaderTime) {
-        const headerId = generateRandomId(15)
+        const headerId = newMessage?.headerId ?? generateRandomId(15)
         chatRoomMessages.value = removeDuplicates(
           [
             {
@@ -709,7 +719,7 @@ export const useChatRoomStore = defineStore('chat-room', () => {
               id: headerId,
               messageId: headerId,
               senderUserId: newData.senderUserId,
-              timeId: newData.timeId,
+              timeId: newMessage.timeId,
               chatId: newData.chatId,
               chatRoomId: newData.chatRoomId,
               latestMessageTimestamp: Number(newData.latestMessageTimestamp),
@@ -717,7 +727,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
             ...chatRoomMessages.value,
           ],
           'messageId',
-        ).sort(sortByTimestamp)
+          profileId,
+        ).sort((a, b) => sortByTimestamp(a, b, profileId))
 
         triggerRef(chatRoomMessages)
       }
@@ -730,7 +741,8 @@ export const useChatRoomStore = defineStore('chat-room', () => {
           ...chatRoomMessages.value,
         ],
         'messageId',
-      ).sort(sortByTimestamp)
+        profileId,
+      ).sort((a, b) => sortByTimestamp(a, b, profileId))
 
       if (toRaw(chatRoomMessages.value).length > ITEMS_PER_PAGE) {
         await nextTick()

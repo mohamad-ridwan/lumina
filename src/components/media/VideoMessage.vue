@@ -4,6 +4,9 @@ import { CircleProgressBar } from 'circle-progress.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
 import VLazyImage from "v-lazy-image";
+import { general } from '@/helpers/general';
+
+const { sortLatestGalleryMessages } = general
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
@@ -37,9 +40,7 @@ onBeforeMount(() => {
     const item = chatRoomMessages.value.find(msg => msg?.messageId === props.info?.messageId)
     if (item) {
       mediaGallery.value.push(item)
-      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => {
-        return Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp)
-      }))
+      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => sortLatestGalleryMessages(a, b, info.value?.profileId)))
       triggerRef(mediaGallery)
     }
   }
@@ -50,9 +51,7 @@ watch(() => [info.value?.isProgressDone, info.value?.isCancelled], ([isProgressD
     const item = chatRoomMessages.value.find(msg => msg?.messageId === props.info?.messageId)
     if (item) {
       mediaGallery.value.push(item)
-      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => {
-        return Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp)
-      }))
+      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => sortLatestGalleryMessages(a, b, info.value?.profileId)))
       triggerRef(mediaGallery)
     }
   }

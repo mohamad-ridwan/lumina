@@ -4,13 +4,14 @@ import ChatProfile from '@/components/ChatProfile.vue';
 import { socket } from '@/services/socket/socket';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { usersStore } from '@/stores/users';
-import { computed, markRaw, onBeforeMount, ref, shallowRef, triggerRef, watch, } from 'vue';
+import { computed, markRaw, onBeforeMount, ref, shallowRef, toRefs, triggerRef, watch, } from 'vue';
 import { storeToRefs } from 'pinia';
 import { chatsStore } from '@/stores/chats';
 import ChatProfileSkeleton from './ChatProfileSkeleton.vue';
 
 // props
-const { item } = defineProps(['item'])
+const props = defineProps(['item'])
+const { item } = toRefs(props)
 
 // store
 // profile store
@@ -29,7 +30,7 @@ const userProfileSocketUpdate = ref(null)
 const userOnlineInfoSocketUpdate = shallowRef(null)
 
 // logic
-const userIdsCurrently = item.userIds.slice().find(id => id !== profile.value.data.id)
+const userIdsCurrently = props.item.userIds.slice().find(id => id !== profile.value.data.id)
 const memoizedChatRoomId = computed(() => chatRoom.value.chatRoomId);
 const memoizedChats = computed(() => chats.value)
 
@@ -54,7 +55,7 @@ watch(userProfileSocketUpdate, (data) => {
     (data.profile.id === userIdsCurrently) &&
     (data?.actionType === 'chats')
   ) {
-    const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.chatId === item?.chatId)
+    const chatUserIndex = markRaw(memoizedChats.value)?.slice()?.findIndex(chat => chat?.chatId === item.value?.chatId)
     if (chatUserIndex !== -1) {
       chats.value[chatUserIndex] = {
         ...chats.value[chatUserIndex],
@@ -69,7 +70,7 @@ watch(userProfileSocketUpdate, (data) => {
 
     const searchMessageUserIndex = markRaw(searchMessengerData.value)
       ?.slice()
-      ?.findIndex((chat) => chat?.chatId === item?.chatId)
+      ?.findIndex((chat) => chat?.chatId === item.value?.chatId)
     if (searchMessageUserIndex !== -1) {
       searchMessengerData.value[searchMessageUserIndex] = {
         ...searchMessengerData.value[searchMessageUserIndex],
@@ -128,8 +129,8 @@ onBeforeMount(() => {
   }
 })
 
-watch(() => item?.username, () => {
-  if (!item?.username) {
+watch(() => item.value?.username, () => {
+  if (!item.value?.username) {
     socket.emit('user-profile', {
       profileId: userIdsCurrently,
       senderId: profile.value.data.id,
@@ -148,10 +149,8 @@ watch(() => item?.username, () => {
 <template>
   <ChatProfileSkeleton v-if="!item?.username" />
 
-  <ChatProfile v-if="item?.username" :username="item?.username"
-    :text-message="item.latestMessage.textMessage || item.latestMessage?.document?.caption"
-    @click="handleClickUser(profile?.data.id, item)" :unread-count="item.unreadCount[profile?.data.id]"
-    :is-active="item.chatRoomId === memoizedChatRoomId" :image="item?.image" :status="item.lastSeenTime"
-    :is-typing="isUserTyping" :document="item?.latestMessage?.document" :latest-message="item.latestMessage"
+  <ChatProfile v-if="item?.username" :username="item?.username" @click="handleClickUser(profile?.data.id, item)"
+    :unread-count="item.unreadCount[profile?.data.id]" :is-active="item.chatRoomId === memoizedChatRoomId"
+    :image="item?.image" :status="item.lastSeenTime" :is-typing="isUserTyping" :latest-message="item.latestMessage"
     :profile-id="profile?.data.id" :img-cropped="item?.imgCropped" :thumbnail="item?.thumbnail" />
 </template>

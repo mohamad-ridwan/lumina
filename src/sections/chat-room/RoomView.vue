@@ -18,6 +18,8 @@ import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import weekday from 'dayjs/plugin/weekday';
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import DateHeader from './DateHeader.vue';
 import UserTypingIndicator from './UserTypingIndicator.vue';
 import SkeletonMessages from './SkeletonMessages.vue';
@@ -30,6 +32,10 @@ dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(weekOfYear);
 dayjs.extend(weekday);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+dayjs.tz.setDefault("Asia/Jakarta");
 
 const { sortByTimestamp, removeDuplicates, messageMatching, formatDate, dateWithHours, captionMediaGallery, mediaGalleryData, HTML_usernameOnCaptionMediaGallery, HTML_subHtmlOnCaptionMediaGallery, base64ToBlob } = general
 
@@ -120,7 +126,7 @@ const memoizedMessages = computed(() => {
         return { ...chat, headerText: formatDate(itemDate) }
       }
       return chat
-    })].sort(sortByTimestamp)
+    })].sort((a, b) => sortByTimestamp(a, b, profileId.value))
   }
 
   return chatRoomMessages.value.map(chat => {
@@ -129,7 +135,7 @@ const memoizedMessages = computed(() => {
       return { ...chat, headerText: formatDate(itemDate) }
     }
     return chat
-  }).sort(sortByTimestamp)
+  }).sort((a, b) => sortByTimestamp(a, b, profileId.value))
 })
 const memoizedUserIds = computed(() => {
   return chatRoom.value?.userIds
@@ -386,8 +392,8 @@ const handleUpdateDeleteMessage = async (newData) => {
     const isMeDelete = data?.isDeleted?.find(user => {
       return user?.senderUserId === profileId.value
     })
-    const isSecondUserDelete = data?.isDeleted?.find(user => user?.senderUserId !== profileId.value)?.deletionType === 'me'
-    if (mediaMessageIndex === -1 || (!isMeDelete?.senderUserId && isSecondUserDelete)) {
+    const isSecondUserDelete = data?.isDeleted?.find(user => user?.senderUserId !== profileId.value)
+    if (mediaMessageIndex === -1 || (!isMeDelete?.senderUserId && isSecondUserDelete?.deletionType === 'me')) {
       return
     }
     const mediaMessageId = mediaGallery.value.find(media => media?.messageId === data?.messageId)?.messageId
@@ -459,165 +465,6 @@ onUnmounted(() => {
       userId: profile?.data.id
     })
   }
-})
-
-onMounted(() => {
-  socket.on('media-message-progress', (message) => {
-    mediaMessageProgressUpdate.value = message
-  })
-})
-
-onMounted(() => {
-  socket.on('media-message-progress-done', (message) => {
-    mediaMessageProgressDoneUpdate.value = message
-  })
-})
-
-const handleUpdateMediaMessageProgress = (newMessage) => {
-  if (newMessage.latestMessage.senderUserId === profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && chatRoomMessages.value.some(msg => msg?.messageId === newMessage.latestMessage.messageId)) {
-    const messageIndex = mediaMessageProgress.value.findIndex(msg => msg?.latestMessage.messageId === newMessage.latestMessage.messageId)
-    if (messageIndex === -1) {
-      mediaMessageProgress.value.push(newMessage)
-      mediaMessageProgress.value = [...mediaMessageProgress.value]
-    } else {
-      mediaMessageProgress.value[messageIndex] = newMessage
-      mediaMessageProgress.value = [...mediaMessageProgress.value]
-    }
-    triggerRef(mediaMessageProgress)
-  }
-}
-
-watch(mediaMessageProgressUpdate, (newMessage) => {
-  handleUpdateMediaMessageProgress(newMessage)
-})
-
-const handleMediaMessageProgress = (newVideo) => {
-  if (newVideo.length > 0) {
-    const currentVideo = newVideo.find(msg => msg?.chatRoomId === memoizedChatRoomId.value)
-    if (!currentVideo) {
-      return
-    }
-    const indexVideoMessage = chatRoomMessages.value.findIndex(msg => msg?.messageId === currentVideo.latestMessage.messageId)
-    if (indexVideoMessage !== -1) {
-      let newMessage = chatRoomMessages.value[indexVideoMessage]
-      newMessage.document = {
-        ...chatRoomMessages.value[indexVideoMessage].document,
-        progress: currentVideo.latestMessage.document.progress,
-        isProgressDone: false,
-        isCancelled: false
-      }
-      chatRoomMessages.value[indexVideoMessage] = newMessage
-      triggerRef(chatRoomMessages)
-    }
-  }
-}
-
-watch(mediaMessageProgress, (newVideo) => {
-  handleMediaMessageProgress(newVideo)
-})
-
-const handleMediaMessageProgressDone = async (newMessage) => {
-  if (newMessage.latestMessage.senderUserId === profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && chatRoomMessages.value.some(msg => msg?.messageId === newMessage.latestMessage.messageId)) {
-    const messageIndex = mediaMessageProgress.value.findIndex(msg => msg?.latestMessage.messageId === newMessage.latestMessage.messageId)
-    if (messageIndex !== -1) {
-      const indexVideoMessage = chatRoomMessages.value.findIndex(msg => msg?.messageId === newMessage.latestMessage.messageId)
-      if (indexVideoMessage !== -1) {
-        let newMessageItem = chatRoomMessages.value[indexVideoMessage]
-        newMessageItem.document = {
-          ...chatRoomMessages.value[indexVideoMessage].document,
-          progress: 100,
-          isProgressDone: newMessage.latestMessage.document.isProgressDone,
-          isCancelled: newMessage.latestMessage.document.isCancelled,
-          url: newMessage.latestMessage.document.url,
-          // thumbnail: newMessage.thumbnail
-        }
-        if (newMessage.latestMessage.document?.poster) {
-          newMessageItem.document.poster = newMessage.latestMessage.document?.poster
-        }
-        chatRoomMessages.value[indexVideoMessage] = newMessageItem
-        triggerRef(chatRoomMessages)
-      }
-      mediaMessageProgress.value = [...mediaMessageProgress.value.filter(msg => msg?.latestMessage.messageId !== newMessage.latestMessage.messageId)]
-      triggerRef(mediaMessageProgress)
-    }
-  } else if (newMessage.latestMessage.senderUserId !== profileId.value && newMessage.chatRoomId === memoizedChatRoomId.value && !newMessage.latestMessage.document.isCancelled) {
-    let newData = {}
-
-    const { latestMessage } = newMessage
-
-    newData = {
-      ...latestMessage,
-      id: latestMessage.messageId,
-      chatRoomId: chatRoom.value?.chatRoomId,
-      chatId: chatRoom.value?.chatId,
-    }
-    if (newData?.replyView) {
-      newData.replyView = toRaw(newData.replyView)
-    }
-
-    const currentHeaderToday = toRaw(chatRoomMessages.value).find((msg) => {
-      const itemDate = dayjs(Number(msg?.latestMessageTimestamp)).startOf('day')
-      return formatDate(itemDate) === 'Today'
-    })
-
-    const isNeedHeaderTime = !currentHeaderToday
-
-    if (
-      !triggerScrollToMessageIdIsDone.value &&
-      !loadingMainMessagesOnScrollBottom.value &&
-      !showScrollDownButton.value &&
-      !loadingMessagesPagination.value &&
-      isStartIndex.value
-    ) {
-      if (isNeedHeaderTime) {
-        const headerId = generateRandomId(15)
-        chatRoomMessages.value = removeDuplicates(
-          [
-            {
-              isHeader: true,
-              id: headerId,
-              messageId: headerId,
-              senderUserId: newData.senderUserId,
-              timeId: newData.timeId,
-              chatId: newData.chatId,
-              chatRoomId: newData.chatRoomId,
-              latestMessageTimestamp: Number(newData.latestMessageTimestamp),
-            },
-            ...chatRoomMessages.value,
-          ],
-          'messageId',
-        ).sort(sortByTimestamp)
-
-        triggerRef(chatRoomMessages)
-      }
-
-      chatRoomMessages.value = removeDuplicates(
-        [
-          {
-            ...newData,
-          },
-          ...chatRoomMessages.value,
-        ],
-        'messageId',
-      ).sort(sortByTimestamp)
-
-      if (toRaw(chatRoomMessages.value).length > ITEMS_PER_PAGE) {
-        await nextTick()
-        chatRoomMessages.value = chatRoomMessages.value.slice(0, -1)
-      }
-
-      if (newData?.senderUserId === profileId) {
-        scroller.value.$refs.scroller.$forceUpdate(true)
-        scroller.value.scrollToItem(0)
-      }
-      mediaMessageProgress.value = [...mediaMessageProgress.value.filter(msg => msg?.latestMessage.messageId !== newMessage.latestMessage.messageId)]
-      triggerRef(mediaMessageProgress)
-    }
-  }
-}
-
-watch(mediaMessageProgressDoneUpdate, (newMessage) => {
-  handleMediaMessageProgressDone(newMessage)
 })
 
 onBeforeUnmount(() => {
@@ -780,7 +627,7 @@ const handleGetMessagesPagination = async () => {
   let newMessagesCurrently = []
 
   if (newData.length > 0) {
-    newMessagesCurrently = removeDuplicates(newChatRoomMessages, 'messageId').sort(sortByTimestamp)
+    newMessagesCurrently = removeDuplicates(newChatRoomMessages, 'messageId', profileId.value).sort((a, b) => sortByTimestamp(a, b, profileId.value))
     chatRoomMessages.value = [...newMessagesCurrently]
     await nextTick()
     await nextTick()
@@ -836,7 +683,7 @@ const handleGetMessagesPagination = async () => {
     isStartIndex.value = false
   }
   loadingMessagesPagination.value = false
-  if (result?.meta?.direction === 'next') {
+  if (result?.meta?.direction === 'next' && result?.data?.length > 0) {
     isStartIndex.value = false
   }
 }
@@ -927,13 +774,13 @@ watch(loadingMessagesPagination, async (isLoading) => {
     chatRoomMessages.value = removeDuplicates([
       ...bufferNewMessages.value,
       ...chatRoomMessages.value
-    ], 'messageId').sort(sortByTimestamp)
+    ], 'messageId', profileId.value).sort((a, b) => sortByTimestamp(a, b, profileId.value))
     await nextTick()
     await nextTick()
     triggerRef(chatRoomMessages)
     scroller.value.$refs.scroller.$forceUpdate(true)
 
-    chatRoomMessages.value = chatRoomMessages.value.sort(sortByTimestamp).slice(0, ITEMS_PER_PAGE)
+    chatRoomMessages.value = chatRoomMessages.value.sort((a, b) => sortByTimestamp(a, b, profileId.value)).slice(0, ITEMS_PER_PAGE)
     await nextTick()
     await nextTick()
     triggerRef(chatRoomMessages)
@@ -983,7 +830,8 @@ onUnmounted(() => {
   scroller.value = null
   showScrollDownButton.value = false
   totalStreamsChatRoomWorkerDones.value = 0
-  mediaMessageProgress.value = []
+  // mediaMessageProgress.value = []
+  isStartIndex.value = true
   handleResetActiveMediaData()
   handleResetAttachment()
   handleStopGetChatRoomWorker()
@@ -1020,31 +868,34 @@ onUnmounted(() => {
 
     <SkeletonMessages v-if="loadingMessages" />
 
-    <DynamicScroller @scroll="handleScrollComponent" v-memo="[memoizedMessages]" v-if="!loadingMessages"
-      id="scrollChatRoom" ref="scroller" :items="memoizedMessages" :key-field="'messageId'" :min-item-size="30"
+    <DynamicScroller @scroll="handleScrollComponent" v-if="!loadingMessages" id="scrollChatRoom" ref="scroller"
+      :items="memoizedMessages" :key-field="'messageId'" :min-item-size="30"
       class="flex-1 space-y-2 bg-[#f9fafb] !py-4 !px-2"
       style="display: flex; flex-direction: column; transform: rotate(180deg); direction: rtl; -webkit-overflow-scrolling: touch;">
       <template v-slot="{ item, index, active }">
         <DynamicScrollerItem :data-index="index" :item="item" :active="active" :size-dependencies="[
           item.textMessage,
         ]" :key="item.messageId">
-          <div v-if="item?.isHeader" :id="`${item.messageId}-${item.latestMessageTimestamp}`">
+          <div v-memo="[item?.messageId]" v-if="item?.isHeader"
+            :id="`${item.messageId}-${item.latestMessageTimestamp}`">
             <DateHeader :date="formatDate(Number(item?.latestMessageTimestamp))" />
           </div>
           <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
             <SenderMessage
-              v-memo="[item?.status, item?.reactions, item?.isDeleted, item?.document?.url, item?.document?.isCancelled, item?.document?.isProgressDone, item?.document?.progress, item?.document?.thumbnail, item?.document?.poster, item?.document?.dimension]"
+              v-memo="[item?.status, item?.reactions, item?.isDeleted, item?.document?.url, item?.document?.isCancelled, item?.document?.isProgressDone, item?.document?.progress, item?.document?.thumbnail, item?.document?.poster, item?.document?.dimension, item?.messageId]"
               v-if="item?.messageType && item.senderUserId === profile.data.id" :key="item?.messageId"
-              :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
+              :text-message="item.textMessage"
+              :latest-message-timestamp="item?.completionTimestamp ? item?.completionTimestamp : item.latestMessageTimestamp"
               :status="item.status" :message-id="item.messageId" :message-type="item.messageType"
               :sender-user-id="item.senderUserId" :reply-view="item?.replyView" :profile-id="profileId"
               :reactions="item?.reactions" :is-deleted="item?.isDeleted" :document="item?.document" />
           </WrapperSetHeaderTimes>
           <WrapperSetHeaderTimes :item="item" v-on:set-header-ref="setHeaderRef">
             <RecipientMessage
-              v-memo="[item?.reactions, item?.isDeleted, item?.document?.url, item?.document?.isCancelled, item?.document?.isProgressDone, item?.document?.progress, item?.document?.thumbnail, item?.document?.poster, item?.document?.dimension]"
+              v-memo="[item?.reactions, item?.isDeleted, item?.document?.url, item?.document?.isCancelled, item?.document?.isProgressDone, item?.document?.progress, item?.document?.thumbnail, item?.document?.poster, item?.document?.dimension, item?.messageId]"
               v-if="item?.messageType && item.senderUserId !== profile.data.id" :key="item?.messageId"
-              :text-message="item.textMessage" :latest-message-timestamp="item.latestMessageTimestamp"
+              :text-message="item.textMessage"
+              :latest-message-timestamp="item?.completionTimestamp ? item?.completionTimestamp : item.latestMessageTimestamp"
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
               :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
               :reply-view="item?.replyView" :profile-id="profileId" :reactions="item?.reactions"

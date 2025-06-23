@@ -128,7 +128,11 @@ const toggleMoreEmojiPanel = (event) => {
   // desktop handler
   const buttonEl = emojiButtonRef.value?.$el
 
-  if (!buttonEl || !document.body.contains(buttonEl)) {
+  // if (!buttonEl || !document.body?.contains(buttonEl)) {
+  //   console.warn('Button DOM belum siap / tidak ada di document')
+  //   return
+  // }
+  if (!buttonEl) {
     console.warn('Button DOM belum siap / tidak ada di document')
     return
   }

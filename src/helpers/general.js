@@ -8,6 +8,8 @@ import weekday from 'dayjs/plugin/weekday'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import imageCompression from 'browser-image-compression'
+// src/composables/useThumbnailGenerator.js
+import { ref } from 'vue'
 
 dayjs.extend(isToday)
 dayjs.extend(isYesterday)
@@ -36,13 +38,16 @@ const formatDate = (date) => {
   }
 }
 
-const removeDuplicates = (arr, field) => {
+const removeDuplicates = (arr, field, profileId) => {
   const seenFieldValues = new Set()
   const seenHeaderTimestamps = new Set()
 
   return arr.filter((obj) => {
     if (obj.isHeader === true) {
-      const timestamp = Number(obj.latestMessageTimestamp)
+      let timestamp = Number(obj.latestMessageTimestamp)
+      if (obj?.senderUserId !== profileId && obj?.completionTimestamp) {
+        timestamp = Number(obj.completionTimestamp)
+      }
       if (seenHeaderTimestamps.has(timestamp)) {
         return false
       } else {
@@ -61,9 +66,16 @@ const removeDuplicates = (arr, field) => {
   })
 }
 
-const sortByTimestamp = (a, b) => {
-  const aTime = Number(a.latestMessageTimestamp)
-  const bTime = Number(b.latestMessageTimestamp)
+const sortByTimestamp = (a, b, profileId) => {
+  let aTime = Number(a.latestMessageTimestamp)
+  let bTime = Number(b.latestMessageTimestamp)
+
+  if (a?.senderUserId !== profileId && a?.completionTimestamp) {
+    aTime = Number(a.completionTimestamp)
+  }
+  if (b?.senderUserId !== profileId && b?.completionTimestamp) {
+    bTime = Number(b.completionTimestamp)
+  }
 
   if (aTime === bTime) {
     if (a.isHeader && !b.isHeader) return 1
@@ -166,8 +178,21 @@ const sortLatestMessages = (chats, profileId) => {
     const a_currentLatestMessage = aMsgs.find((msg) => msg?.userId === profileId)
     const b_currentLatestMessage = bMsgs.find((msg) => msg?.userId === profileId)
 
-    const aTimestamp = Number(a_currentLatestMessage?.latestMessageTimestamp ?? 0)
-    const bTimestamp = Number(b_currentLatestMessage?.latestMessageTimestamp ?? 0)
+    let aTimestamp = Number(a_currentLatestMessage?.latestMessageTimestamp ?? 0)
+    let bTimestamp = Number(b_currentLatestMessage?.latestMessageTimestamp ?? 0)
+
+    if (
+      a_currentLatestMessage?.senderUserId !== profileId &&
+      a_currentLatestMessage?.completionTimestamp
+    ) {
+      aTimestamp = Number(a_currentLatestMessage.completionTimestamp)
+    }
+    if (
+      b_currentLatestMessage?.senderUserId !== profileId &&
+      b_currentLatestMessage?.completionTimestamp
+    ) {
+      bTimestamp = Number(b_currentLatestMessage.completionTimestamp)
+    }
 
     return bTimestamp - aTimestamp
   })
@@ -248,6 +273,10 @@ const captionMediaGallery = (media) => {
 const mediaGalleryData = (mediaGallery, profileId, recipientUsername) => {
   return mediaGallery.map((item) => {
     const username = item?.senderUserId === profileId ? 'You' : recipientUsername
+    let latestMessageTimestamp = Number(item?.latestMessageTimestamp)
+    if (item?.senderUserId !== profileId && item?.completionTimestamp) {
+      latestMessageTimestamp = Number(item?.completionTimestamp)
+    }
     let data = {
       url: item.document.url,
       thumbnail: item.document.url,
@@ -255,8 +284,8 @@ const mediaGalleryData = (mediaGallery, profileId, recipientUsername) => {
       poster: item.document?.poster,
       caption: item.document.caption,
       username: username,
-      latestMessageTimestamp: Number(item.latestMessageTimestamp),
-      hours: dayjs(Number(item.latestMessageTimestamp)).format('HH.mm'),
+      latestMessageTimestamp: latestMessageTimestamp,
+      hours: dayjs(latestMessageTimestamp).format('HH.mm'),
       messageId: item.messageId,
       type: item.document.type,
     }
@@ -264,13 +293,19 @@ const mediaGalleryData = (mediaGallery, profileId, recipientUsername) => {
   })
 }
 
-async function compressedFile(files, type, maxWidthOrHeight = 5, initialQuality = 0) {
+async function compressedFile(
+  files,
+  type,
+  maxWidthOrHeight = 5,
+  initialQuality = 0,
+  maxSizeMB = 0.1,
+) {
   // console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
   // console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
 
   if (type === 'image') {
     const options = {
-      maxSizeMB: 0.1,
+      maxSizeMB: maxSizeMB,
       maxWidthOrHeight,
       initialQuality,
       useWebWorker: true,
@@ -322,9 +357,6 @@ const createArrayBuffer = async (file) => {
   })
 }
 
-// src/composables/useThumbnailGenerator.js
-import { ref } from 'vue'
-
 function useThumbnailGenerator() {
   const thumbnailUrl = ref(null)
   const loading = ref(false)
@@ -337,12 +369,12 @@ function useThumbnailGenerator() {
    * @param {number} width - Lebar thumbnail yang diinginkan (px). Tinggi akan dihitung secara proporsional.
    * @returns {Promise<string|null>} Data URL thumbnail atau null jika gagal.
    */
-  const generateThumbnail = (videoBlobUrl, positionSeconds = 1, width = 300) => {
+  const generateThumbnail = async (videoBlobUrl, positionSeconds = 1, width = 300) => {
     loading.value = true
     error.value = null
     thumbnailUrl.value = null
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const video = document.createElement('video')
       video.src = videoBlobUrl
       video.crossOrigin = 'anonymous' // Penting jika video dari domain berbeda (meskipun Blob URL biasanya tidak masalah)
@@ -463,6 +495,45 @@ function getImageDimensionsFromBlob(blob) {
   })
 }
 
+const sortLatestGalleryMessages = (a, b, profileId) => {
+  let latestA = Number(a.latestMessageTimestamp) || 0
+  let latestB = Number(b.latestMessageTimestamp) || 0
+  if (a?.senderUserId !== profileId && a?.completionTimestamp) {
+    latestA = Number(a.completionTimestamp)
+  }
+  if (b?.senderUserId !== profileId && b?.completionTimestamp) {
+    latestB = Number(b.completionTimestamp)
+  }
+  return latestB - latestA
+}
+
+const sortLatestChats = (a, b, profileId) => {
+  const a_currentLatestMessage = a?.latestMessage?.find((msg) => msg?.userId === profileId)
+  const b_currentLatestMessage = b?.latestMessage?.find((msg) => msg?.userId === profileId)
+
+  let aTimestamp = Number(a_currentLatestMessage?.latestMessageTimestamp ?? 0)
+  let bTimestamp = Number(b_currentLatestMessage?.latestMessageTimestamp ?? 0)
+
+  if (
+    a_currentLatestMessage?.senderUserId !== profileId &&
+    a_currentLatestMessage?.completionTimestamp
+  ) {
+    aTimestamp = Number(a_currentLatestMessage.completionTimestamp)
+  }
+  if (
+    b_currentLatestMessage?.senderUserId !== profileId &&
+    b_currentLatestMessage?.completionTimestamp
+  ) {
+    bTimestamp = Number(b_currentLatestMessage.completionTimestamp)
+  }
+
+  return aTimestamp > bTimestamp ? -1 : 1
+  // return a_currentLatestMessage?.latestMessageTimestamp >
+  //   b_currentLatestMessage?.latestMessageTimestamp
+  //   ? -1
+  //   : 1
+}
+
 export const general = {
   createNewMessages,
   removeDuplicates,
@@ -488,4 +559,6 @@ export const general = {
   getImageData,
   createSuperSmallThumbnail,
   getImageDimensionsFromBlob,
+  sortLatestGalleryMessages,
+  sortLatestChats,
 }

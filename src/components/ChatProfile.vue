@@ -22,11 +22,11 @@ dayjs.extend(timezone)
 
 dayjs.tz.setDefault('Asia/Jakarta')
 
-const props = defineProps(['textMessage', 'username', 'fontSizeUsername', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'document', 'latestMessage', 'profileId', 'thumbnail', 'imgCropped'])
+const props = defineProps(['username', 'fontSizeUsername', 'latestMessage', 'imgSize', 'heightContainer', 'latestMessageTimestamp', 'unreadCount', 'isActive', 'image', 'status', 'isTyping', 'profileId', 'thumbnail', 'imgCropped'])
 
 const emits = defineEmits(['click'])
 
-const { textMessage, username, fontSizeUsername, imgSize, heightContainer, unreadCount, isActive, image, status, isTyping, document, latestMessage, profileId, thumbnail, imgCropped } = toRefs(props)
+const { username, fontSizeUsername, imgSize, heightContainer, unreadCount, isActive, image, status, isTyping, latestMessage, profileId, thumbnail, imgCropped } = toRefs(props)
 
 const isErrorImage = ref(false)
 
@@ -46,7 +46,7 @@ const formattedDate = computed(() => {
   if (!latestMessageCurrently.value?.latestMessageTimestamp) {
     return ''
   }
-  const timestampInMilliseconds = Number(latestMessageCurrently.value.latestMessageTimestamp);
+  const timestampInMilliseconds = latestMessageCurrently.value?.completionTimestamp ? Number(latestMessageCurrently.value.completionTimestamp) : Number(latestMessageCurrently.value.latestMessageTimestamp);
 
   const date = dayjs(timestampInMilliseconds);
 

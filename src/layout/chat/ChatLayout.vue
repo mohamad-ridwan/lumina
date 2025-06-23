@@ -17,7 +17,7 @@ import ChatProfileSkeleton from '@/sections/chat/chat-item/ChatProfileSkeleton.v
 import { fetchChats } from '@/services/api/chats';
 import { general } from '@/helpers/general';
 
-const { sortLatestMessages } = general
+const { sortLatestMessages, sortLatestChats } = general
 
 // store
 // profile store
@@ -26,14 +26,13 @@ const { profile } = storeToRefs(userStore)
 // chats store
 const chatStore = chatsStore()
 const { setChats } = chatStore
-const { chats, searchMessengerData } = storeToRefs(chatStore)
+const { chats, searchMessengerData, searchValue } = storeToRefs(chatStore)
 
 // state
 const newMessateSocketUpdate = ref(null)
 const newReadNotificationSocketUpdate = ref(null)
 // const chatsEventSource = ref(null)
 const scroller = ref(null)
-const searchValue = shallowRef('')
 const loadingChats = shallowRef(true)
 const loadingNextChats = ref(false)
 const firstLoadChats = ref(true)
@@ -61,12 +60,7 @@ const handleGetChats = async () => {
   if (chatsData?.data?.length > 0) {
     const newChats = [...markRaw(memoizedChats.value), ...chatsData.data].filter((chat, index, self) =>
       index === self.findIndex(c => c.chatId === chat.chatId)
-    ).sort((a, b) => {
-      const a_currentLatestMessage = a?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
-      const b_currentLatestMessage = b?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
-
-      return a_currentLatestMessage?.latestMessageTimestamp > b_currentLatestMessage?.latestMessageTimestamp ? -1 : 1
-    })
+    ).sort((a, b) => sortLatestChats(a, b, profile.value?.data?.id))
     setChats(newChats, true)
     searchMessengerData.value = newChats
     triggerRef(searchMessengerData)
@@ -140,22 +134,12 @@ const handleGetNextChats = async (getNextSearchMessengerData, onResize) => {
   }
   const newChats = [...markRaw(memoizedChats.value), ...chatsData.data].filter((chat, index, self) =>
     index === self.findIndex(c => c.chatId === chat.chatId)
-  ).sort((a, b) => {
-    const a_currentLatestMessage = a?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
-    const b_currentLatestMessage = b?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
-
-    return a_currentLatestMessage?.latestMessageTimestamp > b_currentLatestMessage?.latestMessageTimestamp ? -1 : 1
-  })
+  ).sort((a, b) => sortLatestChats(a, b, profile.value?.data?.id))
   setChats(newChats, true)
 
   const newSearchMessenger = [...markRaw(memoizedChatsCurrently.value), ...chatsData.data].filter((chat, index, self) =>
     index === self.findIndex(c => c.chatId === chat.chatId)
-  ).sort((a, b) => {
-    const a_currentLatestMessage = a?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
-    const b_currentLatestMessage = b?.latestMessage?.find(msg => msg?.userId === profile.value?.data.id)
-
-    return a_currentLatestMessage?.latestMessageTimestamp > b_currentLatestMessage?.latestMessageTimestamp ? -1 : 1
-  })
+  ).sort((a, b) => sortLatestChats(a, b, profile.value?.data?.id))
   searchMessengerData.value = newSearchMessenger
   triggerRef(searchMessengerData)
   loadingNextChats.value = false
@@ -267,6 +251,13 @@ onBeforeUnmount(() => {
 })
 
 const handleNewMessage = (data) => {
+  // if the media is on progress
+  // stop it
+  const latestMessage = data?.latestMessage?.find((msg) => msg.userId === profile.value?.data?.id)
+  if (latestMessage?.document?.isProgressDone === false && latestMessage?.senderUserId !== profile.value?.data?.id) {
+    return
+  }
+
   const chatCurrently = markRaw(memoizedChats.value)?.find(chat => chat?.chatId === data?.chatId)
   // jika data ada di chats store
   // tinggal ubah datanya
@@ -303,6 +294,13 @@ const handleNewMessage = (data) => {
 }
 
 const handleNewMessageSearchMessenger = (data) => {
+  // if the media is on progress
+  // stop it
+  const latestMessage = data?.latestMessage?.find((msg) => msg.userId === profile.value?.data?.id)
+  if (latestMessage?.document?.isProgressDone === false && latestMessage?.senderUserId !== profile.value?.data?.id) {
+    return
+  }
+
   const chatCurrently = markRaw(memoizedChatsCurrently.value)?.find(chat => chat?.chatId === data?.chatId)
   // jika data ada di chats store
   // tinggal ubah datanya
@@ -364,9 +362,6 @@ const handleUpdateDeleteMessage = async (data) => {
       ...updatedChats[indexChat],
       latestMessage: []
     }
-    updatedChats.sort((a, b) => {
-
-    })
     updatedChats = sortLatestMessages(updatedChats, profile.value?.data?.id)
     chats.value = updatedChats
     triggerRef(chats)
@@ -486,7 +481,7 @@ watch(newReadNotificationSocketUpdate, (data) => {
 
         <!-- chat list -->
         <RecycleScroller v-if="!loadingChats && memoizedChats.length > 0" ref="scroller" class="px-3 pb-3 flex-1"
-          :items="memoizedChatsCurrently" :item-size="64" key-field="chatId" v-slot="{ item }" :key="item?.chatId">
+          :items="searchMessengerData" :item-size="64" key-field="chatId" v-slot="{ item }" :key="item?.chatId">
           <ChatItem :item="item" :key="item.chatId" />
         </RecycleScroller>
 

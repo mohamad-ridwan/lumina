@@ -15,6 +15,8 @@ import isToday from 'dayjs/plugin/isToday'
 import isYesterday from 'dayjs/plugin/isYesterday'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import weekday from 'dayjs/plugin/weekday'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import { fetchMessagesPagination, uploadMediaMessage } from '@/services/api/chat-room';
 import { triggerRef } from 'vue';
 import { useImgThumbnailGenerator } from '@/hooks/useImgThumbnailGenerator';
@@ -23,6 +25,10 @@ dayjs.extend(isToday)
 dayjs.extend(isYesterday)
 dayjs.extend(weekOfYear)
 dayjs.extend(weekday)
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+dayjs.tz.setDefault("Asia/Jakarta");
 
 const { formatDate, compressedFile, useThumbnailGenerator, getImageDimensionsFromBlob } = general
 
@@ -75,6 +81,7 @@ const isNeedHeaderDate = computed(() => {
 })
 
 const handleImgThumbnail = async () => {
+  loadingImgThumbnail.value = true
   const dimension = await getImageDimensionsFromBlob(memoizedAttachments.value.file)
   const fileCompressed = await compressedFile(memoizedAttachments.value.file, memoizedAttachments.value.type)
   generateImgThumbnail(fileCompressed)
@@ -125,7 +132,7 @@ const scrollToBottom = async () => {
 }
 
 const onFormSubmit = async () => {
-  if (!memoizedAttachments.value || proccessSubmitAttachmentData.value || loadingVideoThumbnail.value) return
+  if (!memoizedAttachments.value || proccessSubmitAttachmentData.value || loadingVideoThumbnail.value || loadingImgThumbnail.value) return
   let filePath = ''
   if (memoizedAttachments.value.type === 'image') {
     filePath = 'images'
@@ -172,25 +179,9 @@ const onFormSubmit = async () => {
     const formData = new FormData();
     formData.append('file', memoizedAttachments.value.file);
     formData.append('message', JSON.stringify(proccessSubmitAttachmentData.value))
-    // socket.emit('sendMessage', {
-    //   ...toRaw(proccessSubmitAttachmentData.value)
-    // })
     uploadMediaMessage(formData)
     proccessSubmitAttachmentData.value = null
     await scrollToBottom()
-  } else if (memoizedAttachments.value.type === 'image') {
-    // const fileCompressed = await compressedFile(memoizedAttachments.value.file, memoizedAttachments.value.type)
-
-    // uploadFileToFirebase(fileCompressed?.type ? fileCompressed : memoizedAttachments.value.file, `lumina/${filePath}`)
-    //   .then(async (url) => {
-    //     proccessSubmitAttachmentData.value.latestMessage.document.url = url
-    //     socket.emit('sendMessage', {
-    //       ...toRaw(proccessSubmitAttachmentData.value)
-    //     })
-    //     proccessSubmitAttachmentData.value = null
-
-    //     await scrollToBottom()
-    //   })
   }
   formInput.value.caption = ''
   resetReplyMessageData()

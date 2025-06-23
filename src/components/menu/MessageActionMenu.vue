@@ -83,7 +83,7 @@ const memoizedDataComputed = computed(() => {
 })
 
 watch(() => [message.value?.document?.isProgressDone, message.value?.document?.isCancelled, message.value?.document?.progress], ([isProgressDone, isCancelled, progress], [oldIsProgressDone, oldIsCancelled, oldProgress]) => {
-  if ((oldProgress !== 100) && (isProgressDone && !isCancelled)) {
+  if ((oldIsProgressDone !== true) && (isProgressDone && !isCancelled)) {
     items.value.unshift({
       label: 'Reply',
       command: () => {

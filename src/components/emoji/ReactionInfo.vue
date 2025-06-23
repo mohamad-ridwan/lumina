@@ -3,10 +3,12 @@ import { socket } from '@/services/socket/socket'
 import { useChatRoomStore } from '@/stores/chat-room'
 import { usersStore } from '@/stores/users'
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
+import { computed, toRefs } from 'vue'
 import ImageUserReactionInfo from './ImageUserReactionInfo.vue'
 
-const { reactions, profileId, reactionCurrently, messageId, wrapperClass } = defineProps(['reactions', 'profileId', 'reactionCurrently', 'messageId', 'wrapperClass'])
+const props = defineProps(['reactions', 'profileId', 'reactionCurrently', 'messageId', 'wrapperClass'])
+
+const { reactions, profileId, reactionCurrently, messageId, wrapperClass } = toRefs(props)
 
 // store
 // chat room store
@@ -23,22 +25,13 @@ const memoizedChatId = computed(() => {
   return chatRoom.value?.chatId
 })
 
-// const emojis = computed(() => {
-//   const map = new Map();
-//   reactions.forEach(react => {
-//     if (!map.has(react.emoji)) {
-//       map.set(react.emoji, react);
-//     }
-//   });
-//   return Array.from(map.values());
-// });
 const emojis = computed(() => {
-  return [...new Map(reactions.map(r => [r.emoji, r])).values()]
+  return [...new Map(reactions.value.map(r => [r.emoji, r])).values()]
 })
 
 const images = computed(() => {
-  return reactions.map((react, key) => {
-    if (react.senderUserId === profileId) {
+  return reactions.value.map((react, key) => {
+    if (react.senderUserId === profileId.value) {
       return {
         imgCropped: profile.value?.data?.imgCropped ?? '/avatar.png',
         thumbnail: profile.value?.data?.thumbnail,
@@ -54,16 +47,16 @@ const images = computed(() => {
 })
 
 const submitReactionMessage = () => {
-  if (!reactionCurrently) return
+  if (!reactionCurrently.value) return
 
   const req = {
     chatRoomId: memoizedChatRoomId.value,
     chatId: memoizedChatId.value,
-    messageId,
+    messageId: messageId.value,
     reaction: {
-      emoji: reactionCurrently.emoji,
-      senderUserId: profileId,
-      code: reactionCurrently.code,
+      emoji: reactionCurrently.value.emoji,
+      senderUserId: profileId.value,
+      code: reactionCurrently.value.code,
       latestMessageTimestamp: `${Date.now()}`
     },
     eventType: "reaction-message"

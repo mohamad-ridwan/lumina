@@ -4,6 +4,9 @@ import { useChatRoomStore } from '@/stores/chat-room'
 import { CircleProgressBar } from 'circle-progress.vue';
 import { storeToRefs } from "pinia";
 import { computed, markRaw, onBeforeMount, ref, toRefs, triggerRef, watch } from "vue";
+import { general } from "@/helpers/general";
+
+const { sortLatestGalleryMessages } = general
 
 // chat-room store
 const chatRoomStore = useChatRoomStore()
@@ -21,25 +24,21 @@ const currentImageUrl = ref(props.info?.url);
 
 const messageComputed = computed(() => {
   const wrapperCalculatedStyle = () => {
-    const originalWidth = props.info?.dimension?.width;
-    const originalHeight = props.info?.dimension?.height;
-
+    const originalWidth = info.value?.dimension?.width;
+    const originalHeight = info.value?.dimension?.height;
     if (!originalWidth || !originalHeight) {
       // Memberikan rasio aspek default jika dimensi tidak tersedia
       // atau jika Anda ingin tampilan awal yang stabil sebelum dimensi dimuat.
       // Misalnya, rasio 16:9 atau 4:3
       return { 'width': '100%', 'max-width': '100%', "max-height": '400px' }; // Default fallback
     }
-
     // --- Konfigurasi Ukuran Maksimum untuk Wrapper Thumbnail ---
     // Ini adalah batas maksimal untuk *tampilan* wrapper Anda di UI.
     // Sesuaikan nilai-nilai ini sesuai desain UI Anda.
     const MAX_WRAPPER_WIDTH = 220; // Contoh lebar maks yang cocok untuk thumbnail
     const MAX_WRAPPER_HEIGHT = 300; // Sesuai dengan `max-h-[300px]` yang Anda miliki
-
     let calculatedWidth = originalWidth;
-    let calculatedHeight = originalHeight;
-
+    let calculatedHeight = originalHeight
     // Skala dimensi agar muat dalam batas MAX_WRAPPER_WIDTH / MAX_WRAPPER_HEIGHT
     // Ini akan menjadi dimensi intrinsic untuk wrapper
     // Prioritaskan lebar jika gambar landscape
@@ -64,8 +63,6 @@ const messageComputed = computed(() => {
         calculatedWidth = MAX_WRAPPER_WIDTH;
       }
     }
-
-
     // Pastikan dimensi tidak nol atau sangat kecil karena pembulatan
     calculatedWidth = Math.max(1, calculatedWidth);
     calculatedHeight = Math.max(1, calculatedHeight);
@@ -73,13 +70,15 @@ const messageComputed = computed(() => {
     return {
       // `aspect-ratio` akan membuat wrapper menyesuaikan tingginya berdasarkan lebarnya
       // dan rasio ini. Ini adalah kunci untuk wrapper yang proporsional.
-      'aspect-ratio': `${calculatedWidth} / ${calculatedHeight}`,
+      'aspect-ratio': `${originalWidth} / ${originalHeight}`,
+      // 'aspect-ratio': `${calculatedWidth} / ${calculatedHeight}`,
       // Tambahkan `max-width` dan `max-height` ke style binding untuk kontrol yang lebih ketat
       // meskipun Anda sudah memiliki `max-w-full w-full max-h-[300px]` di kelas Tailwind.
       // Jika Anda ingin *width* dan *max-width* responsif penuh dari Tailwind,
       // Anda bisa menghapus properti 'width' dan 'max-width' di sini dan hanya
       // mengandalkan CSS kelas.
       'max-height': `${MAX_WRAPPER_HEIGHT}px`, // Tetapkan max-height eksplisit
+      'max-width': `${originalWidth}px`, // Tetapkan max-width eksplisit
     };
   }
   const memoizedImageOnMediaGallery = () => {
@@ -115,9 +114,7 @@ onBeforeMount(() => {
     const item = chatRoomMessages.value.find(msg => msg?.messageId === props.info?.messageId)
     if (item) {
       mediaGallery.value.push(item)
-      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => {
-        return Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp)
-      }))
+      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => sortLatestGalleryMessages(a, b, info.value?.profileId)))
       triggerRef(mediaGallery)
     }
   }
@@ -128,27 +125,28 @@ watch(() => [info.value?.isProgressDone, info.value?.isCancelled], ([isProgressD
     const item = chatRoomMessages.value.find(msg => msg?.messageId === props.info?.messageId)
     if (item) {
       mediaGallery.value.push(item)
-      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => {
-        return Number(b.latestMessageTimestamp) - Number(a.latestMessageTimestamp)
-      }))
+      mediaGallery.value = markRaw(mediaGallery.value.sort((a, b) => sortLatestGalleryMessages(a, b, info.value?.profileId)))
       triggerRef(mediaGallery)
     }
   }
 })
 
 watch(() => info.value?.url, (newUrl) => {
-  currentImageUrl.value = newUrl
+  if (newUrl) {
+    currentImageUrl.value = newUrl
+  }
 });
 
 </script>
 
 <template>
   <div @contextmenu.prevent @click.prevent.stop="handleClickImg"
-    class="cursor-pointer flex justify-center bg-gray-500/60 overflow-hidden relative" :class="imgClass"
+    class="cursor-pointer flex justify-center bg-gray-500/60 overflow-hidden relative w-full" :class="imgClass"
     :style="messageComputed.wrapperCalculatedStyle">
     <v-lazy-image :key="info?.messageId" :src="currentImageUrl" :src-placeholder="info?.thumbnail"
-      class="rounded-sm rotate-180 image-media" :heigt="info?.dimension?.height" :width="info?.dimension?.width"
-      draggable="false" :sizes="`(max-width: ${info?.dimension?.width}px) 220px, 400px`" @error="handleImageError" />
+      class="rounded-sm rotate-180 image-media object-contain" :heigt="info?.dimension?.height"
+      :width="info?.dimension?.width" draggable="false" :sizes="`(max-width: ${info?.dimension?.width}px) 220px, 400px`"
+      @error="handleImageError" />
 
     <div v-if="!info.isProgressDone || info.isCancelled" class="absolute rotate-180 top-2 right-2">
       <div class="h-fit w-fit bg-black/30 rounded-full">

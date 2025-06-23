@@ -14,7 +14,7 @@ const handleImageError = () => {
   }
 }
 
-watch(image.value.imgCropped, (newImageCropped) => {
+watch(() => image.value.imgCropped, (newImageCropped) => {
   currentImageUrl.value = newImageCropped;
 });
 </script>
