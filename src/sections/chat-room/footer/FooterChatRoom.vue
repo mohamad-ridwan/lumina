@@ -90,6 +90,7 @@ const onFormSubmit = async () => {
       latestMessage,
       eventType: 'send-message',
       isNeedHeaderDate: isNeedHeaderDate.value,
+      role: profile.value?.data?.role,
       recipientProfileId: chatRoom.value?.userIds?.find(id => id !== profile.value?.data?.id)
     })
     formMessage.value.textMessage = ''
