@@ -60,6 +60,7 @@ const typingStopSocketUpdate = shallowRef({
 })
 const mediaMessageProgressUpdate = ref(null)
 const mediaMessageProgressDoneUpdate = ref(null)
+const updateMessage = ref(null)
 
 // logic
 const profileId = computed(() => profile.value?.data.id)
@@ -353,6 +354,49 @@ onMounted(() => {
       key: typingStopSocketUpdate.value.key + 1
     }
   })
+
+  socket.on('updateMessage', (data) => {
+    updateMessage.value = data
+  })
+})
+
+const updateLatestMessageOnChats = (chats, currentChatIndex, newMessage) => {
+  let newChatMessageItem = {}
+
+  if (currentChatIndex !== -1) {
+    newChatMessageItem = chats.value[currentChatIndex]
+
+    const currentLatestMessageIndexUser1 = chats.value[currentChatIndex].latestMessage?.findIndex(msg => msg?.userId === profile.value?.data?.id && msg?.messageId === newMessage?.messageUpdated?.messageId)
+    const currentLatestMessageIndexUser2 = chats.value[currentChatIndex].latestMessage?.findIndex(msg => msg?.userId !== profile.value?.data?.id && msg?.messageId === newMessage?.messageUpdated?.messageId)
+
+    if (currentLatestMessageIndexUser1 !== -1) {
+      newChatMessageItem.latestMessage[currentLatestMessageIndexUser1].textMessage = newMessage?.messageUpdated?.textMessage
+    }
+    if (currentLatestMessageIndexUser2 !== -1) {
+      newChatMessageItem.latestMessage[currentLatestMessageIndexUser2].textMessage = newMessage?.messageUpdated?.textMessage
+    }
+
+    chats.value[currentChatIndex] = newChatMessageItem
+    chats.value = [...chats.value]
+    triggerRef(chats)
+  }
+}
+
+watch(updateMessage, (newMessage) => {
+  if (newMessage && newMessage?.chatRoomId === memoizedChatRoomId.value) {
+    const availableMessageIndex = chatRoomMessages.value.findIndex(msg => msg?.messageId === newMessage?.messageUpdated?.messageId)
+    if (availableMessageIndex !== -1) {
+      chatRoomMessages.value[availableMessageIndex].textMessage = newMessage?.messageUpdated?.textMessage
+      chatRoomMessages.value = [...chatRoomMessages.value]
+      triggerRef(chatRoomMessages)
+
+      const currentItemSearchMessangerIdx = searchMessengerData.value.findIndex(msg => msg.chatId === newMessage?.chatId)
+      const currentItemChatIdx = chats.value.findIndex(msg => msg.chatId === newMessage?.chatId)
+
+      updateLatestMessageOnChats(chats, currentItemChatIdx, newMessage)
+      updateLatestMessageOnChats(searchMessengerData, currentItemSearchMessangerIdx, newMessage)
+    }
+  }
 })
 
 onBeforeMount(() => {
