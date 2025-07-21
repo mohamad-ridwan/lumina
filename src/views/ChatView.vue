@@ -387,6 +387,10 @@ watch(updateMessage, (newMessage) => {
     const availableMessageIndex = chatRoomMessages.value.findIndex(msg => msg?.messageId === newMessage?.messageUpdated?.messageId)
     if (availableMessageIndex !== -1) {
       chatRoomMessages.value[availableMessageIndex].textMessage = newMessage?.messageUpdated?.textMessage
+      if (newMessage?.messageUpdated?.productData) {
+        chatRoomMessages.value[availableMessageIndex].productData = newMessage?.messageUpdated?.productData
+      }
+
       chatRoomMessages.value = [...chatRoomMessages.value]
       triggerRef(chatRoomMessages)
 

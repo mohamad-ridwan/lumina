@@ -38,6 +38,7 @@
     "vue-easy-lightbox": "^1.19.0",
     "vue-router": "^4.5.0",
     "vue-virtual-scroller": "^2.0.0-beta.8",
+    "vue3-carousel": "^0.16.0",
     "vue3-emoji-picker": "^1.1.8",
     "zod": "^3.24.2"
   },

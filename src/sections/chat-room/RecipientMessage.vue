@@ -14,6 +14,7 @@ import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, toRefs } from 'vue'
+import ProductCard from './product-card/ProductCard.vue'
 
 dayjs.extend(localizedFormat)
 
@@ -34,7 +35,8 @@ const props = defineProps([
   'profileId',
   'reactions',
   'isDeleted',
-  'document'
+  'document',
+  'productData'
 ])
 
 // Kemudian, gunakan toRefs untuk mendestrukturisasi dan mempertahankan reaktivitas
@@ -51,7 +53,8 @@ const {
   profileId,
   reactions,
   isDeleted,
-  document
+  document,
+  productData
 } = toRefs(props); // Semua prop ini sekarang adalah Ref
 
 // store
@@ -246,8 +249,8 @@ const handleTouchEndLongPress = () => {
         <ReactionInfo v-if="!messageComputedProps.messageDeleted && reactions?.length > 0" :reactions="reactions"
           :profile-id="profileId" :reaction-currently="messageComputedProps.reactionCurrently" :message-id="messageId"
           :wrapper-class="messageComputedProps.memoizedReactionInfoClass" />
-        <p class="text-start rotate-180" style="direction: ltr" :class="messageComputedProps.memoizedClassTextMessage"
-          v-html="messageComputedProps.memoizedTextMessage"></p>
+        <div class="text-start rotate-180" style="direction: ltr" :class="messageComputedProps.memoizedClassTextMessage"
+          v-html="messageComputedProps.memoizedTextMessage"></div>
         <ImageMessage
           v-memo="[document?.url, messageComputedProps.messageDeleted, document?.progress, document?.isProgressDone, document?.isCancelled, messageComputedProps.memoizedWrapperImageClass]"
           v-if="document?.type === 'image' && !messageComputedProps.messageDeleted" :info="{
@@ -290,6 +293,7 @@ const handleTouchEndLongPress = () => {
         </div>
       </div>
     </MessageReaction>
+    <ProductCard v-if="productData && productData?.length > 0" :product-data="productData" />
     <span class="text-xs text-[#111827] self-start rotate-180">
       {{ dayjs(Number(latestMessageTimestamp)).format('HH.mm') }}
     </span>
