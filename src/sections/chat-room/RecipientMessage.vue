@@ -15,6 +15,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, toRefs } from 'vue'
 import ProductCard from './product-card/ProductCard.vue'
+import OrderList from './order-card/OrderList.vue'
 
 dayjs.extend(localizedFormat)
 
@@ -36,7 +37,8 @@ const props = defineProps([
   'reactions',
   'isDeleted',
   'document',
-  'productData'
+  'productData',
+  'orderData'
 ])
 
 // Kemudian, gunakan toRefs untuk mendestrukturisasi dan mempertahankan reaktivitas
@@ -54,7 +56,8 @@ const {
   reactions,
   isDeleted,
   document,
-  productData
+  productData,
+  orderData
 } = toRefs(props); // Semua prop ini sekarang adalah Ref
 
 // store
@@ -294,6 +297,7 @@ const handleTouchEndLongPress = () => {
       </div>
     </MessageReaction>
     <ProductCard v-if="productData && productData?.length > 0" :product-data="productData" />
+    <OrderList v-if="orderData && orderData.length > 0" :order-data="orderData" />
     <span class="text-xs text-[#111827] self-start rotate-180">
       {{ dayjs(Number(latestMessageTimestamp)).format('HH.mm') }}
     </span>

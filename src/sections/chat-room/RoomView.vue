@@ -899,7 +899,8 @@ onUnmounted(() => {
               :status="item.status" :chat-id="memoizedChatId" :chat-room-id="memoizedChatRoomId"
               :message-id="item.messageId" :message-type="item.messageType" :sender-user-id="item.senderUserId"
               :reply-view="item?.replyView" :profile-id="profileId" :reactions="item?.reactions"
-              :is-deleted="item?.isDeleted" :document="item?.document" :product-data="item?.productData" />
+              :is-deleted="item?.isDeleted" :document="item?.document" :product-data="item?.productData"
+              :order-data="item?.orderData ?? []" />
           </WrapperSetHeaderTimes>
           <div v-if="item?.isTyping" ref="typingBubbleEl">
             <UserTypingIndicator />
