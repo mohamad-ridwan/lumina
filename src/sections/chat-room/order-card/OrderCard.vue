@@ -1,22 +1,8 @@
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps, toRefs } from 'vue';
 
-const props = defineProps({
-  order: {
-    type: Object,
-    required: true,
-    validator: (value) => {
-      // Basic validation for essential properties
-      return (
-        value.orderId &&
-        value.status &&
-        value.totalAmount !== undefined &&
-        value.orderedAt &&
-        Array.isArray(value.items)
-      );
-    },
-  },
-});
+const props = defineProps(['order'])
+const { order } = toRefs(props)
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('id-ID', {

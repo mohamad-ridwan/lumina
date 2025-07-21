@@ -12,25 +12,7 @@ const carouselItems = computed(() => {
     return [];
   }
   // orderData.value adalah array, langsung gunakan
-  return orderData.value.map(order => {
-    const status = () => {
-      if (order.status === 'pending') {
-        return 'Menunggu Pembayaran';
-      } else if (order.status === 'processing') {
-        return 'Diproses';
-      } else if (order.status === 'shipped') {
-        return 'Dikirim';
-      } else if (order.status === 'delivered') {
-        return 'Selesai';
-      } else if (order.status === 'cancelled') {
-        return 'Dibatalkan';
-      }
-    }
-    return {
-      ...order,
-      status: status()
-    }
-  })
+  return orderData.value
 });
 
 const carouselSettings = {
