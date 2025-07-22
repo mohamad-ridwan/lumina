@@ -70,7 +70,7 @@ const formatVariantOptions = (options) => {
         {{ formatDate(order.orderedAt) }}
       </p>
       <p class="mb-1">
-        <span class="font-medium">Total:</span>
+        <span class="font-medium">Total {{ order.totalQuantity }} produk:</span>
         {{ formatCurrency(order.totalAmount) }}
       </p>
       <p v-if="order.shippingAddress" class="mb-1">
