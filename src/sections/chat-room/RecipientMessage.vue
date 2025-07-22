@@ -16,6 +16,7 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, toRefs } from 'vue'
 import ProductCard from './product-card/ProductCard.vue'
 import OrderList from './order-card/OrderList.vue'
+import CancelOrderConfirm from './order-card/CancelOrderConfirm.vue'
 
 dayjs.extend(localizedFormat)
 
@@ -252,6 +253,8 @@ const handleTouchEndLongPress = () => {
         <ReactionInfo v-if="!messageComputedProps.messageDeleted && reactions?.length > 0" :reactions="reactions"
           :profile-id="profileId" :reaction-currently="messageComputedProps.reactionCurrently" :message-id="messageId"
           :wrapper-class="messageComputedProps.memoizedReactionInfoClass" />
+        <CancelOrderConfirm v-if="!messageComputedProps.messageDeleted && orderData?.type === 'requestCancelOrderData'"
+          :order-data="orderData" :message-id="messageId" :profile-id="profileId" :recipient-id="senderUserId" />
         <div class="text-start rotate-180" style="direction: ltr" :class="messageComputedProps.memoizedClassTextMessage"
           v-html="messageComputedProps.memoizedTextMessage"></div>
         <ImageMessage
@@ -297,7 +300,7 @@ const handleTouchEndLongPress = () => {
       </div>
     </MessageReaction>
     <ProductCard v-if="productData && productData?.length > 0" :product-data="productData" />
-    <OrderList v-if="orderData && orderData.length > 0" :order-data="orderData" />
+    <OrderList v-if="orderData && orderData?.orders.length > 0" :order-data="orderData" />
     <span class="text-xs text-[#111827] self-start rotate-180">
       {{ dayjs(Number(latestMessageTimestamp)).format('HH.mm') }}
     </span>

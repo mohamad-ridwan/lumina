@@ -81,6 +81,17 @@ export const fetchMessagesPagination = async ({
   return result
 }
 
+export const fetchConfirmCancelOrder = async (req) => {
+  const result = await fetchData(`${clientUrl}/chat-room/confirm-cancel-order`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(req),
+  })
+  return result
+}
+
 // export const fetchChatRoom = async (req, apiChatRoomWorker, resDataCallback, errCallback) => {
 //   const response = await fetch(`${clientUrl}/chat-room`, {
 //     method: 'POST',

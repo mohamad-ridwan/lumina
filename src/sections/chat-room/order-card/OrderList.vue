@@ -8,11 +8,11 @@ const props = defineProps(['orderData'])
 const { orderData } = toRefs(props)
 
 const carouselItems = computed(() => {
-  if (!orderData.value || orderData.value.length === 0) {
+  if (!orderData.value?.orders || orderData.value?.orders.length === 0) {
     return [];
   }
   // orderData.value adalah array, langsung gunakan
-  return orderData.value
+  return orderData.value.orders;
 });
 
 const carouselSettings = {
