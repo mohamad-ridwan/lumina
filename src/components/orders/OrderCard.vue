@@ -106,7 +106,7 @@ const formatVariantOptions = (options) => {
       </ul>
     </div>
 
-    <div v-if="!isShowBtnAction" class="w-full flex justify-start">
+    <div v-if="!isShowBtnAction" class="w-full flex justify-end">
       <a :href="order.publicOrderUrl" target="_blank"
         class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-xs mt-2">
         Lihat Detail Pesanan
@@ -118,7 +118,7 @@ const formatVariantOptions = (options) => {
       </a>
     </div>
 
-    <div class="flex justify-between items-center pt-2 w-full">
+    <div v-if="isShowBtnAction" class="flex justify-between items-center pt-2 w-full">
       <div class="w-full flex justify-start">
         <button
           class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-xs mt-2 cursor-pointer"
