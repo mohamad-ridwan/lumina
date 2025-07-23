@@ -1,8 +1,15 @@
 <script setup>
+import { Button } from 'primevue';
 import { defineProps, toRefs } from 'vue';
 
-const props = defineProps(['order'])
-const { order } = toRefs(props)
+const props = defineProps(['order', 'isShowBtnAction'])
+const { order, isShowBtnAction } = toRefs(props)
+
+const emit = defineEmits(['handleDetailOrder'])
+
+const handleDetailOrder = () => {
+  emit('handleDetailOrder', order.value)
+}
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('id-ID', {
@@ -99,7 +106,7 @@ const formatVariantOptions = (options) => {
       </ul>
     </div>
 
-    <div class="w-full flex justify-end">
+    <div v-if="!isShowBtnAction" class="w-full flex justify-start">
       <a :href="order.publicOrderUrl" target="_blank"
         class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-xs mt-2">
         Lihat Detail Pesanan
@@ -110,6 +117,26 @@ const formatVariantOptions = (options) => {
         </svg>
       </a>
     </div>
+
+    <div class="flex justify-between items-center pt-2 w-full">
+      <div class="w-full flex justify-start">
+        <button
+          class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-xs mt-2 cursor-pointer"
+          @click="handleDetailOrder">
+          Lihat Detail Pesanan
+          <svg class="ml-1 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </button>
+      </div>
+      <div v-if="isShowBtnAction" class="flex gap-2">
+        <Button icon="pi pi-times" severity="danger" size="small" class="!text-xs !h-6 !w-6 !rounded-full" />
+        <Button icon="pi pi-check" severity="success" size="small" class="!text-xs !h-6 !w-6 !rounded-full" />
+      </div>
+    </div>
+
   </div>
 </template>
 
