@@ -28,6 +28,7 @@ const { profile } = storeToRefs(userStore)
 // orders store
 const orderStore = ordersStore()
 const { setActiveOrder } = orderStore
+const { orders } = storeToRefs(orderStore)
 // chat store
 const chatStore = chatsStore()
 const { setChats, searchMessengerData } = chatStore
@@ -139,11 +140,11 @@ const handleOpenOrders = () => {
         <h1 class="font-bold text-lg">Chats</h1>
       </button>
       <div class="flex items-center gap-4">
-        <div class="relative cursor-pointer" @click="handleOpenOrders">
+        <div v-if="profile?.data?.role === 'admin'" class="relative cursor-pointer" @click="handleOpenOrders">
           <Button icon="pi pi-box" aria-label="Orders" :class="theme.regularBtn" size="small" icon-class="!text-xs" />
-          <div
+          <div v-if="orders.pagination?.totalOrders"
             class="absolute flex justify-center items-center h-5 w-5 bg-red-500 text-white rounded-full top-[-10px] border border-white right-[-8px]">
-            <span class="text-xs">5</span>
+            <span class="text-xs">{{ orders.pagination?.totalOrders }}</span>
           </div>
         </div>
         <Button icon="pi pi-plus" aria-label="Chat" :class="theme.regularBtn" size="small" icon-class="!text-xs"

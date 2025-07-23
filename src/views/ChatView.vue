@@ -20,6 +20,8 @@ import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import { ITEMS_PER_PAGE } from '@/utils/pagination';
 import OrderLayoutWrapper from '@/layout/orders/OrderLayoutWrapper.vue';
+import { fetchCancelRequested } from '@/services/api/orders';
+import { ordersStore } from '@/stores/orders';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -38,6 +40,10 @@ const { profile } = storeToRefs(userStore)
 // chats store
 const chatStore = chatsStore()
 const { chats, searchMessengerData, searchValue } = storeToRefs(chatStore)
+// orders store
+const orderStore = ordersStore()
+const { resetOrders } = orderStore
+const { orders } = storeToRefs(orderStore)
 // chat-room store
 const chatRoomStore = useChatRoomStore()
 const { handleUpdateUsersTyping } = chatRoomStore
@@ -421,6 +427,20 @@ onBeforeMount(() => {
   })
 })
 
+const handleGetCancelRequested = async () => {
+  const response = await fetchCancelRequested({ page: 1, limit: 10 })
+  if (response?.success && response?.data?.length > 0) {
+    orders.value = {
+      data: response.data,
+      pagination: response.pagination
+    }
+  }
+}
+
+onBeforeMount(() => {
+  handleGetCancelRequested()
+})
+
 const notifyOnline = () => {
   if (socket?.connected && profileId.value) {
     socket.emit('userOnline', profileId.value)
@@ -507,6 +527,7 @@ onUnmounted(() => {
   usersTyping.value = []
   window.removeEventListener('resize', handleDeviceDetector)
   mediaMessageProgress.value = []
+  resetOrders()
 })
 </script>
 

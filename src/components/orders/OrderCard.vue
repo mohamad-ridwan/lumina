@@ -81,7 +81,7 @@ const formatVariantOptions = (options) => {
 
     <div class="mb-3 flex flex-col">
       <ul class="text-sm text-gray-600 flex flex-col gap-2">
-        <li v-for="item in order.items.slice(0, 2)" :key="item._id" class="mb-1">
+        <li v-for="item in order?.items?.slice(0, 2)" :key="item._id" class="mb-1">
           <div class="flex items-center gap-2">
             <img v-if="item.variant" :src="item.variant?.imageUrl ?? '/no-image.jpg'" alt="Product Image"
               class="w-10 h-10 object-cover rounded" />
