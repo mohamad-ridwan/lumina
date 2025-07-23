@@ -1,14 +1,36 @@
 <script setup>
-import { Button } from 'primevue';
-import { defineProps, toRefs } from 'vue';
+import { addJobResponseCancelOrder } from '@/services/api/orders';
+import { ordersStore } from '@/stores/orders';
+import { Button, useToast } from 'primevue';
+import { defineProps, ref, toRefs } from 'vue';
+
+// orders store
+const orderStore = ordersStore()
+const { updateAgendaJobOrder } = orderStore
 
 const props = defineProps(['order', 'isShowBtnAction'])
 const { order, isShowBtnAction } = toRefs(props)
 
 const emit = defineEmits(['handleDetailOrder'])
 
+const loadingConfirmReqCancelOrder = ref(false)
+
+const toast = useToast();
+
 const handleDetailOrder = () => {
   emit('handleDetailOrder', order.value)
+}
+
+const handleConfirmResponseCancelOrder = async (orderId, responseType) => {
+  loadingConfirmReqCancelOrder.value = true
+  const response = await addJobResponseCancelOrder(orderId, responseType)
+  if (response?.agendaJobId) {
+    updateAgendaJobOrder(orderId)
+    toast.add({ severity: 'success', summary: response.message, life: 3000 })
+  } else {
+    toast.add({ severity: 'error', summary: response?.message ?? 'A server error has occurred, please try again.', life: 3000 });
+  }
+  loadingConfirmReqCancelOrder.value = false
 }
 
 const formatCurrency = (amount) => {
@@ -132,8 +154,10 @@ const formatVariantOptions = (options) => {
         </button>
       </div>
       <div v-if="isShowBtnAction" class="flex gap-2">
-        <Button icon="pi pi-times" severity="danger" size="small" class="!text-xs !h-6 !w-6 !rounded-full" />
-        <Button icon="pi pi-check" severity="success" size="small" class="!text-xs !h-6 !w-6 !rounded-full" />
+        <Button icon="pi pi-times" severity="danger" size="small" class="!text-xs !h-6 !w-6 !rounded-full"
+          @click="() => handleConfirmResponseCancelOrder(order?.orderId, 'reject')" />
+        <Button icon="pi pi-check" severity="success" size="small" class="!text-xs !h-6 !w-6 !rounded-full"
+          @click="() => handleConfirmResponseCancelOrder(order?.orderId, 'agree')" />
       </div>
     </div>
 
