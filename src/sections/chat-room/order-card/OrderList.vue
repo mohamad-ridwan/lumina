@@ -1,6 +1,6 @@
 <script setup>
 import { computed, toRefs } from 'vue';
-import OrderCard from './OrderCard.vue';
+import OrderCard from '../../../components/orders/OrderCard.vue';
 import 'vue3-carousel/carousel.css'
 import { Carousel, Slide } from 'vue3-carousel'
 
