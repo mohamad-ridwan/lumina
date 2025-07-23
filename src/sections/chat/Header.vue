@@ -12,6 +12,7 @@ import { useChatRoomStore } from '@/stores/chat-room';
 import { socket } from '@/services/socket/socket';
 import { storeToRefs } from 'pinia';
 import MenuCard from '@/components/menu/MenuCard.vue';
+import { ordersStore } from '@/stores/orders';
 
 // props
 const { scroller } = defineProps(['scroller'])
@@ -24,6 +25,9 @@ const router = useRouter()
 const userStore = usersStore()
 const { setProfile, setActiveProfile } = userStore
 const { profile } = storeToRefs(userStore)
+// orders store
+const orderStore = ordersStore()
+const { setActiveOrder } = orderStore
 // chat store
 const chatStore = chatsStore()
 const { setChats, searchMessengerData } = chatStore
@@ -120,6 +124,10 @@ const handleScrollToTop = () => {
 const toggleMenu = (event) => {
   menu.value.menu.toggle(event)
 }
+
+const handleOpenOrders = () => {
+  setActiveOrder(true)
+}
 </script>
 
 <template>
@@ -131,6 +139,13 @@ const toggleMenu = (event) => {
         <h1 class="font-bold text-lg">Chats</h1>
       </button>
       <div class="flex items-center gap-4">
+        <div class="relative cursor-pointer" @click="handleOpenOrders">
+          <Button icon="pi pi-box" aria-label="Orders" :class="theme.regularBtn" size="small" icon-class="!text-xs" />
+          <div
+            class="absolute flex justify-center items-center h-5 w-5 bg-red-500 text-white rounded-full top-[-10px] border border-white right-[-8px]">
+            <span class="text-xs">5</span>
+          </div>
+        </div>
         <Button icon="pi pi-plus" aria-label="Chat" :class="theme.regularBtn" size="small" icon-class="!text-xs"
           @click="showTemplate($event)" />
         <MenuCard ref="menu" :items="chatsMenu" :toggleMenu="toggleMenu" btnMenuIcon="pi pi-ellipsis-v" />

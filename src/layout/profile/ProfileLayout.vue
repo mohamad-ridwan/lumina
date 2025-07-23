@@ -1,12 +1,12 @@
 <script setup>
 import { usersStore } from '@/stores/users';
 import { onMounted, onUnmounted } from 'vue';
-import Header from '@/sections/profile/Header.vue';
 import Picture from '@/sections/profile/Picture.vue';
 import ImageLightBox from '@/components/media/MediaLightBox.vue';
 import UpdateUsername from '@/sections/profile/UpdateUsername.vue';
 import { useChatRoomStore } from '@/stores/chat-room';
 import { storeToRefs } from 'pinia';
+import Header from '../Header.vue';
 
 // users store
 const userStore = usersStore()
@@ -46,7 +46,8 @@ onUnmounted(() => {
 <template>
   <!-- MEDIA -->
   <ImageLightBox />
-  <Header />
+
+  <Header title="Profile" @handle-back="() => setActiveProfile(false)" />
   <Picture />
   <UpdateUsername />
 </template>

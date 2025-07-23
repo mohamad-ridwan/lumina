@@ -19,6 +19,7 @@ import weekday from 'dayjs/plugin/weekday';
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import { ITEMS_PER_PAGE } from '@/utils/pagination';
+import OrderLayoutWrapper from '@/layout/orders/OrderLayoutWrapper.vue';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -512,6 +513,7 @@ onUnmounted(() => {
 <template>
   <div class="grid grid-cols-1 md:grid-cols-3">
     <ProfileLayoutWrapper />
+    <OrderLayoutWrapper />
     <ChatLayout />
     <ChatRoomLayout />
   </div>
