@@ -49,7 +49,7 @@ const formatVariantOptions = (options) => {
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow-xs p-3 mb-4 border border-gray-200 flex flex-col gap-2">
+  <div class="bg-white rounded-lg shadow-xs p-3 border border-gray-200 flex flex-col gap-2">
     <div class="flex justify-between items-center gap-1 w-full">
       <h3 class="text-xs font-semibold text-gray-800">
         Pesanan #{{ order.orderId }}
