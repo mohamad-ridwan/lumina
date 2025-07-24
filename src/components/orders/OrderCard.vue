@@ -1,9 +1,13 @@
 <script setup>
 import { addJobResponseCancelOrder } from '@/services/api/orders';
 import { ordersStore } from '@/stores/orders';
+import { usersStore } from '@/stores/users';
 import { Button, useToast } from 'primevue';
 import { defineProps, ref, toRefs } from 'vue';
 
+// users store
+const users = usersStore()
+const { profile } = toRefs(users)
 // orders store
 const orderStore = ordersStore()
 const { updateAgendaJobOrder } = orderStore
@@ -23,7 +27,7 @@ const handleDetailOrder = () => {
 
 const handleConfirmResponseCancelOrder = async (orderId, responseType) => {
   loadingConfirmReqCancelOrder.value = true
-  const response = await addJobResponseCancelOrder(orderId, responseType)
+  const response = await addJobResponseCancelOrder(orderId, responseType, profile.value?.data?.id)
   if (response?.agendaJobId) {
     updateAgendaJobOrder(orderId)
     toast.add({ severity: 'success', summary: response.message, life: 3000 })
@@ -155,9 +159,9 @@ const formatVariantOptions = (options) => {
       </div>
       <div v-if="isShowBtnAction" class="flex gap-2">
         <Button icon="pi pi-times" severity="danger" size="small" class="!text-xs !h-6 !w-6 !rounded-full"
-          @click="() => handleConfirmResponseCancelOrder(order?.orderId, 'reject')" />
+          @click="() => handleConfirmResponseCancelOrder(order?.orderId, 'rejected')" />
         <Button icon="pi pi-check" severity="success" size="small" class="!text-xs !h-6 !w-6 !rounded-full"
-          @click="() => handleConfirmResponseCancelOrder(order?.orderId, 'agree')" />
+          @click="() => handleConfirmResponseCancelOrder(order?.orderId, 'approved')" />
       </div>
     </div>
 

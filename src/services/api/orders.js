@@ -7,9 +7,9 @@ export const fetchCancelRequested = async ({ page, limit }) => {
   return result
 }
 
-export const addJobResponseCancelOrder = async (orderId, responseType) => {
+export const addJobResponseCancelOrder = async (orderId, responseType, adminId) => {
   const result = await fetchData(
-    `${clientUrl}/order/add-job-response-cancel-order?orderId=${orderId}&responseType=${responseType}`,
+    `${clientUrl}/order/add-job-response-cancel-order?orderId=${orderId}&responseType=${responseType}&adminId=${adminId}`,
     {
       method: 'POST',
     },

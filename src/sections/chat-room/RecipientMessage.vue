@@ -300,7 +300,7 @@ const handleTouchEndLongPress = () => {
       </div>
     </MessageReaction>
     <ProductCard v-if="productData && productData?.length > 0" :product-data="productData" />
-    <OrderList v-if="orderData && orderData?.orders.length > 0" :order-data="orderData" />
+    <OrderList v-if="orderData && orderData?.orders?.length > 0" :order-data="orderData" />
     <span class="text-xs text-[#111827] self-start rotate-180">
       {{ dayjs(Number(latestMessageTimestamp)).format('HH.mm') }}
     </span>
